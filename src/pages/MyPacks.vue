@@ -26,8 +26,8 @@ const packs: Modpack[] = [
     }
   },
   {
-    name: "Direwolf20",
-    author: "Etho",
+    name: "Hi Ezra",
+    author: "Oppenheimer",
     versions: {
       minecraft: "1.16.5",
       forge: "1.16.5"

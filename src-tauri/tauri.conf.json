@@ -58,7 +58,8 @@
         "height": 720,
         "resizable": true,
         "title": "Minecraft Mod Manager",
-        "width": 1280
+        "width": 1280,
+        "decorations": false
       }
     ]
   }

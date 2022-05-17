@@ -12,7 +12,7 @@
         </figure>
       </div>
       <div class="column">
-        <h4 class="title is-4 has-text-white">{{props.pack.name}}
+        <h4 class="title is-4 has-text-white">{{props.pack.name}} |
           <em class="subtitle has-text-light is-6" v-if="props.pack.author">by {{props.pack.author}}</em>
         </h4>
         <br>

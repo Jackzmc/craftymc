@@ -4,10 +4,12 @@ module.exports = {
     node: true
   },
   extends: [
-    'plugin:vue/vue3-essential',
-    '@vue/standard',
-    '@vue/typescript'
+    "plugin:vue/essential",
+    "@vue/typescript"
   ],
+  parserOptions: {
+    parser: "@typescript-eslint/parser"
+  },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -19,6 +21,7 @@ module.exports = {
     "space-before-function-paren": "off",
     "keyword-spacing": "off",
     "no-unused-vars": "off",
-    "@typescript-eslint/no-unused-vars": "error"
+    "@typescript-eslint/no-unused-vars": "error",
+    "vue/no-v-model-argument": "off"
   }
 }

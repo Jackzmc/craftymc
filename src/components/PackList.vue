@@ -1,8 +1,8 @@
 <template>
 <div>
-  <PackViewHeader />
+  <PackViewHeader v-model:cardsize="cardSize"/>
   <div class="columns is-multiline" v-if="props.packs.length > 0">
-    <div class="column" v-for="pack of props.packs" :key="pack.name">
+    <div :class="columnClass" v-for="pack of props.packs" :key="pack.name">
       <Pack :pack="pack" />
     </div>
   </div>
@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { ref, computed } from 'vue'
 import { Modpack } from '@/types/Pack'
 import PackViewHeader from '@/components/PackViewHeader.vue'
 import Pack from '@/components/Pack.vue'
@@ -21,5 +21,11 @@ import Pack from '@/components/Pack.vue'
 const props = defineProps<{
   packs: Modpack[]
 }>()
+
+const cardSize = ref(3)
+
+const columnClass = computed(() => {
+  return ['column', 'is-multiline', `is-${cardSize.value}`]
+})
 
 </script>

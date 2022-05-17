@@ -1,13 +1,15 @@
 <template>
 <div>
-  <PackList :packs="packs" />
+  <PackDetails v-if="selectedPack" :pack="selectedPack" />
+  <PackList v-else :packs="packs" @select="(pack) => selectedPack = pack" />
 </div>
 </template>
 
 <script setup lang="ts">
-// import {  } from 'vue'
+import { ref } from 'vue'
 import { Modpack } from '@/types/Pack'
 import PackList from '@/components/PackList'
+import PackDetails from '@/pages/PackDetails'
 
 const packs: Modpack[] = [
   {
@@ -49,5 +51,7 @@ const packs: Modpack[] = [
     }
   }
 ]
+
+let selectedPack = ref<Modpack>()
 
 </script>

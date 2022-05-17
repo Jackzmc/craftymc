@@ -1,6 +1,6 @@
 <template>
 <div class="card" @mouseover="setActive(true)" @mouseleave="setActive(false)">
-  <div class="card-image">
+  <a class="card-image" @click="emit('select', pack)">
     <figure class="image is-4by3">
       <img :src="props.pack.imageUrl" alt="Placeholder image">
       <span class="is-overlay pr-2 py-2">
@@ -15,7 +15,7 @@
         </div>
       </span>
     </figure>
-  </div>
+  </a>
   <div class="card-content">
     <div class="media">
       <div class="media-content" v-if="active">
@@ -34,6 +34,7 @@
 import { ref } from 'vue'
 import { Modpack } from '@/types/Pack'
 
+const emit = defineEmits(["select"])
 const props = defineProps<{
   pack: Modpack
 }>()

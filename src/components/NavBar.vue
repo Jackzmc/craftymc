@@ -38,20 +38,10 @@
       <div class="navbar-item">
         <div class="buttons">
           <a class="button">
-            <span class="icon-text">
-              <span class="icon">
-                <fa-icon :icon="['fas', 'plus']" />
-              </span>
-              <span>Import</span>
-            </span>
+            <Icon :icon="['fas', 'plus']" text="Import" />
           </a>
           <a class="button is-info">
-            <span class="icon-text">
-              <span class="icon">
-                <fa-icon :icon="['fas', 'plus']" />
-              </span>
-              <span>New Modpack</span>
-            </span>
+            <Icon :icon="['fas', 'plus']" text="New Modpack" />
           </a>
         </div>
       </div>

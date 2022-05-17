@@ -1,9 +1,10 @@
 export interface Modpack {
-  name?: string,
+  id: string,
+  name: string,
   versions: {
-    minecraft?: string,
-    forge?: string,
-    pack?: string
+    minecraft: string,
+    forge: string,
+    pack: string
   }
 }
 

@@ -30,23 +30,12 @@
   </p>
   <ul class="menu-list">
     <li><router-link to="/settings">
-      <span class="icon-text">
-        <span class="icon">
-          <fa-icon :icon="['fas', 'sliders']" />
-        </span>
-        <span>Settings</span>
-      </span>
+      <Icon :icon="['fas', 'sliders']" text="Settings" />
     </router-link></li>
     <li><a>
-      <span class="icon-text">
-        <span class="icon">
-          <fa-icon :icon="['fab', 'github']" />
-        </span>
-        <span>Github</span>
-        <span class="icon">
-          <fa-icon class="has-text-info" :icon="['fas', 'arrow-up-right-from-square']" />
-        </span>
-      </span>
+      <Icon :icon="['fab', 'github']" text="Github"
+        right-icon-class="has-text-info" :icon-right="['fas', 'arrow-up-right-from-square']"
+      />
     </a></li>
   </ul>
 </aside>

@@ -6,7 +6,7 @@ const routes = [
   {
     name: "MyPacks",
     path: '/',
-    component: MyPacks
+    component: MyPacks,
   },
   {
     name: "BrowsePacks",

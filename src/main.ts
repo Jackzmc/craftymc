@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import router from './router'
 
 import '@/assets/main.scss'
 import { library } from "@fortawesome/fontawesome-svg-core";
@@ -12,5 +13,6 @@ import '@creativebulma/bulma-tooltip/dist/bulma-tooltip.min.css'
 library.add(faPlus, faCube, faGithub, faCircleCheck, faCircle, faSearch, faHome, faSliders, faArrowUpRightFromSquare);
 
 createApp(App)
+  .use(router)
   .component("fa-icon", FontAwesomeIcon)
   .mount('#app')

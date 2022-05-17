@@ -4,18 +4,18 @@
     Dashboard
   </p>
   <ul class="menu-list">
-    <li><a :class="['icon-text', {'is-active': props.view === View.MyPacks }]" @click="setView(View.MyPacks)">
+    <li><router-link to="/" class="icon-text">
       <span class="icon">
         <fa-icon :icon="['fas', 'home']" />
       </span>
       <span>My Modpacks</span>
-    </a></li>
-    <li><a :class="['icon-text', {'is-active': props.view === View.BrowsePacks }]"  @click="setView(View.BrowsePacks)">
+    </router-link></li>
+    <li><router-link to="/browse" class="icon-text">
       <span class="icon">
         <fa-icon :icon="['fas', 'search']" />
       </span>
       <span>Find Modpacks</span>
-    </a></li>
+    </router-link></li>
   </ul>
   <p class="menu-label  has-text-centered">
     Sources
@@ -29,14 +29,14 @@
     Misc
   </p>
   <ul class="menu-list">
-    <li><a>
+    <li><router-link to="/settings">
       <span class="icon-text">
         <span class="icon">
           <fa-icon :icon="['fas', 'sliders']" />
         </span>
         <span>Settings</span>
       </span>
-    </a></li>
+    </router-link></li>
     <li><a>
       <span class="icon-text">
         <span class="icon">
@@ -53,16 +53,4 @@
 </template>
 
 <script setup lang="ts">
-// TODO: Rewrite this as like a really shitty vue-router
-import { defineEmits, defineProps } from 'vue'
-import { View } from '@/types/Pack'
-const emit = defineEmits(['view'])
-
-const props = defineProps<{
-  view: View
-}>()
-
-function setView(view: View) {
-  emit('view', view)
-}
 </script>

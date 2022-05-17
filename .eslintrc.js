@@ -6,11 +6,8 @@ module.exports = {
   extends: [
     'plugin:vue/vue3-essential',
     '@vue/standard',
-    '@vue/typescript/recommended'
+    '@vue/typescript'
   ],
-  parserOptions: {
-    ecmaVersion: 2020
-  },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -18,6 +15,7 @@ module.exports = {
     semi: "off",
     "vue/no-template-key": "off",
     "vue/no-v-for-template-key": "off",
-    quotes: 'off'
+    quotes: 'off',
+    "space-before-function-paren": "off"
   }
 }

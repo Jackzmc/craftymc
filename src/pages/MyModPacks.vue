@@ -29,36 +29,17 @@
   </div>
   <div class="columns is-multiline">
     <div class="column" v-for="pack of PACKS" :key="pack.name">
-      <div class="card">
-        <div class="card-image">
-          <figure class="image is-4by3">
-            <img src="https://bulma.io/images/placeholders/1280x960.png" alt="Placeholder image">
-          </figure>
-        </div>
-        <div class="card-content">
-          <div class="media">
-            <div class="media-content">
-              <p class="title is-5">{{pack.name}}</p>
-              <p class="subtitle is-6">by {{pack.author}}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Pack :pack="pack" />
     </div>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
+// import {  } from 'vue'
 import HorizontalField from '@/components/HorizontalField.vue'
-
-interface Pack {
-  name?: string,
-  versions: {
-    minecraft?: string,
-    forge?: string
-  }
-}
+import { Modpack } from '@/types/Pack'
+import Pack from '@/components/Pack'
 
 const FILTERS = {
   all: "All Modpacks"
@@ -72,9 +53,20 @@ const SORTS = {
   created: "Creation Date"
 }
 
-const PACKS: Pack[] = [
+const PACKS: Modpack[] = [
   {
     name: "Direwolf20",
+    imageUrl: "https://cdn-raw.modrinth.com//data/KmiWHzQ4/62f2e3a020f761f275f0a7f3ebca3327576edb4c.png",
+    author: "Etho",
+    versions: {
+      minecraft: "1.16.5",
+      forge: "1.16.5",
+      pack: "1.0.0"
+    }
+  },
+  {
+    name: "Direwolf20",
+    imageUrl: "https://bulma.io/images/placeholders/1280x960.png",
     author: "Etho",
     versions: {
       minecraft: "1.16.5",
@@ -83,19 +75,23 @@ const PACKS: Pack[] = [
   },
   {
     name: "Direwolf20",
-    author: "Etho",
-    versions: {
-      minecraft: "1.16.5",
-      forge: "1.16.5"
-    }
-  },
-  {
-    name: "Direwolf20",
+    imageUrl: "https://bulma.io/images/placeholders/1280x960.png",
     author: "FTB",
     versions: {
       minecraft: "1.16.5",
       forge: "1.16.5"
     }
+  },
+  {
+    name: "Direwolf20",
+    imageUrl: "https://cdn-raw.modrinth.com//data/KmiWHzQ4/62f2e3a020f761f275f0a7f3ebca3327576edb4c.png",
+    author: "Etho",
+    versions: {
+      minecraft: "1.16.5",
+      forge: "1.16.5",
+      pack: "1.0.0"
+    }
   }
 ]
+
 </script>

@@ -10,9 +10,14 @@
 
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
-      <div class="navbar-item">
-        Minecraft Mod Manager
-      </div>
+      <a @click="emit('sidebar')" class="navbar-item">
+        <span class="icon-text">
+          <span class="icon">
+            <fa-icon :icon="sidebarIcon" />
+          </span>
+          <span>Minecraft Mod Manager</span>
+        </span>
+      </a>
 
       <div class="navbar-item has-dropdown is-hoverable">
         <a class="navbar-link">
@@ -62,3 +67,18 @@
   </div>
 </nav>
 </template>
+
+<script setup lang="ts">
+import { defineEmits, defineProps, computed } from 'vue'
+const props = defineProps<{
+  hasSidebar: boolean
+}>()
+const emit = defineEmits(["sidebar"])
+
+const sidebarIcon = computed(() => {
+  return [
+    'fas',
+    props.hasSidebar ? 'circle-check' : 'circle'
+  ]
+})
+</script>

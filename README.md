@@ -1,24 +1,15 @@
 # mc-mod-manager
 
-## Project setup
-```
-yarn install
-```
+Extremely alpha stages. Heavily inspired by curseforge for ui purposes, for now.
 
-### Compiles and hot-reloads for development
-```
-yarn serve
-```
+### Current Roadmap
 
-### Compiles and minifies for production
-```
-yarn build
-```
+1. Overall UI mockup
+2. UI functionality
+3. Backend rust code
 
-### Lints and fixes files
-```
-yarn lint
-```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+#### Development
+
+`yarn serve` to run the web server for port 8080
+`tauri dev` to run the actual application

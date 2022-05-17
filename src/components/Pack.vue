@@ -1,0 +1,46 @@
+<template>
+<div class="card" @mouseover="setActive(true)" @mouseleave="setActive(false)">
+  <div class="card-image">
+    <figure class="image is-4by3">
+      <img :src="props.pack.imageUrl" alt="Placeholder image">
+      <span class="is-overlay pr-2 py-2">
+        <div class="tags has-addons is-pulled-right ml-2"  data-tooltip="Game version">
+          <span class="tag">
+            <fa-icon :icon="['fa', 'cube']" />
+          </span>
+          <span class="tag is-black">{{props.pack.versions.minecraft}}</span>
+        </div>
+        <div class="tags has-addons is-pulled-right" data-tooltip="Pack version" v-if="props.pack.versions.pack">
+          <span class="tag is-black">{{props.pack.versions.pack}}</span>
+        </div>
+      </span>
+    </figure>
+  </div>
+  <div class="card-content">
+    <div class="media">
+      <div class="media-content" v-if="active">
+        <p class="button is-info is-pulled-right is-fullwidth">Play</p>
+      </div>
+      <div class="media-content" v-else>
+        <p><b>{{props.pack.name}}</b></p>
+        <p>by {{props.pack.author}}</p>
+      </div>
+    </div>
+  </div>
+</div>
+</template>
+
+<script setup lang="ts">
+import { defineProps, ref } from 'vue'
+import { Modpack } from '@/types/Pack'
+
+const props = defineProps<{
+  pack: Modpack
+}>()
+
+const active = ref()
+
+function setActive(state: boolean) {
+  active.value = state
+}
+</script>

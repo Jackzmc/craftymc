@@ -8,7 +8,7 @@
     <div class="columns is-mobile is-centered is-vcentered">
       <div class="column is-2">
         <figure class="image is-128x128 is-pulled-left">
-          <img :src="props.pack.imageUrl" />
+          <img :src="props.pack.imageUrl || DefaultPackImage" />
         </figure>
       </div>
       <div class="column">
@@ -63,6 +63,7 @@ import { Tabs, Tab } from 'vue3-tabs-component'
 import { Modpack } from '@/types/Pack'
 import { ref } from 'vue'
 import PackSettingsModal from '@/components/modals/PackSettingsModal.vue'
+import DefaultPackImage from '@/assets/default_pack.png'
 
 const emit = defineEmits(["goback"])
 const props = defineProps<{

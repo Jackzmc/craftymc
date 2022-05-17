@@ -27,7 +27,6 @@ const packs: Modpack[] = [
   },
   {
     name: "Direwolf20",
-    imageUrl: "https://bulma.io/images/placeholders/1280x960.png",
     author: "Etho",
     versions: {
       minecraft: "1.16.5",
@@ -39,7 +38,6 @@ const packs: Modpack[] = [
   },
   {
     name: "Direwolf20",
-    imageUrl: "https://bulma.io/images/placeholders/1280x960.png",
     author: "FTB",
     versions: {
       minecraft: "1.16.5",

@@ -13,6 +13,11 @@ module.exports = {
   },
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
+    "vue/multi-word-component-names": "off",
+    semi: "off",
+    "vue/no-template-key": "off",
+    "vue/no-v-for-template-key": "off",
+    quotes: 'off'
   }
 }

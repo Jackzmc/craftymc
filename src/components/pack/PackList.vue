@@ -15,8 +15,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Modpack } from '@/types/Pack'
-import PackViewHeader from '@/components/PackViewHeader.vue'
-import Pack from '@/components/Pack.vue'
+import PackViewHeader from '@/components/pack/PackViewHeader.vue'
+import Pack from '@/components/pack/Pack.vue'
 
 const emit = defineEmits(["select"])
 

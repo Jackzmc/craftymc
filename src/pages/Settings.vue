@@ -59,8 +59,8 @@
 
 <script setup lang="ts">
 import { Tabs, Tab } from 'vue3-tabs-component'
-import Field from '@/components/Field.vue'
-import HorizontalField from '@/components/HorizontalField.vue'
+import Field from '@/components/form/Field.vue'
+import HorizontalField from '@/components/form/HorizontalField.vue'
 import { ref, computed } from 'vue'
 
 interface AppSettings {

@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import HorizontalField from '@/components/HorizontalField.vue'
+import HorizontalField from '@/components/form/HorizontalField.vue'
 
 const emit = defineEmits(['update:cardsize'])
 const props = defineProps<{cardsize: number}>()

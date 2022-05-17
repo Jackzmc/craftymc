@@ -1,0 +1,29 @@
+<template>
+<div :class="['modal', {'is-active': props.active}]">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head" v-if="props.hasHeader">
+      <p class="modal-card-title">{{props.title}}</p>
+      <button v-if="props.closable" class="delete" aria-label="close" @click="emit('close')"></button>
+    </header>
+    <section class="modal-card-body">
+      <slot />
+    </section>
+    <footer class="modal-card-foot">
+      <slot name="footer">
+        <button class="button">Close</button>
+      </slot>
+    </footer>
+  </div>
+</div>
+</template>
+
+<script setup lang="ts">
+const emit = defineEmits(["close"])
+const props = defineProps<{
+  title: string,
+  closable?: boolean,
+  active?: boolean,
+  hasHeader?: boolean
+}>()
+</script>

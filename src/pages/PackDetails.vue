@@ -1,5 +1,9 @@
 <template>
 <div>
+  <PackSettingsModal :pack="pack" v-if="settingsModalActive" @close="settingsModalActive=false" />
+  <a class="button mb-2">
+    <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
+  </a>
   <div class="box has-background-dark">
     <div class="columns is-mobile is-centered is-vcentered">
       <div class="column is-2">
@@ -30,7 +34,7 @@
             <div class="level-item">
               <div class="buttons">
                 <a class="button is-dark">
-                  <Icon class="" :icon="['fas', 'cog']" />
+                  <Icon :icon="['fas', 'cog']" @click="settingsModalActive = true" />
                 </a>
                 <a class="button is-info" style="width: 6em">Play</a>
               </div>
@@ -40,13 +44,30 @@
       </div>
     </div>
   </div>
-  Pack Details!
+  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+    <Tab name="Overview">
+
+    </Tab>
+    <Tab name="Mods">
+
+    </Tab>
+    <Tab name="Versions">
+
+    </Tab>
+  </Tabs>
 </div>
 </template>
 
 <script setup lang="ts">
+import { Tabs, Tab } from 'vue3-tabs-component'
 import { Modpack } from '@/types/Pack'
+import { ref } from 'vue'
+import PackSettingsModal from '@/components/modals/PackSettingsModal.vue'
+
+const emit = defineEmits(["goback"])
 const props = defineProps<{
   pack: Modpack
 }>()
+
+let settingsModalActive = ref(false)
 </script>

@@ -7,7 +7,7 @@
 <script setup lang="ts">
 // import {  } from 'vue'
 import { Modpack } from '@/types/Pack'
-import PackList from '@/components/PackList'
+import PackList from '@/components/pack/PackList'
 
 const packs: Modpack[] = []
 

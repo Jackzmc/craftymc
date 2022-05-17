@@ -1,11 +1,11 @@
 <template>
-<div :class="'icon-text ' + props.iconClass || ''">
+<div :class="'icon-text ' + (props.iconClass || '')">
   <span class="icon">
-    <fa-icon :icon="props.icon" />
+    <fa-icon :icon="props.icon" :size="props.size" />
   </span>
   <span v-if="props.text">{{props.text}}</span>
   <span class="icon" v-if="iconRight">
-    <fa-icon :class="rightIconClass" :icon="props.iconRight" />
+    <fa-icon :class="rightIconClass" :icon="props.iconRight" :size="props.size" />
   </span>
 </div>
 </template>
@@ -16,6 +16,7 @@ const props = defineProps<{
   iconClass?: string
   iconRight?: string[]
   rightIconClass?: string
-  text?: string
+  text?: string,
+  size?: string
 }>()
 </script>

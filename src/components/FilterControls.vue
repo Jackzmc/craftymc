@@ -20,7 +20,7 @@
       </HorizontalField>
     </div>
   </div>
-  <div class="level-right">
+  <div class="level-right" v-if="props.showSize">
     <div class="level-item">
       <input class="slider is-fullwidth has-output" step="1" min="2" max="4" v-model.number="size" type="range" :data-tooltip="sizeName" @input="emit('update:cardsize', size)">
     </div>
@@ -33,7 +33,7 @@ import { ref, computed } from 'vue'
 import HorizontalField from '@/components/form/HorizontalField.vue'
 
 const emit = defineEmits(['update:cardsize'])
-const props = defineProps<{cardsize: number}>()
+const props = defineProps<{cardsize?: number, showSize?: boolean}>()
 
 const FILTERS = {
   all: "All Modpacks",
@@ -52,7 +52,7 @@ const SORTS = {
 
 const sort = ref('recentlyPlayed')
 const filter = ref('all')
-let size = ref(props.cardsize)
+let size = ref(props.cardsize || 3)
 const sizeName = computed(() => {
   switch(size.value) {
     case 2: return "S"

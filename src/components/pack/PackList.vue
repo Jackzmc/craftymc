@@ -1,6 +1,6 @@
 <template>
 <div>
-  <PackViewHeader v-model:cardsize="cardSize"/>
+  <FilterControls v-model:cardsize="cardSize" show-size />
   <div class="columns is-multiline" v-if="props.packs.length > 0">
     <div :class="columnClass" v-for="pack of props.packs" :key="pack.name">
       <Pack :pack="pack" @select="pack => emit('select', pack)" />
@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { Modpack } from '@/types/Pack'
-import PackViewHeader from '@/components/pack/PackViewHeader.vue'
+import FilterControls from '@/components/FilterControls.vue'
 import Pack from '@/components/pack/Pack.vue'
 
 const emit = defineEmits(["select"])

@@ -1,6 +1,8 @@
 <template>
 <div>
-  <PackSettingsModal :pack="pack" v-if="settingsModalActive" @close="settingsModalActive=false" />
+  <PackSettingsModal v-if="activeSubview && activeSubview === Subview.SettingsModal"  :pack="pack" @close="activeSubview = undefined" />
+  <AddContent :pack="pack" v-if="activeSubview && activeSubview === Subview.AddContent" @close="activeSubview = undefined" />
+  <template v-else> <!-- a little hacky -->
   <a class="button mb-2">
     <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
   </a>
@@ -33,10 +35,10 @@
           <div class="level-right">
             <div class="level-item">
               <div class="buttons">
-                <a class="button is-dark">
-                  <Icon :icon="['fas', 'cog']" @click="settingsModalActive = true" />
+                <a class="button is-dark" @click="activeSubview = Subview.SettingsModal">
+                  <Icon :icon="['fas', 'cog']" />
                 </a>
-                <a class="button is-success">
+                <a class="button is-success" @click="activeSubview = Subview.AddContent">
                   <Icon :icon="['fas', 'plus']" text="Add Content" />
                 </a>
                 <a class="button is-info" style="width: 6em">Play</a>
@@ -55,37 +57,7 @@
 
         </Tab>
         <Tab name="Mods">
-          <table class="table is-fullwidth">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Author</th>
-                <th>File</th>
-                <th>Action</th>
-                <th>Enabled</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Applied Energistics</td>
-                <td>Tom Brady</td>
-                <td>ae2.jar</td>
-                <td>
-                  <div class="buttons">
-                  <a class="button is-small is-white"><Icon :icon="['fas', 'download']" /></a>
-                  <a class="button is-small is-white"><Icon :icon="['fas', 'trash']" /></a>
-                  </div>
-                </td>
-                <td>
-                  <input id="mod1-active" type="checkbox" name="switchRoundedDefault" class="switch is-rounded is-info" checked="checked">
-                  <label for="mod1-active"></label>
-                </td>
-              </tr>
-              <!--<tr v-for="mod in modpack.mods" :key="mod.id">
-
-              </tr>-->
-            </tbody>
-          </table>
+          <Modlist :mods="pack.mods" />
         </Tab>
         <Tab name="Versions">
 
@@ -94,6 +66,7 @@
       </div>
     </div>
   </div>
+  </template>
 </div>
 </template>
 
@@ -103,11 +76,18 @@ import { Modpack } from '@/types/Pack'
 import { ref } from 'vue'
 import PackSettingsModal from '@/components/modals/PackSettingsModal.vue'
 import DefaultPackImage from '@/assets/default_pack.png'
+import Modlist from '@/components/Modlist.vue'
+import AddContent from '@/pages/AddContent.vue'
 
 const emit = defineEmits(["goback"])
 const props = defineProps<{
   pack: Modpack
 }>()
 
-let settingsModalActive = ref(false)
+
+const enum Subview {
+  SettingsDialog,
+  AddContent
+}
+let activeSubview = ref<Subview>()
 </script>

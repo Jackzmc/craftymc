@@ -36,6 +36,9 @@
                 <a class="button is-dark">
                   <Icon :icon="['fas', 'cog']" @click="settingsModalActive = true" />
                 </a>
+                <a class="button is-success">
+                  <Icon :icon="['fas', 'plus']" text="Add Content" />
+                </a>
                 <a class="button is-info" style="width: 6em">Play</a>
               </div>
             </div>
@@ -44,17 +47,53 @@
       </div>
     </div>
   </div>
-  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-    <Tab name="Overview">
+  <div class="level">
+    <div class="level-left">
+      <div class="level-item">
+      <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+        <Tab name="Overview">
 
-    </Tab>
-    <Tab name="Mods">
+        </Tab>
+        <Tab name="Mods">
+          <table class="table is-fullwidth">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Author</th>
+                <th>File</th>
+                <th>Action</th>
+                <th>Enabled</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Applied Energistics</td>
+                <td>Tom Brady</td>
+                <td>ae2.jar</td>
+                <td>
+                  <div class="buttons">
+                  <a class="button is-small is-white"><Icon :icon="['fas', 'download']" /></a>
+                  <a class="button is-small is-white"><Icon :icon="['fas', 'trash']" /></a>
+                  </div>
+                </td>
+                <td>
+                  <input id="mod1-active" type="checkbox" name="switchRoundedDefault" class="switch is-rounded is-info" checked="checked">
+                  <label for="mod1-active"></label>
+                </td>
+              </tr>
+              <!--<tr v-for="mod in modpack.mods" :key="mod.id">
 
-    </Tab>
-    <Tab name="Versions">
+              </tr>-->
+            </tbody>
+          </table>
+        </Tab>
+        <Tab name="Versions">
 
-    </Tab>
-  </Tabs>
+        </Tab>
+      </Tabs>
+      </div>
+    </div>
+  </div>
 </div>
 </template>
 

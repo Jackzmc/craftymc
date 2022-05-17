@@ -6,3 +6,10 @@ export interface Modpack {
     pack?: string
   }
 }
+
+export enum View {
+  Main,
+  MyPacks,
+  BrowsePacks,
+  Settings
+}

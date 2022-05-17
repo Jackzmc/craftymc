@@ -4,13 +4,13 @@
     Dashboard
   </p>
   <ul class="menu-list">
-    <li><a class="is-active icon-text">
+    <li><a :class="['icon-text', {'is-active': props.view === View.MyPacks }]" @click="setView(View.MyPacks)">
       <span class="icon">
         <fa-icon :icon="['fas', 'home']" />
       </span>
       <span>My Modpacks</span>
     </a></li>
-    <li><a class="icon-text">
+    <li><a :class="['icon-text', {'is-active': props.view === View.BrowsePacks }]"  @click="setView(View.BrowsePacks)">
       <span class="icon">
         <fa-icon :icon="['fas', 'search']" />
       </span>
@@ -51,3 +51,18 @@
   </ul>
 </aside>
 </template>
+
+<script setup lang="ts">
+// TODO: Rewrite this as like a really shitty vue-router
+import { defineEmits, defineProps } from 'vue'
+import { View } from '@/types/Pack'
+const emit = defineEmits(['view'])
+
+const props = defineProps<{
+  view: View
+}>()
+
+function setView(view: View) {
+  emit('view', view)
+}
+</script>

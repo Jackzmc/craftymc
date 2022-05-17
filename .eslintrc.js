@@ -16,6 +16,9 @@ module.exports = {
     "vue/no-template-key": "off",
     "vue/no-v-for-template-key": "off",
     quotes: 'off',
-    "space-before-function-paren": "off"
+    "space-before-function-paren": "off",
+    "keyword-spacing": "off",
+    "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error"
   }
 }

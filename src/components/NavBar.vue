@@ -10,13 +10,9 @@
 
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
-      <a class="navbar-item">
-        Home
-      </a>
-
-      <a class="navbar-item">
-        Documentation
-      </a>
+      <div class="navbar-item">
+        Minecraft Mod Manager
+      </div>
 
       <div class="navbar-item has-dropdown is-hoverable">
         <a class="navbar-link">
@@ -44,11 +40,21 @@
     <div class="navbar-end">
       <div class="navbar-item">
         <div class="buttons">
-          <a class="button is-primary">
-            <strong>Sign up</strong>
+          <a class="button">
+            <span class="icon-text">
+              <span class="icon">
+                <fa-icon :icon="['fas', 'plus']" />
+              </span>
+              <span>Import</span>
+            </span>
           </a>
-          <a class="button is-light">
-            Log in
+          <a class="button is-info">
+            <span class="icon-text">
+              <span class="icon">
+                <fa-icon :icon="['fas', 'plus']" />
+              </span>
+              <span>New Modpack</span>
+            </span>
           </a>
         </div>
       </div>

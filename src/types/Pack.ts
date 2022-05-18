@@ -14,9 +14,15 @@ export interface PackSettings {
   useCustomMemory: boolean
 }
 
-export enum View {
+export const enum View {
   Main,
   MyPacks,
   BrowsePacks,
   Settings
+}
+
+export const enum InstallState {
+  Installed,
+  NotInstalled,
+  Installing,
 }

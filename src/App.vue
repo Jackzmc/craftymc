@@ -2,7 +2,7 @@
 <div>
   <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" />
   <br>
-  <div class="columns">
+  <div class="columns mt-6">
     <div class="column is-2 ml-1" v-show="hasSidebar">
       <SideBar />
     </div>

@@ -1,5 +1,6 @@
 <template>
 <div class="container">
+  <h4 class="title is-4">Settings</h4>
   <div class="columns">
     <div class="column is-8">
       <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">

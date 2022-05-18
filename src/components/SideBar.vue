@@ -1,5 +1,5 @@
 <template>
-<aside class="menu">
+<aside class="menu" style="position: fixed">
   <p class="menu-label  has-text-centered">
     Dashboard
   </p>
@@ -32,7 +32,7 @@
     <li><router-link to="/settings">
       <Icon :icon="['fas', 'sliders']" text="Settings" />
     </router-link></li>
-    <li><a>
+    <li><a href="https://github.com/Jackzmc/mc-mod-downloader" target="_blank">
       <Icon :icon="['fab', 'github']" text="Github"
         right-icon-class="has-text-info" :icon-right="['fas', 'arrow-up-right-from-square']"
       />

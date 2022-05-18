@@ -1,5 +1,5 @@
 <template>
-<nav class="navbar is-black" role="navigation" aria-label="main navigation" data-tauri-drag-region>
+<nav data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
       <a @click="emit('sidebar')" class="navbar-item">

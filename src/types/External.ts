@@ -1,3 +1,5 @@
+import { InstallState } from "./Pack.js"
+
 export interface ModrinthProject {
   id: string
   slug: string
@@ -35,4 +37,10 @@ export interface ModrinthProject {
   gallery: any[]
 }
 
+// Project refers to a mod or a modpack
 export type ExternalProject = ModrinthProject
+
+export interface Entry {
+  project: ExternalProject,
+  installState: InstallState
+}

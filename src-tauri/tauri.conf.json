@@ -15,8 +15,8 @@
     },
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
+      "category": "Entertainment",
+      "copyright": "Jackz",
       "deb": {
         "depends": []
       },
@@ -28,7 +28,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "me.jackz.mcmodmanager",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -59,7 +59,9 @@
         "resizable": true,
         "title": "Minecraft Mod Manager",
         "width": 1280,
-        "decorations": false
+        "decorations": false,
+        "minHeight": 585,
+        "minWidth": 1040
       }
     ]
   }

@@ -1,7 +1,12 @@
 import { InstallState } from "./Pack.js"
 
+export interface ModrinthModpack extends ModrinthProject {
+  project_id: string,
+  project_type: "modpack"
+}
+
 export interface ModrinthProject {
-  id: string
+  id: string,
   slug: string
   project_type: string
   team: string

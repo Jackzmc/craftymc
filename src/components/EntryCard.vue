@@ -1,17 +1,16 @@
 <template>
-<div class="box is-dark" >
+<div class="box" >
   <div class="columns is-mobile">
-    <div class="column is-2">
-      <figure class="image is-128x128 is-pulled-left">
+    <div class="column is-1">
+      <figure class="image is-64x64 is-pulled-left">
         <img :src="props.entry.project.icon_url || DefaultModImage" />
       </figure>
     </div>
     <div class="column">
-      <h4 class="title is-4">{{props.entry.project.name}} |
+      <h4 class="title is-5">{{props.entry.project.title}} |
         <em class="subtitle has-text-gray is-6" v-if="props.entry.project.author">by {{props.entry.project.author}}</em>
       </h4>
       <p class="subtitle is-6">{{props.entry.project.description}}</p>
-      <br>
       <div class="level">
         <div class="level-left">
           <div class="level-item" data-tooltip="Downloads">

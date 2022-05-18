@@ -55,7 +55,7 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 720,
+        "height": 960,
         "resizable": true,
         "title": "Minecraft Mod Manager",
         "width": 1280,

@@ -1,6 +1,6 @@
 <template>
 <div>
-  <h4 class="title is-4">Installed Modpacks</h4>
+  <h4 class="title is-4" v-if="!selectedPack">Installed Modpacks</h4>
   <PackDetails v-if="selectedPack" :pack="selectedPack" @goback="selectedPack = undefined" />
   <PackList v-else :packs="packs" @select="(pack) => selectedPack = pack" />
 </div>

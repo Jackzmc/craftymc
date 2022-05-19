@@ -64,6 +64,8 @@ import Field from '@/components/form/Field.vue'
 import HorizontalField from '@/components/form/HorizontalField.vue'
 import { ref, computed, watch } from 'vue'
 import { AppSettings } from '../types/Settings';
+import { invoke } from '@tauri-apps/api/tauri'
+import { onBeforeRouteLeave } from 'vue-router'
 
 const props = defineProps<{
   settings: AppSettings
@@ -81,12 +83,12 @@ let settings = ref<AppSettings>(JSON.parse(JSON.stringify(props.settings)))
 
 watch(settings, () => {
   for(const category in settings.value) {
-    for(const setting in settings.value[category]) {
-      if(props.settings[category][setting] !== settings.value[category][setting]) {
-        invoke('update_setting', {
+    for(const key in settings.value[category]) {
+      if(props.settings[category][key] !== settings.value[category][key]) {
+        invoke('set_setting', {
           category,
-          setting,
-          value: settings.value[category][setting].toString()
+          key,
+          value: settings.value[category][key].toString()
         })
       }
     }
@@ -95,5 +97,9 @@ watch(settings, () => {
 
 const javaMemory = computed(() => {
   return `${settings.value.minecraft.javaMemoryMb.toLocaleString()} MB`
+})
+
+onBeforeRouteLeave(async() => {
+  await invoke('save_settings')
 })
 </script>

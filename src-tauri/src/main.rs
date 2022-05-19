@@ -2,32 +2,33 @@
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
 )]
-
 use std::sync::{Arc, Mutex};
+use std::io::prelude::*;
 
-mod Settings;
+mod settings;
 
 struct AppState {
-  settings: Mutex<Settings::Settings>,
+  config: Mutex<settings::SettingsManager>,
 }
 
 #[tauri::command]
-fn get_settings(state: tauri::State<'_, AppState>) -> Settings::Settings {
-  state.settings.lock().unwrap().clone()
+fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
+  state.config.lock().unwrap().Settings.clone()
 }
 
 #[tauri::command]
-fn update_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Option<String> {
+fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Option<String> {
   // Categories are passed in lowercase. 
   // Keys are case-sensitive, may not be lowercase.
   // TODO: Move to Settings
-  let mut settings = state.settings.lock().unwrap();
+  let config = &mut state.config.lock().unwrap();
+  let settings = &mut config.Settings;
+  println!("[debug] Setting {}/{} to \"{}\"", &category, &key, &value);
   match category {
     "general" => {
       match key {
         _ => return Some("Invalid key".to_string())
       };
-      None
     },
     "minecraft" => {
       match key {
@@ -40,20 +41,36 @@ fn update_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, 
         "javaArgs" => settings.minecraft.javaArgs = Some(value),
         _ => return Some("Invalid key".to_string())
       };
-      None
     }
     _ => return Some("Invalid category".to_string())
+  };
+  None
+}
+
+#[tauri::command]
+fn save_settings(state: tauri::State<'_, AppState>) {
+  let config = &mut state.config.lock().unwrap();
+  let settings = &config.Settings;
+  let json_str = serde_json::to_string(&settings).unwrap();
+  match config.config_file.write_all(&json_str.as_bytes()) {
+    Ok(_) => {
+      config.config_file.flush().unwrap();
+      println!("[debug] Saved settings to file.");
+    },
+    Err(err) => {
+      println!("WARN: Failed to save settings to file: {}", err);
+    }
   }
-  // TODO: Write settings to file
+  
 }
 
 fn main() {
-  let mut settings = Settings::Settings::new();
+  let config = settings::SettingsManager::new();
   tauri::Builder::default()
     .manage(AppState {
-      settings: Mutex::new(settings)
+      config: Mutex::new(config)
     })
-    .invoke_handler(tauri::generate_handler![get_settings, update_setting])
+    .invoke_handler(tauri::generate_handler![get_settings, set_setting, save_settings])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

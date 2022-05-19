@@ -27,6 +27,7 @@ onBeforeMount(async() => {
   settings.value = await invoke('get_settings')
   console.log('app settings', settings.value)
 })
+
 </script>
 
 <style>

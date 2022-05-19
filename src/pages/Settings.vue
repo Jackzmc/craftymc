@@ -35,11 +35,11 @@
           </div>
           <hr>
           <h4 class="title is-4">Java Settings</h4>
-          <input id="javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="settings.minecraft.javaMemory" type="range" :data-tooltip="javaMemory">
+          <input id="javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="settings.minecraft.javaMemoryMb" type="range" :data-tooltip="javaMemory">
           <Field label="Java Version">
             <div class="select">
               <select v-model="settings.minecraft.javaPath">
-                <option :value="undefined">Automatic</option>
+                <option :value="null">Automatic</option>
               </select>
             </div>
           </Field>
@@ -63,32 +63,13 @@ import { Tabs, Tab } from 'vue3-tabs-component'
 import Field from '@/components/form/Field.vue'
 import HorizontalField from '@/components/form/HorizontalField.vue'
 import { ref, computed } from 'vue'
+import { AppSettings } from '../types/Settings';
 
-interface AppSettings {
-  general: GeneralSettings,
-  minecraft: MinecraftSettings
-}
+const props = defineProps<{
+  settings: AppSettings
+}>()
 
 // TODO: tauri invoke to get appmeta and settings
-//eslint-disable-next-line
-interface AppMeta {
-  maxMemory: number
-}
-
-// Needs to be flat to tie to rust struct
-interface GeneralSettings {
-
-}
-// Needs to be flat to tie to rust struct
-interface MinecraftSettings {
-  saveDirectory: string,
-  width: number,
-  height: number,
-  javaMemory: number,
-  javaPath: string,
-  javaArgs: string
-}
-
 
 const RELEASES = {
   stable: "Stable (Recommended)",
@@ -96,18 +77,9 @@ const RELEASES = {
   alpha: "Alpha"
 }
 
-const settings = ref<AppSettings>({
-  general: {
-
-  },
-  minecraft: {
-    javaMemory: 1000,
-    javaPath: undefined,
-    javaArgs: ""
-  }
-})
+let settings = ref<AppSettings>(props.settings)
 
 const javaMemory = computed(() => {
-  return `${settings.value.minecraft.javaMemory.toLocaleString()} MB`
+  return `${settings.value.minecraft.javaMemoryMb.toLocaleString()} MB`
 })
 </script>

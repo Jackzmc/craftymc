@@ -20,6 +20,7 @@
       <Field label="Minecraft Version">
         <div class="select">
           <select v-model="pack.settings.mcVersion">
+            <option :value="undefined" v-if="!pack.settings.mcVersion">Select a version</option>
             <option v-for="version in shownMcVersions" :key="version.version">
               {{version.version}}
             </option>
@@ -41,31 +42,32 @@
     <div class="column">
       <Field label="Modloader Version">
         <div class="select">
-          <select v-model="pack.settings.modloaderVersion">
+          <select disabled v-model="pack.settings.modloaderVersion">
             <option :value="undefined" v-if="!pack.settings.modloader">Select a modloader</option>
             <option v-for="version in modloaderVersions" :key="version">
               {{version}}
             </option>
           </select>
         </div>
+        <p class="help">Auto download support is not available.</p>
       </Field>
     </div>
   </div>
   <template v-slot:footer>
     <div class="buttons">
-      <div class="button is-success" @click="save">Create</div>
+      <div class="button is-success" :disabled="saveDisabled" @click="save">Create</div>
       <div class="button" @click="close">Cancel</div>
     </div>
   </template>
 </BaseModal>
 </template>
 <script setup lang="ts">
- /* eslint-disable */
 import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import DefaultPackImage from '@/assets/default_pack.png'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(['close'])
 let pack = ref<Partial<Modpack>>({
@@ -105,14 +107,22 @@ async function getMCVersions() {
 }
 
 async function getModloaderVersions() {
-  const response = await fetch("https://api.modrinth.com/v2/tag/game_version")
-  const json = await response.json()
-  if(response.ok) {
-    modloaderVersions.value = json as MCVersion[]
-  }
+
 }
 
-function save() {
+const saveDisabled = computed(() => {
+  if(pack.value.name !== undefined
+    && pack.value.settings.mcVersion !== undefined
+    && pack.value.settings.modloader !== undefined)
+  {
+    return undefined
+  }
+  return true // Why the fuck does vue3 mean :disabled="false" -> disabled
+    // TODO: In future, if/when modloaderVersion supported, check.
+})
+
+async function save() {
+  await invoke('create_modpack', pack.value)
   emit('save', pack.value)
   emit('close')
 }

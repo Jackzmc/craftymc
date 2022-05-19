@@ -7,6 +7,9 @@
 	"settings": {
 		"vetur.experimental.templateInterpolationService": true,
 		"vetur.validation.template": true,
-		"vetur.validation.templateProps": true
+		"vetur.validation.templateProps": true,
+		"rust-analyzer.procMacro.ignored": {
+			"tauri": ["generate_context"]
+		}
 	}
 }

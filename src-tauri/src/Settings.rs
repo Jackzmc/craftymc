@@ -1,11 +1,11 @@
 use std::path::Path;
 use sysinfo::SystemExt;
-use std::fs::File;
+use std::fs;
 
 #[allow(non_snake_case)]
 pub struct SettingsManager {
     pub Settings: Settings,
-    pub config_file: File
+    file_path: std::path::PathBuf
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -72,11 +72,25 @@ impl SettingsManager {
     pub fn new() -> SettingsManager {
         let save_dir = SettingsManager::get_save_folder();
         std::fs::create_dir_all(&save_dir).unwrap(); //TODO: Send telemetry when created
-        let file = File::create(Path::new(&save_dir).join("settings.json")).unwrap();
+
+        let config_file_path = Path::new(&save_dir).join("settings.json");
+        let settings: Settings = match fs::read_to_string(&config_file_path) {
+            Ok(str) => {
+                serde_json::from_str(&str).unwrap()
+            },
+            Err(_) => {
+                Settings::new(&save_dir)
+            }
+        };
         
         SettingsManager {
-            Settings: Settings::new(&save_dir),
-            config_file: file
+            Settings: settings,
+            file_path: config_file_path
         }
+    }
+
+    pub fn save(&mut self) -> Result<(), std::io::Error> {
+        let json_str = serde_json::to_string(&self.Settings).unwrap();
+        fs::write(&self.file_path, json_str)
     }
 }

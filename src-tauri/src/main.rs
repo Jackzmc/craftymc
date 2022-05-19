@@ -3,7 +3,6 @@
   windows_subsystem = "windows"
 )]
 use std::sync::{Arc, Mutex};
-use std::io::prelude::*;
 
 mod settings;
 
@@ -50,11 +49,8 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
 #[tauri::command]
 fn save_settings(state: tauri::State<'_, AppState>) {
   let config = &mut state.config.lock().unwrap();
-  let settings = &config.Settings;
-  let json_str = serde_json::to_string(&settings).unwrap();
-  match config.config_file.write_all(&json_str.as_bytes()) {
+  match config.save() {
     Ok(_) => {
-      config.config_file.flush().unwrap();
       println!("[debug] Saved settings to file.");
     },
     Err(err) => {

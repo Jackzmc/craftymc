@@ -1,10 +1,8 @@
 <template>
-<BaseModal active :title="props.pack.name" @close="close">
+<BaseModal active title="Edit modpack" @close="close" show-header>
   <div class="columns is-mobile is-centered is-vcentered">
     <div class="column is-3">
-      <figure class="image is-128x128 is-pulled-left">
-        <img :src="props.pack.imageUrl" />
-      </figure>
+      <img :src="props.pack.imageUrl || DefaultPackImage" />
     </div>
     <div class="column">
       <Field label="Name">
@@ -29,18 +27,15 @@
 import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
+import DefaultPackImage from '@/assets/default_pack.png'
+
 const emit = defineEmits(['close'])
 const props = defineProps<{
   pack: Modpack
 }>()
 
 let pack = ref(props.pack)
-watch(pack.value.settings.useCustomMemory, (value) => {
-  if(value && pack.value.settings.useCustomMemory) {
-    pack.value.settings.javaMemory = 1000 //TODO: Pull form main settings
-  }
-})
 
 const javaMemory = computed(() => {
   return `${pack.value.settings.javaMemory?.toLocaleString()} MB`

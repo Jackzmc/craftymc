@@ -1,4 +1,6 @@
 <template>
+<div>
+<CreatePackModal :active="showCreatePack" @close="showCreatePack = false" />
 <nav data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
@@ -19,7 +21,7 @@
             <Icon :icon="['fas', 'plus']" text="Import" />
           </a>
           <a class="button is-info">
-            <Icon :icon="['fas', 'plus']" text="New Modpack" />
+            <Icon :icon="['fas', 'plus']" text="New Modpack" @click="showCreatePack = true" />
           </a>
           <a class="button is-black">
             <Icon :icon="['fas', 'window-minimize']" @click="appWindow.minimize()" />
@@ -35,17 +37,20 @@
     </div>
   </div>
 </nav>
+</div>
 </template>
 
 <script setup lang="ts">
 import { appWindow } from '@tauri-apps/api/window'
-
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import CreatePackModal from '@/components/modals/CreatePackModal.vue'
 // eslint-disable-next-line
 const props = defineProps<{
   hasSidebar: boolean
 }>()
 const emit = defineEmits(["sidebar"])
+
+let showCreatePack = ref(false)
 
 const sidebarIcon = computed(() => {
   return [

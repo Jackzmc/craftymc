@@ -1,7 +1,7 @@
 <template>
 <div>
-  <PackSettingsModal v-if="activeSubview && activeSubview === Subview.SettingsModal"  :pack="pack" @close="activeSubview = undefined" />
-  <AddContent :pack="pack" v-if="activeSubview && activeSubview === Subview.AddContent" @close="activeSubview = undefined" />
+  <PackSettingsModal v-if="activeSubview && activeSubview === Subview.SettingsModal" :pack="pack" @close="activeSubview = undefined" />
+  <AddContent v-if="activeSubview && activeSubview === Subview.AddContent" :pack="pack" @close="activeSubview = undefined" />
   <template v-else> <!-- a little hacky -->
   <a class="button mb-2">
     <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
@@ -86,8 +86,8 @@ const props = defineProps<{
 
 
 const enum Subview {
-  SettingsDialog,
-  AddContent
+  SettingsModal = 1,
+  AddContent = 2
 }
 let activeSubview = ref<Subview>()
 </script>

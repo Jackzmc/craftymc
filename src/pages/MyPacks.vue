@@ -23,7 +23,8 @@ const packs: Modpack[] = [
       pack: "1.0.0"
     },
     settings: {
-      javaMemory: 5000
+      javaMemory: 5000,
+      useCustomMemory: false
     }
   },
   {
@@ -34,7 +35,8 @@ const packs: Modpack[] = [
       forge: "1.16.5"
     },
     settings: {
-
+      javaMemory: 1570,
+      useCustomMemory: true
     }
   },
   {
@@ -45,7 +47,8 @@ const packs: Modpack[] = [
       forge: "1.16.5"
     },
     settings: {
-
+      javaMemory: 5000,
+      useCustomMemory: false
     }
   },
   {
@@ -58,7 +61,8 @@ const packs: Modpack[] = [
       pack: "1.0.0"
     },
     settings: {
-
+      javaMemory: 9000,
+      useCustomMemory: false
     }
   }
 ]

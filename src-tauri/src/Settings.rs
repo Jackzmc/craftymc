@@ -71,7 +71,7 @@ impl SettingsManager {
 
     pub fn new() -> SettingsManager {
         let save_dir = SettingsManager::get_save_folder();
-        std::fs::create_dir_all(&save_dir).unwrap();
+        std::fs::create_dir_all(&save_dir).unwrap(); //TODO: Send telemetry when created
         let file = File::create(Path::new(&save_dir).join("settings.json")).unwrap();
         
         SettingsManager {

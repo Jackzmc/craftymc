@@ -7,7 +7,7 @@
       <SideBar />
     </div>
     <div class="column mr-1 ml-1">
-      <router-view :settings="settings" />
+      <router-view :settings="settings" @update-settings="updateSettings"/>
     </div>
   </div>
 </div>
@@ -24,9 +24,14 @@ const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
 
 onBeforeMount(async() => {
-  settings.value = await invoke('get_settings')
+  updateSettings()
   console.log('app settings', settings.value)
 })
+
+async function updateSettings(newSettings?: AppSettings) {
+  if(!newSettings) settings.value = await invoke('get_settings')
+  else settings.value = newSettings
+}
 
 </script>
 

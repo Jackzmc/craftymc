@@ -35,7 +35,7 @@
           </div>
           <hr>
           <h4 class="title is-4">Java Settings</h4>
-          <input id="javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="settings.minecraft.javaMemoryMb" type="range" :data-tooltip="javaMemory">
+          <input id="javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" :max="settings.meta.maxMemoryMb" v-model.number="settings.minecraft.javaMemoryMb" type="range" :data-tooltip="javaMemory">
           <Field label="Java Version">
             <div class="select">
               <select v-model="settings.minecraft.javaPath">
@@ -67,6 +67,7 @@ import { AppSettings } from '../types/Settings';
 import { invoke } from '@tauri-apps/api/tauri'
 import { onBeforeRouteLeave } from 'vue-router'
 
+const emit = defineEmits(["update-settings"])
 const props = defineProps<{
   settings: AppSettings
 }>()
@@ -101,5 +102,6 @@ const javaMemory = computed(() => {
 
 onBeforeRouteLeave(async() => {
   await invoke('save_settings')
+  emit('update-settings', settings.value)
 })
 </script>

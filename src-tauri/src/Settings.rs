@@ -1,32 +1,33 @@
 use std::path::Path;
 use sysinfo::SystemExt;
 
-#[derive(serde::Serialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct Settings {
-    general: GeneralSettings,
-    minecraft: MinecraftSettings,
+    pub general: GeneralSettings,
+    pub minecraft: MinecraftSettings,
     meta: MetaInfo
 }
 
-#[derive(serde::Serialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct GeneralSettings {
+
 }
 
-#[derive(serde::Serialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct MinecraftSettings {
-    saveDirectory: String,
-    preferredRelease: String,
-    width: u32,
-    height: u32,
-    javaMemoryMb: u32,
-    javaPath: Option<String>,
-    javaArgs: Option<String>
+    pub saveDirectory: String,
+    pub preferredRelease: String,
+    pub width: u32,
+    pub height: u32,
+    pub javaMemoryMb: u32,
+    pub javaPath: Option<String>,
+    pub javaArgs: Option<String>
 }
 
-#[derive(serde::Serialize, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct MetaInfo {
     maxMemoryMb: u64

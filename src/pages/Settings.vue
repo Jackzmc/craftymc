@@ -62,7 +62,7 @@
 import { Tabs, Tab } from 'vue3-tabs-component'
 import Field from '@/components/form/Field.vue'
 import HorizontalField from '@/components/form/HorizontalField.vue'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { AppSettings } from '../types/Settings';
 
 const props = defineProps<{
@@ -77,7 +77,21 @@ const RELEASES = {
   alpha: "Alpha"
 }
 
-let settings = ref<AppSettings>(props.settings)
+let settings = ref<AppSettings>(JSON.parse(JSON.stringify(props.settings)))
+
+watch(settings, () => {
+  for(const category in settings.value) {
+    for(const setting in settings.value[category]) {
+      if(props.settings[category][setting] !== settings.value[category][setting]) {
+        invoke('update_setting', {
+          category,
+          setting,
+          value: settings.value[category][setting].toString()
+        })
+      }
+    }
+  }
+}, { deep: true })
 
 const javaMemory = computed(() => {
   return `${settings.value.minecraft.javaMemoryMb.toLocaleString()} MB`

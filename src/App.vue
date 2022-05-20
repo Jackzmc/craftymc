@@ -6,7 +6,7 @@
     <div class="column is-2 ml-1" v-show="hasSidebar">
       <SideBar />
     </div>
-    <div class="column mr-1 ml-1">
+    <div :class="mainViewClass">
       <router-view :settings="settings" :modpacks="modpacks" @update-settings="updateSettings"  />
     </div>
   </div>
@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
 import { invoke} from '@tauri-apps/api/tauri'
@@ -35,7 +35,12 @@ async function updateModpacks(newModpack?: Modpack) {
   else modpacks.value.push(newModpack)
 }
 
-
+const mainViewClass = computed(() => {
+  const arr = ['column', 'mr-1 ml-1']
+  if(hasSidebar.value) arr.push("is-10")
+  else arr.push("mx-5")
+  return arr
+})
 
 onBeforeMount(async() => {
   await listen('update-modpack', (event) => {

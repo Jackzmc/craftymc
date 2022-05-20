@@ -16,6 +16,7 @@ pub struct ModpackManager {
 pub struct Modpack {
     pub id: Option<String>,
     pub name: String,
+    pub author: Option<String>,
     pub versions: ModpackVersionInfo,
     pub settings: PackSettings,
     pub lastPlayed: Option<u32>,
@@ -101,6 +102,10 @@ impl ModpackManager {
         self.packs.get(id)
     }
 
+    pub fn get_modpack_mut(&mut self, id: &str) -> Option<&mut Modpack> {
+        self.packs.get_mut(id)
+    }
+
     pub fn get_modpacks(&self) -> Vec<Modpack> {
         self.packs.values()
             .map(|pack| pack.clone())
@@ -145,29 +150,15 @@ impl ModpackManager {
         self.settings = settings;
     }
 
-    pub fn launch_modpack(&self, id: &str) -> Result<std::process::Child, String> {
+    pub fn launch_modpack(&mut self, id: &str) -> Result<std::process::Child, String> {
         println!("[debug] attempting to launch {}", id);
-        match self.get_modpack(id) {
+        match self.get_modpack_mut(id) {
             Some(modpack) => {
                 /*
                 1. Install launcher to $saveDir/Launcher/
-                2. Somehow:
-                    a) install 'versions'
-                    b) create a profile
-                        "Ethos Custom Modded (1.16)": {
-                            "created": "2022-05-17T23:37:49.271Z",
-                            "gameDir": "D:\\Jackz\\Documents\\Curse\\Minecraft\\Instances\\Ethos Modded (1.16)\\",
-                            "javaArgs": "-Xmx5984m -Xms256m -Dminecraft.applet.TargetDirectory=\"D:\\Jackz\\Documents\\Curse\\Minecraft\\Instances\\Ethos Modded (1.16)\" -Dfml.ignorePatchDiscrepancies=true -Dfml.ignoreInvalidMinecraftCertificates=true -Duser.language=en -Duser.country=US -XX:UseSSE=3 -XX:+UseG1GC",
-                            "lastUsed": "2022-05-17T23:38:46.707Z",
-                            "lastVersionId": "forge-36.2.34",
-                            "name": "Ethos Custom Modded (1.16)",
-                            "resolution": {
-                                "height": 768,
-                                "width": 1024
-                            },
-                            "type": "custom"
-                        },
                 */
+                modpack.lastPlayed = Some(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as u32);
+                let modpack = self.get_modpack(id).unwrap();
                 self.set_launcher_config(&modpack);
                 let work_dir = self.get_install_folder();
                 println!("[debug] launching modpack \"{}\" with args: \"-w {}\"", &modpack.name, &work_dir.to_string_lossy());

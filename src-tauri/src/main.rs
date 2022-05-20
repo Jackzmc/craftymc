@@ -78,10 +78,17 @@ fn get_modpacks(state: tauri::State<'_, AppState>) -> Vec<pack::Modpack> {
   state.modpacks.lock().unwrap().get_modpacks()
 }
 
+#[derive(Clone, serde::Serialize)]
+struct UpdateModpackPayload {
+  modpack: pack::Modpack
+}
+
 #[tauri::command]
-async fn launch_modpack(state: tauri::State<'_, AppState>, id: &str) -> Result<i32, String> {
-  match state.modpacks.lock().unwrap().launch_modpack(id) {
+async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, id: &str) -> Result<i32, String> {
+  let mut packs = state.modpacks.lock().unwrap();
+  match packs.launch_modpack(id) {
     Ok(mut child) => {
+      window.emit("update-modpack", UpdateModpackPayload { modpack: packs.get_modpack(id).unwrap().clone() }).unwrap();
       child.wait().expect("wait for child failed").code().ok_or("killed by signal".to_string())
     },
     Err(err) => Err(err)

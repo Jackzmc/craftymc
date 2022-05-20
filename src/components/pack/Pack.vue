@@ -23,7 +23,7 @@
       </div>
       <div class="media-content" v-else>
         <p><b>{{props.pack.name}}</b></p>
-        <p>by {{props.pack.author}}</p>
+        <p v-if="props.pack.author">by {{props.pack.author}}</p>
       </div>
     </div>
   </div>

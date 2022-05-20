@@ -14,14 +14,14 @@
         </figure>
       </div>
       <div class="column">
-        <h4 class="title is-4 has-text-white">{{props.pack.name}} |
-          <em class="subtitle has-text-light is-6" v-if="props.pack.author">by {{props.pack.author}}</em>
+        <h4 class="title is-4 has-text-white">{{props.pack.name}}
+          <em class="subtitle has-text-light is-6" v-if="props.pack.author">| by {{props.pack.author}}</em>
         </h4>
         <br>
         <div class="level">
           <div class="level-left">
             <div class="level-item" data-tooltip="Last played">
-              <Icon :icon="['fas', 'play']" icon-class="has-text-white" text="Yesterday" />
+              <Icon :icon="['fas', 'play']" icon-class="has-text-white" :text="formatRelative(props.pack.lastPlayed)" />
             </div>
             <div class="level-item" data-tooltip="Game version">
               <Icon :icon="['fas', 'cube']" icon-class="has-text-white" :text="props.pack.versions.minecraft" />
@@ -49,6 +49,7 @@
       </div>
     </div>
   </div>
+  <pre>{{ JSON.stringify(props.pack, null, 2) }}</pre>
   <div class="level">
     <div class="level-left">
       <div class="level-item">
@@ -88,6 +89,16 @@ const props = defineProps<{
 const enum Subview {
   SettingsModal = 1,
   AddContent = 2
+}
+
+function formatRelative(value: number, locale?: string) {
+  if(!value) return "Never"
+  const date = new Date(value*1000);
+  const deltaDays = (date.getTime() - Date.now()) / (1000 * 3600 * 24);
+  if(deltaDays <= 0) return "Today"
+  else if(deltaADays <= 1) return "Yesterday"
+  const formatter = new Intl.RelativeTimeFormat(locale);
+  return formatter.format(Math.round(deltaDays), 'days');
 }
 let activeSubview = ref<Subview>()
 </script>

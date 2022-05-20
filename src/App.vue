@@ -17,7 +17,8 @@
 import { ref, onBeforeMount } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke} from '@tauri-apps/api/tauri'
+import { listen } from '@tauri-apps/api/event'
 import { AppSettings } from './types/Settings';
 
 const hasSidebar = ref(true)
@@ -34,7 +35,21 @@ async function updateModpacks(newModpack?: Modpack) {
   else modpacks.value.push(newModpack)
 }
 
+
+
 onBeforeMount(async() => {
+  await listen('update-modpack', (event) => {
+    const newModpack = event.payload.modpack
+    for(let i = 0; i < modpacks.value.length; i++) {
+      let modpack = modpacks.value[i]
+      if(modpack.id === newModpack.id) {
+        modpacks.value[i] = newModpack
+        return
+      }
+    }
+    // Modpack to update not found, insert
+    modpacks.value.push(newModpack)
+  })
   await updateSettings()
   console.debug('app settings', settings.value)
   await updateModpacks()

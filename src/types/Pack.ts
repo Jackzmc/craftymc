@@ -1,6 +1,7 @@
 export interface Modpack {
   id: string,
   name: string,
+  author?: string,
   versions: {
     minecraft: string,
     modloader: string,

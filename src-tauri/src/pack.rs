@@ -2,6 +2,7 @@ use crate::settings;
 use std::fs;
 use std::collections::HashMap;
 use uuid::Uuid;
+use std::path::{Path,PathBuf};
 
 
 pub struct ModpackManager {
@@ -36,6 +37,10 @@ pub struct PackSettings {
 }
 
 impl ModpackManager {
+    fn get_instances_folder(&self) -> PathBuf {
+        Path::new(&self.settings.minecraft.saveDirectory).join("Instances")
+    }
+
     pub fn new(settings: settings::Settings) -> ModpackManager {
         let mut manager = ModpackManager {
             packs: HashMap::new(),
@@ -46,7 +51,7 @@ impl ModpackManager {
     }
 
     pub fn load(&mut self) {
-        let paths = fs::read_dir(&self.settings.minecraft.saveDirectory).unwrap();
+        let paths = fs::read_dir(self.get_instances_folder()).unwrap();
         for path in paths {
             let entry = path.unwrap();
             if entry.file_type().unwrap().is_dir() {
@@ -103,7 +108,7 @@ impl ModpackManager {
             }
         }
 
-        let save_dir = settings::SettingsManager::get_save_folder().join(&pack.name);
+        let save_dir = self.get_instances_folder().join(&pack.name);
         std::fs::create_dir_all(&save_dir).unwrap();
         fs::write(save_dir.join(".mcmm"), pack.id.as_ref().unwrap()).unwrap();
         fs::write(save_dir.join("manifest.json"), serde_json::to_string_pretty(&pack).unwrap()).unwrap();

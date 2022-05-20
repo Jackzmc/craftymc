@@ -19,7 +19,7 @@
   <div class="card-content">
     <div class="media">
       <div class="media-content" v-if="active">
-        <p class="button is-info is-pulled-right is-fullwidth">Play</p>
+        <p class="button is-info is-pulled-right is-fullwidth" @click="launch">Play</p>
       </div>
       <div class="media-content" v-else>
         <p><b>{{props.pack.name}}</b></p>
@@ -34,6 +34,7 @@
 import { ref } from 'vue'
 import { Modpack } from '@/types/Pack'
 import DefaultPackImage from '@/assets/default_pack.png'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(["select"])
 const props = defineProps<{
@@ -44,5 +45,9 @@ const active = ref()
 
 function setActive(state: boolean) {
   active.value = state
+}
+
+function launch() {
+  invoke('launch_modpack', { id: props.pack.id })
 }
 </script>

@@ -30,7 +30,6 @@ async function updateSettings(newSettings?: AppSettings) {
 }
 
 async function updateModpacks(newModpack?: Modpack) {
-  console.log('updating modpacks. pushing: ', newModpack !== undefined)
   if(!newModpack) modpacks.value = await invoke('get_modpacks')
   else modpacks.value.push(newModpack)
 }

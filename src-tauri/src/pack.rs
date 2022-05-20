@@ -91,6 +91,10 @@ impl ModpackManager {
             .collect::<Vec<Modpack>>()
     }
 
+    pub fn delete_modpack(&mut self, id: &str) -> Option<Modpack> {
+        self.packs.remove(id)
+    }
+
     pub fn create_modpack(&mut self, mut pack: Modpack) -> Result<Modpack, String> {
         pack.id = Some(Uuid::new_v4().to_string());
         if self.get_modpack_by_name(pack.name.as_ref()).is_some() {
@@ -118,7 +122,70 @@ impl ModpackManager {
         self.packs.insert(id, pack);
         Ok(clone)
     }
+
+    // Updates the internal settings
     pub fn set_settings(&mut self, settings: settings::Settings) {
         self.settings = settings;
     }
+
+    pub fn launch_modpack(&self, id: &str) -> Result<(), String> {
+        println!("[debug] attempting to launch {}", id);
+        match self.get_modpack(id) {
+            Some(modpack) => {
+                /*
+                1. Install launcher to $saveDir/Launcher/
+                2. Somehow :
+                    a) install 'versions'
+                    b) create a profile
+                        "Ethos Custom Modded (1.16)" : {
+                            "created" : "2022-05-17T23:37:49.271Z",
+                            "gameDir" : "D:\\Jackz\\Documents\\Curse\\Minecraft\\Instances\\Ethos Modded (1.16)\\",
+                            "javaArgs" : "-Xmx5984m -Xms256m -Dminecraft.applet.TargetDirectory=\"D:\\Jackz\\Documents\\Curse\\Minecraft\\Instances\\Ethos Modded (1.16)\" -Dfml.ignorePatchDiscrepancies=true -Dfml.ignoreInvalidMinecraftCertificates=true -Duser.language=en -Duser.country=US -XX:UseSSE=3 -XX:+UseG1GC",
+                            "lastUsed" : "2022-05-17T23:38:46.707Z",
+                            "lastVersionId" : "forge-36.2.34",
+                            "name" : "Ethos Custom Modded (1.16)",
+                            "resolution" : {
+                                "height" : 768,
+                                "width" : 1024
+                            },
+                            "type" : "custom"
+                        },
+                */
+                let work_dir = self.get_instances_folder().join(&modpack.name).as_os_str().to_owned();
+                println!("[debug] launching \"{}\" with args: \"-w {}\"", &modpack.name, &work_dir.to_string_lossy());
+                let result = std::process::Command::new("D:\\Jackz\\Documents\\MCModDownloader\\Launcher\\MinecraftLauncher.exe")
+                    .arg("-l")
+                    .arg(work_dir)
+                    .output()
+                    .expect("failed to execute process");
+                println!("prgm exit code {}.\nstdout: {}\nstderr: {}",
+                    result.status,
+                    String::from_utf8(result.stdout).unwrap(),
+                    String::from_utf8(result.stderr).unwrap(),
+                );
+                Ok(())
+            },
+            None => Err("No modpack found with id".to_string())
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+struct LauncherProfile {
+    created: String,
+    gameDir: String,
+    javaArgs: String,
+    lastUsed: String,
+    lastVersionId: String,
+    name: String,
+    resolution: ProfileResolution,
+    #[serde(rename = "type")]
+    type_: String
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+struct ProfileResolution {
+    height: u32,
+    width: u32
 }

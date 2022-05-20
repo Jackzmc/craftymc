@@ -78,10 +78,20 @@ fn get_modpacks(state: tauri::State<'_, AppState>) -> Vec<pack::Modpack> {
   state.modpacks.lock().unwrap().get_modpacks()
 }
 
+#[tauri::command]
+fn launch_modpack(state: tauri::State<'_, AppState>, id: &str) -> Result<(), String> {
+  state.modpacks.lock().unwrap().launch_modpack(id)
+}
+
+#[tauri::command]
+fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::Modpack> {
+  state.modpacks.lock().unwrap().delete_modpack(id)
+}
+
 /* TODO: methods:
   save_modpack(name)
-  get_modpack(name)
-  get_modpacks()
+  [x] get_modpack(name)
+  [x] get_modpacks()
   set_modpack_setting(category, key, value)
   possibly: reload_modpacks
 */
@@ -95,7 +105,7 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks
+      create_modpack, get_modpack, get_modpacks, launch_modpack, delete_modpack
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

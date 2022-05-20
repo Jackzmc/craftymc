@@ -40,7 +40,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
         "javaMemoryMb" => settings.minecraft.javaMemoryMb = value.parse::<u32>().unwrap(),
         "javaPath" => settings.minecraft.javaPath = Some(value),
         "javaArgs" => settings.minecraft.javaArgs = Some(value),
-        _ => return Some("Invalid key".to_string())
+        _ => return Some("Invalid, unknown, or unsupported key. Report this to a developer.".to_string())
       };
     }
     _ => return Some("Invalid category".to_string())
@@ -79,8 +79,13 @@ fn get_modpacks(state: tauri::State<'_, AppState>) -> Vec<pack::Modpack> {
 }
 
 #[tauri::command]
-fn launch_modpack(state: tauri::State<'_, AppState>, id: &str) -> Result<(), String> {
-  state.modpacks.lock().unwrap().launch_modpack(id)
+async fn launch_modpack(state: tauri::State<'_, AppState>, id: &str) -> Result<i32, String> {
+  match state.modpacks.lock().unwrap().launch_modpack(id) {
+    Ok(mut child) => {
+      child.wait().expect("wait for child failed").code().ok_or("killed by signal".to_string())
+    },
+    Err(err) => Err(err)
+  }
 }
 
 #[tauri::command]

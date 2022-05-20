@@ -16,61 +16,6 @@ const props = defineProps<{
   modpacks: Modpack[]
 }>()
 
-/*const packs: Modpack[] = [
-  {
-    name: "Direwolf20",
-    imageUrl: "https://cdn-raw.modrinth.com//data/KmiWHzQ4/62f2e3a020f761f275f0a7f3ebca3327576edb4c.png",
-    author: "Etho",
-    versions: {
-      minecraft: "1.16.5",
-      forge: "1.16.5",
-      pack: "1.0.0"
-    },
-    settings: {
-      javaMemory: 5000,
-      useCustomMemory: false
-    }
-  },
-  {
-    name: "Hi Ezra",
-    author: "Oppenheimer",
-    versions: {
-      minecraft: "1.16.5",
-      forge: "1.16.5"
-    },
-    settings: {
-      javaMemory: 1570,
-      useCustomMemory: true
-    }
-  },
-  {
-    name: "Direwolf20",
-    author: "FTB",
-    versions: {
-      minecraft: "1.16.5",
-      forge: "1.16.5"
-    },
-    settings: {
-      javaMemory: 5000,
-      useCustomMemory: false
-    }
-  },
-  {
-    name: "Direwolf20",
-    imageUrl: "https://cdn-raw.modrinth.com//data/KmiWHzQ4/62f2e3a020f761f275f0a7f3ebca3327576edb4c.png",
-    author: "Etho",
-    versions: {
-      minecraft: "1.16.5",
-      forge: "1.16.5",
-      pack: "1.0.0"
-    },
-    settings: {
-      javaMemory: 9000,
-      useCustomMemory: false
-    }
-  }
-]*/
-
 let selectedPack = ref<Modpack>()
 
 </script>

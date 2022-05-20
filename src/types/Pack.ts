@@ -6,13 +6,15 @@ export interface Modpack {
     modloader: string,
     pack?: string
   },
-  settings: PackSettings
+  settings: PackSettings,
+  created: number,
+  lastPlayed?: number
 }
 
 export interface PackSettings {
   modloaderType: string,
   javaMemory?: number,
-  useCustomMemory: boolean
+  useCustomMemory: boolean,
 }
 
 export const enum View {

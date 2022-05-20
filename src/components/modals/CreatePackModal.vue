@@ -83,7 +83,9 @@ let pack = ref<Partial<Modpack>>({
     minecraft: undefined,
     modloader: "manual",
     pack: undefined
-  }
+  },
+  lastPlayed: undefined,
+  created: undefined
 })
 
 const javaMemory = computed(() => {
@@ -132,7 +134,7 @@ async function save() {
   saving.value = true
   if(!saveDisabled) return alert("Cannot save: Please fill in all fields.")
   try {
-    const savedPack = await invoke('create_modpack', { modpack: pack.value })
+    const savedPack = await invoke('create_modpack', { modpack: pack.value as Modpack })
     emit('save', savedPack)
     saving.value = false
     emit('close')

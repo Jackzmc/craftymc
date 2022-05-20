@@ -21,6 +21,7 @@ tauri = { version = "1.0.0-rc.9", features = ["api-all"] }
 dirs-next = "*"
 sysinfo = "*"
 uuid = "1.0.0"
+chrono = "*"
 
 [features]
 # by default Tauri runs in production mode

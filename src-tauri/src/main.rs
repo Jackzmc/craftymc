@@ -6,6 +6,8 @@ use std::sync::{Arc, Mutex};
 
 mod settings;
 mod pack;
+mod util;
+mod mods;
 
 struct AppState {
   config: Mutex<settings::SettingsManager>,

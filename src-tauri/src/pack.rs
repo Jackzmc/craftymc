@@ -3,8 +3,7 @@ use std::fs;
 use std::collections::HashMap;
 use uuid::Uuid;
 use std::path::{Path,PathBuf};
-use chrono::{DateTime, Utc};
-
+use crate::util;
 
 pub struct ModpackManager {
     pub packs: HashMap<String, Modpack>, //id is folder name
@@ -19,8 +18,8 @@ pub struct Modpack {
     pub author: Option<String>,
     pub versions: ModpackVersionInfo,
     pub settings: PackSettings,
-    pub lastPlayed: Option<u32>,
-    pub created: u32
+    pub lastPlayed: String,
+    pub created: String
     // pub mods: Vec<Mod>
 }
 
@@ -118,7 +117,7 @@ impl ModpackManager {
 
     pub fn create_modpack(&mut self, mut pack: Modpack) -> Result<Modpack, String> {
         pack.id = Some(Uuid::new_v4().to_string());
-        pack.created = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as u32;
+        pack.created = util::get_iso8601(None);
         if self.get_modpack_by_name(pack.name.as_ref()).is_some() {
             let mut found_suitable = false;
             for n in 1..50 {
@@ -157,7 +156,7 @@ impl ModpackManager {
                 /*
                 1. Install launcher to $saveDir/Launcher/
                 */
-                modpack.lastPlayed = Some(std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as u32);
+                modpack.lastPlayed = util::get_iso8601(None);
                 let modpack = self.get_modpack(id).unwrap();
                 self.set_launcher_config(&modpack);
                 let work_dir = self.get_install_folder();
@@ -178,22 +177,15 @@ impl ModpackManager {
     #[allow(non_snake_case)]
     fn get_launcher_profile(&self, modpack: &Modpack) -> LauncherProfile {
         let game_dir = self.get_instances_folder().join(&modpack.name).to_str().unwrap().to_owned();
-        let lastUsed = match modpack.lastPlayed {
-            Some(time) => DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(time as i64, 0), Utc).to_rfc3339(),
-            None => {
-               let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
-               DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(now, 0), Utc).to_rfc3339()
-            }
-        };
         let java_args = modpack.settings.javaArgs.as_ref()
             .or(self.settings.minecraft.javaArgs.as_ref())
             .or(Some(&"".to_string()))
             .cloned();
         LauncherProfile {
-            created: DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(modpack.created as i64, 0), Utc).to_rfc3339(),
+            created: modpack.created.clone(),
             gameDir: Some(game_dir),
             javaArgs: java_args,
-            lastUsed,
+            lastUsed: util::get_iso8601(None),
             lastVersionId: "1.16.5".to_string(), //TODO: Use correct jar
             name: modpack.name.clone(),
             resolution: Some(ProfileResolution {

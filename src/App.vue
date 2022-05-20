@@ -1,13 +1,13 @@
 <template>
 <div>
-  <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" />
+  <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" @update-modpacks="updateModpacks" />
   <br>
   <div class="columns mt-6" v-if="settings">
     <div class="column is-2 ml-1" v-show="hasSidebar">
       <SideBar />
     </div>
     <div class="column mr-1 ml-1">
-      <router-view :settings="settings" @update-settings="updateSettings"/>
+      <router-view :settings="settings" :modpacks="modpacks" @update-settings="updateSettings"  />
     </div>
   </div>
 </div>
@@ -22,16 +22,25 @@ import { AppSettings } from './types/Settings';
 
 const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
-
-onBeforeMount(async() => {
-  updateSettings()
-  console.log('app settings', settings.value)
-})
+let modpacks = ref<Modpack[]>([])
 
 async function updateSettings(newSettings?: AppSettings) {
   if(!newSettings) settings.value = await invoke('get_settings')
   else settings.value = newSettings
 }
+
+async function updateModpacks(newModpack?: Modpack) {
+  console.log('updating modpacks. pushing: ', newModpack !== undefined)
+  if(!newModpack) modpacks.value = await invoke('get_modpacks')
+  else modpacks.value.push(newModpack)
+}
+
+onBeforeMount(async() => {
+  await updateSettings()
+  console.debug('app settings', settings.value)
+  await updateModpacks()
+  console.debug(modpacks.value.length, 'modpacks loaded')
+})
 
 </script>
 

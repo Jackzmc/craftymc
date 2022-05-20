@@ -3,13 +3,14 @@ export interface Modpack {
   name: string,
   versions: {
     minecraft: string,
-    forge: string,
-    pack: string
+    modloader: string,
+    pack?: string
   },
   settings: PackSettings
 }
 
 export interface PackSettings {
+  modloaderType: string,
   javaMemory?: number,
   useCustomMemory: boolean
 }

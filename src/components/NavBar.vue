@@ -1,6 +1,6 @@
 <template>
 <div>
-<CreatePackModal :active="showCreatePack" @close="showCreatePack = false" />
+<CreatePackModal v-if="showCreatePack" active @close="showCreatePack = false" @save="pack => emit('update-modpacks', pack)" />
 <nav data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
@@ -48,7 +48,7 @@ import CreatePackModal from '@/components/modals/CreatePackModal.vue'
 const props = defineProps<{
   hasSidebar: boolean
 }>()
-const emit = defineEmits(["sidebar"])
+const emit = defineEmits(["sidebar", "update-modpacks"])
 
 let showCreatePack = ref(false)
 

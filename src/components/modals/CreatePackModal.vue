@@ -19,8 +19,8 @@
     <div class="column">
       <Field label="Minecraft Version">
         <div class="select">
-          <select v-model="pack.settings.mcVersion">
-            <option :value="undefined" v-if="!pack.settings.mcVersion">Select a version</option>
+          <select v-model="pack.versions.minecraft">
+            <option :value="undefined" v-if="!pack.versions.minecraft">Select a version</option>
             <option v-for="version in shownMcVersions" :key="version.version">
               {{version.version}}
             </option>
@@ -31,8 +31,8 @@
     <div class="column">
       <Field label="Modloader">
         <div class="select">
-          <select v-model="pack.settings.modloader" @input="getModloaderVersions">
-            <option :value="undefined" v-if="!pack.settings.modloader">Select a modloader</option>
+          <select v-model="pack.settings.modloaderType" @input="getModloaderVersions">
+            <option :value="undefined" v-if="!pack.settings.modloaderType">Select a modloader</option>
             <option value="forge">Forge</option>
             <option value="forge">Fabric</option>
           </select>
@@ -42,8 +42,9 @@
     <div class="column">
       <Field label="Modloader Version">
         <div class="select">
-          <select disabled v-model="pack.settings.modloaderVersion">
-            <option :value="undefined" v-if="!pack.settings.modloader">Select a modloader</option>
+          <select disabled v-model="pack.versions.modloader">
+            <option :value="undefined" v-if="!pack.versions.modloader">Select a modloader</option>
+            <option value="manual">Manually Provided</option>
             <option v-for="version in modloaderVersions" :key="version">
               {{version}}
             </option>
@@ -55,8 +56,8 @@
   </div>
   <template v-slot:footer>
     <div class="buttons">
-      <div class="button is-success" :disabled="saveDisabled" @click="save">Create</div>
-      <div class="button" @click="close">Cancel</div>
+      <div :class="['button','is-success',{'is-loading': saving}]" :disabled="saveDisabled" @click="save">Create</div>
+      <div class="button" :disabled="saving" @click="close">Cancel</div>
     </div>
   </template>
 </BaseModal>
@@ -69,14 +70,19 @@ import { ref, computed, onMounted } from 'vue'
 import DefaultPackImage from '@/assets/default_pack.png'
 import { invoke } from '@tauri-apps/api/tauri'
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'save'])
 let pack = ref<Partial<Modpack>>({
+  name: undefined,
   settings: {
     useCustomMemory: false,
     javaMemory: 1000,
     mcVersion: undefined,
-    modloader: undefined,
-    modloaderVersion: undefined,
+    modloaderType: undefined,
+  },
+  versions: {
+    minecraft: undefined,
+    modloader: "manual",
+    pack: undefined
   }
 })
 
@@ -93,6 +99,7 @@ interface MCVersion {
 
 let mcVersions = ref<MCVersion[]>([])
 let modloaderVersions = ref<any[]>([])
+let saving = ref(false)
 
 const shownMcVersions = computed(() => {
   return mcVersions.value.filter(version => version.version_type === "release")
@@ -111,9 +118,9 @@ async function getModloaderVersions() {
 }
 
 const saveDisabled = computed(() => {
-  if(pack.value.name !== undefined
-    && pack.value.settings.mcVersion !== undefined
-    && pack.value.settings.modloader !== undefined)
+  if(!saving.value && pack.value.name !== undefined
+    && pack.value.versions.minecraft !== undefined
+    && pack.value.settings.modloaderType !== undefined)
   {
     return undefined
   }
@@ -122,9 +129,17 @@ const saveDisabled = computed(() => {
 })
 
 async function save() {
-  await invoke('create_modpack', pack.value)
-  emit('save', pack.value)
-  emit('close')
+  saving.value = true
+  if(!saveDisabled) return alert("Cannot save: Please fill in all fields.")
+  try {
+    const savedPack = await invoke('create_modpack', { modpack: pack.value })
+    emit('save', savedPack)
+    saving.value = false
+    emit('close')
+  } catch(err) {
+    console.error('Error creating modpack:', err)
+    alert("An error occurred while attempting to save: " + err)
+  }
 }
 
 function close() {

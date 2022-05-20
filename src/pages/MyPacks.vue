@@ -2,7 +2,7 @@
 <div>
   <h4 class="title is-4" v-if="!selectedPack">Installed Modpacks</h4>
   <PackDetails v-if="selectedPack" :pack="selectedPack" @goback="selectedPack = undefined" />
-  <PackList v-else :packs="packs" @select="(pack) => selectedPack = pack" />
+  <PackList v-else :packs="props.modpacks" @select="(pack) => selectedPack = pack" />
 </div>
 </template>
 
@@ -12,7 +12,11 @@ import { Modpack } from '@/types/Pack'
 import PackList from '@/components/pack/PackList'
 import PackDetails from '@/pages/PackDetails'
 
-const packs: Modpack[] = [
+const props = defineProps<{
+  modpacks: Modpack[]
+}>()
+
+/*const packs: Modpack[] = [
   {
     name: "Direwolf20",
     imageUrl: "https://cdn-raw.modrinth.com//data/KmiWHzQ4/62f2e3a020f761f275f0a7f3ebca3327576edb4c.png",
@@ -65,7 +69,7 @@ const packs: Modpack[] = [
       useCustomMemory: false
     }
   }
-]
+]*/
 
 let selectedPack = ref<Modpack>()
 

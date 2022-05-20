@@ -41,7 +41,7 @@ pub struct MetaInfo {
 }
 
 impl Settings {
-    pub fn new(save_dir: &std::path::PathBuf) -> Settings {
+    pub fn get_default(save_dir: &std::path::PathBuf) -> Settings {
         let mut system = sysinfo::System::new();
         system.refresh_all();
         Settings {
@@ -74,14 +74,7 @@ impl SettingsManager {
         std::fs::create_dir_all(&save_dir).unwrap(); //TODO: Send telemetry when created
 
         let config_file_path = Path::new(&save_dir).join("settings.json");
-        let settings: Settings = match fs::read_to_string(&config_file_path) {
-            Ok(str) => {
-                serde_json::from_str(&str).unwrap()
-            },
-            Err(_) => {
-                Settings::new(&save_dir)
-            }
-        };
+        let settings = SettingsManager::load(&save_dir);
         
         SettingsManager {
             Settings: settings,
@@ -89,8 +82,20 @@ impl SettingsManager {
         }
     }
 
+    pub fn load(save_dir: &std::path::PathBuf) -> Settings {
+        let config_file_path = Path::new(save_dir).join("settings.json");
+        match fs::read_to_string(&config_file_path) {
+            Ok(str) => {
+                serde_json::from_str(&str).unwrap()
+            },
+            Err(_) => {
+                Settings::get_default(save_dir)
+            }
+        }
+    }
+
     pub fn save(&mut self) -> Result<(), std::io::Error> {
-        let json_str = serde_json::to_string(&self.Settings).unwrap();
+        let json_str = serde_json::to_string_pretty(&self.Settings).unwrap();
         fs::write(&self.file_path, json_str)
     }
 }

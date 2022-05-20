@@ -63,6 +63,7 @@ dependencies = [
  "sysinfo",
  "tauri",
  "tauri-build",
+ "uuid 1.0.0",
 ]
 
 [[package]]

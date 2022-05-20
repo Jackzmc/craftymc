@@ -84,6 +84,7 @@ struct UpdateModpackPayload {
 }
 
 #[tauri::command]
+// TODO: Possibly not make ui wait for return and instead use events
 async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, id: &str) -> Result<i32, String> {
   let mut packs = state.modpacks.lock().unwrap();
   match packs.launch_modpack(id) {

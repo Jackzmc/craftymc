@@ -14,6 +14,10 @@ struct AppState {
   modpacks: Mutex<pack::ModpackManager>
 }
 
+////////////////////////////////////////////////////////////////////////
+/// Settings Commands
+////////////////////////////////////////////////////////////////////////
+
 #[tauri::command]
 fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
   state.config.lock().unwrap().Settings.clone()
@@ -65,6 +69,10 @@ fn save_settings(state: tauri::State<'_, AppState>) {
   
 }
 
+////////////////////////////////////////////////////////////////////////
+/// Modpacks Commands
+////////////////////////////////////////////////////////////////////////
+
 #[tauri::command]
 fn create_modpack(state: tauri::State<'_, AppState>, modpack: pack::Modpack) -> Result<pack::Modpack, String> {
   state.modpacks.lock().unwrap().create_modpack(modpack)
@@ -103,6 +111,17 @@ fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::M
   state.modpacks.lock().unwrap().delete_modpack(id)
 }
 
+
+////////////////////////////////////////////////////////////////////////
+/// Mod Commands
+////////////////////////////////////////////////////////////////////////
+
+#[tauri::command]
+#[allow(non_snake_case)]
+fn install_mod(state: tauri::State<'_, AppState>, packId: &str, modData: mods::ModrinthModData) {
+  
+}
+
 /* TODO: methods:
   save_modpack(name)
   [x] get_modpack(name)
@@ -120,7 +139,8 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks, launch_modpack, delete_modpack
+      create_modpack, get_modpack, get_modpacks, launch_modpack, delete_modpack,
+      install_mod
     ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");

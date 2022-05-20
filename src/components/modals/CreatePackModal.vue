@@ -85,7 +85,7 @@ let pack = ref<Partial<Modpack>>({
     pack: undefined
   },
   lastPlayed: undefined,
-  created: undefined
+  created: new Date()
 })
 
 const javaMemory = computed(() => {

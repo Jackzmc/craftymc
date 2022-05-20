@@ -47,5 +47,23 @@ export type ExternalProject = ModrinthProject
 
 export interface Entry {
   project: ExternalProject,
-  installState: InstallState
+  installing: boolean
+}
+
+export interface ModrinthProjectVersion {
+  name: string;
+  version_number: string;
+  changelog: string;
+  dependencies: any[];
+  game_versions: any[];
+  version_type: string;
+  loaders: any[];
+  featured: boolean;
+  id: string;
+  project_id: string;
+  author_id: string;
+  date_published: Date;
+  downloads: number;
+  changelog_url?: any;
+  files: any[];
 }

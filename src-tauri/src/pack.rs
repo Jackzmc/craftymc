@@ -18,13 +18,13 @@ pub struct Modpack {
     pub author: Option<String>,
     pub versions: ModpackVersionInfo,
     pub settings: PackSettings,
-    pub lastPlayed: String,
-    pub created: String
-    // pub mods: Vec<Mod>
+    pub lastPlayed: Option<String>,
+    pub created: String,
+    // pub mods: HashMap<String, mods::DownloadedMod>
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
 
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct ModpackVersionInfo {
     pub minecraft: String,
     pub modloader: String,
@@ -117,7 +117,6 @@ impl ModpackManager {
 
     pub fn create_modpack(&mut self, mut pack: Modpack) -> Result<Modpack, String> {
         pack.id = Some(Uuid::new_v4().to_string());
-        pack.created = util::get_iso8601(None);
         if self.get_modpack_by_name(pack.name.as_ref()).is_some() {
             let mut found_suitable = false;
             for n in 1..50 {
@@ -156,7 +155,7 @@ impl ModpackManager {
                 /*
                 1. Install launcher to $saveDir/Launcher/
                 */
-                modpack.lastPlayed = util::get_iso8601(None);
+                modpack.lastPlayed = Some(util::get_iso8601(None));
                 let modpack = self.get_modpack(id).unwrap();
                 self.set_launcher_config(&modpack);
                 let work_dir = self.get_install_folder();

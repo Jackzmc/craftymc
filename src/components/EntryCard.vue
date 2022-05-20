@@ -7,6 +7,7 @@
       </figure>
     </div>
     <div class="column">
+      <!-- TODO: Add EntryCardDetails, aka moddetials. allow selecting version -->
       <h4 class="title is-5">{{props.entry.project.title}} |
         <em class="subtitle has-text-gray is-6" v-if="props.entry.project.author">by {{props.entry.project.author}}</em>
       </h4>

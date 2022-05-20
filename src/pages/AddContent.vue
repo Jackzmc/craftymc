@@ -23,14 +23,15 @@
         <span class="subtitle is-4" v-else-if="mods.length == 0">No mods were found.</span>
       </p>
       <EntryCard v-for="entry in mods" :entry="entry" :key="entry.project.id">
-      <template v-slot:rightColumn>
-          <p v-if="entry.installState == InstallState.Installed">Installed</p>
-          <a v-else
-            :disabled="entry.installState != InstallState.NotInstalled ? true : undefined"
-            :class="['button', 'is-info', {'is-loading': entry.installState == InstallState.Installing}]"
-          >Install</a>
-      </template>
-    </EntryCard>
+        <template v-slot:rightColumn>
+            <p v-if="pack.mods && pack.mods[entry.id]">Installed</p> <!-- remove pack.mods once rust has it -->
+            <a v-else
+              :disabled="entry.installing || undefined"
+              :class="['button', 'is-info', {'is-loading': entry.installing }]"
+              @click="installMod(entry)"
+            >Install</a>
+        </template>
+      </EntryCard>
     </Tab>
     <Tab name="Resource Packs">
 
@@ -40,6 +41,7 @@
 
     </Tab>
   </Tabs>
+  <pre>{{JSON.stringify(debug, null, 2)}}</pre>
 </div>
 </template>
 
@@ -49,7 +51,7 @@ import { ModrinthProject } from '@/types/External';
 import FilterControls from '@/components/FilterControls.vue'
 import EntryCard from '@/components/EntryCard.vue'
 import Field from '@/components/form/Field.vue'
-import { Modpack, InstallState } from '@/types/Pack';
+import { Modpack } from '@/types/Pack';
 import { ref } from 'vue'
 import { createDebounce } from '@/js/utils'
 
@@ -58,6 +60,7 @@ const props = defineProps<{
   pack: Modpack
 }>()
 
+let debug = ref<string>()
 let searchQuery = ref<string>()
 let loading = ref(false)
 let error = ref<string>()
@@ -67,15 +70,21 @@ async function searchModrinth() {
   loading.value = true
   error.value = undefined
   try {
+    const facets = ["project_type:mod"]
+    facets.push(`categories:${props.pack.settings.modloaderType}`)
+    facets.push(`versions:${props.pack.versions.minecraft}`)
+    const facetsString = `[["${facets.join('"],["')}"]]`
+
     const queryText = searchQuery.value && searchQuery.value != '' ? `&query=${searchQuery.value}` : ''
-    const response = await fetch(`https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=[["project_type:mod"]]${queryText}`)
+    const response = await fetch(`https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`)
     const json = await response.json()
     if(response.ok) {
+      debug.value = {...json, _url: `https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`}
       mods.value = (json.hits as ModrinthProject[])
         .map(pack => {
           return {
             project: pack,
-            installState: InstallState.NotInstalled
+            installing: false
           }
         })
     } else {
@@ -85,6 +94,32 @@ async function searchModrinth() {
     error.value = err.message
   } finally {
     loading.value = false
+  }
+}
+
+async function installMod(entry: Entry) {
+  entry.installing = true
+  console.log(entry.project)
+  const versions = (await getVersions(entry))
+    .filter((version) => {
+      // TODO: Check against settings for version_type
+      return version.version_type && true
+    })
+    .sort((a,b) => new Date(b.datePublished) - new Date(a.datePublished))
+  console.debug('versions', versions)
+  await invoke('install_mod', {
+    packId: props.pack.id,
+    modData: versions[0]
+  })
+}
+
+async function getVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
+  const response = await fetch(`https://api.modrinth.com/v2/project/${entry.project.slug}/version?loaders=["${props.pack.settings.modloaderType}"]&game_versions=["${props.pack.versions.minecraft}"]`)
+  const json = await response.json()
+  if(response.ok) {
+    return json as ModrinthProjectVersion[]
+  } else {
+    throw new Error(json.message || json.error)
   }
 }
 

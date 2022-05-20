@@ -1,6 +1,7 @@
 # mc-mod-manager
 
 Extremely alpha stages. Heavily inspired by curseforge for ui purposes, for now.
+
 Name is still pending.
 
 ### Current Roadmap
@@ -16,4 +17,5 @@ Name is still pending.
 #### Development
 
 `yarn serve` to run the web server for port 8080
+
 `tauri dev` to run the actual application

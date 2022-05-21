@@ -60,11 +60,10 @@ impl ModpackManager {
     }
 
     pub fn new(settings: settings::Settings) -> ModpackManager {
-        let mut manager = ModpackManager {
+        let manager = ModpackManager {
             packs: HashMap::new(),
             settings 
         };
-        manager.load();
         manager
     }
 
@@ -96,6 +95,12 @@ impl ModpackManager {
                 }
             }
         }
+    }
+
+    pub fn save(&self, modpack: &Modpack) {
+        let folder_name = modpack.folder_name.as_ref().expect("modpack has no save folder");
+        let manifest = self.get_instances_folder().join(folder_name).join("manifest.json");
+        std::fs::write(manifest, serde_json::to_string_pretty(modpack).unwrap().as_bytes()).expect("save failed");
     }
 
     pub fn get_modpack_by_name(&self, name: &str) -> Option<&Modpack> {
@@ -231,7 +236,7 @@ impl ModpackManager {
     }
 
     pub fn add_mod_entry(&mut self, pack_id: &str, entry: mods::SavedModEntry) {
-        let pack = self.get_modpack(pack_id).expect("add mod entry to not a modpack");
+        let mut pack = self.get_modpack(pack_id).expect("add mod entry to not a modpack").clone();
         let download_dir = self.get_downloads_folder();
         let dest = self.get_instances_folder().join(pack.folder_name.as_ref().unwrap()).join("mods");
         std::fs::create_dir_all(&dest).unwrap();
@@ -241,8 +246,9 @@ impl ModpackManager {
             println!("[debug] mv {:?} => {:?}", &src_path, &dest_path);
             std::fs::rename(src_path, dest_path).expect("failed to move download");
         }
-        let pack = self.get_modpack_mut(pack_id).expect("add mod entry to not a modpack");
         pack.mods.push(entry);
+        self.save(&pack);
+        self.packs.insert(pack.id.clone().unwrap(), pack);
     }
 
 }

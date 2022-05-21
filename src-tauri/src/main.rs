@@ -24,7 +24,7 @@ fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
 }
 
 #[tauri::command]
-fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Option<String> {
+fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Result<(), String> {
   // Categories are passed in lowercase. 
   // Keys are case-sensitive, may not be lowercase.
   // TODO: Move to Settings
@@ -34,7 +34,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
   match category {
     "general" => {
       match key {
-        _ => return Some("Invalid key".to_string())
+        _ => return Err("Invalid key".to_string())
       };
     },
     "minecraft" => {
@@ -46,12 +46,12 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
         "javaMemoryMb" => settings.minecraft.javaMemoryMb = value.parse::<u32>().unwrap(),
         "javaPath" => settings.minecraft.javaPath = Some(value),
         "javaArgs" => settings.minecraft.javaArgs = Some(value),
-        _ => return Some("Invalid, unknown, or unsupported key. Report this to a developer.".to_string())
+        _ => return Err("Invalid, unknown, or unsupported key. Report this to a developer.".to_string())
       };
     }
-    _ => return Some("Invalid category".to_string())
+    _ => return Err("Invalid category".to_string())
   };
-  None
+  Ok(())
 }
 
 #[tauri::command]
@@ -106,6 +106,19 @@ async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window
   }
 }
 
+#[tauri::command]
+fn save_modpack(state: tauri::State<'_, AppState>, id: &str) -> Result<(), String> {
+  let modpacks = &mut state.modpacks.lock().unwrap();
+  match modpacks.get_modpack(id) {
+    Some(pack) => Ok(modpacks.save(pack)),
+    None => Err("No modpack was found".to_string())
+  }
+}
+
+#[tauri::command]
+fn set_pack_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Result<(), String> {
+  Err("Not implemented".to_string())
+}
 
 #[tauri::command]
 fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::Modpack> {
@@ -123,6 +136,7 @@ async fn install_mod(state: tauri::State<'_, AppState>, pack_id: &str, window: t
   window.emit("update-modpack", UpdateModpackPayload { modpack: tuple.0.clone() }).unwrap();
   Ok(())
 }
+
 
 fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &str) -> (pack::Modpack, std::path::PathBuf) {
   let pack = modpacks.get_modpack(pack_id).expect("pack not found to install mod to").clone();
@@ -154,7 +168,7 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks, launch_modpack, delete_modpack,
+      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_pack_setting, delete_modpack,
       install_mod
     ])
     .run(tauri::generate_context!())

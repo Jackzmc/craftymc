@@ -244,7 +244,6 @@ impl ModpackManager {
         for filename in &entry.filenames {
             let src_path = download_dir.join(filename);
             let dest_path = dest.join(filename);
-            println!("[debug] mv {:?} => {:?}", &src_path, &dest_path);
             std::fs::rename(src_path, dest_path).expect("failed to move download");
         }
         pack.mods.push(entry);

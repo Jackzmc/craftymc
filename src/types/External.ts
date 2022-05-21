@@ -6,14 +6,14 @@ export interface ModrinthModpack extends ModrinthProject {
 export interface ModrinthProject {
   slug: string
   project_type: string
-  author_id?: string,
+  author: string,
   team?: string
   title: string
   description: string
   body: string
   body_url: string
   published: string
-  updated: string
+  date_modified: string
   status: string
   moderator_message: any
   license: {

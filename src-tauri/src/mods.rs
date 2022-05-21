@@ -23,11 +23,11 @@ pub struct SavedModEntry {
     pub version_id: String,
     pub filenames: Vec<String>,
     pub name: String,
-    pub author_id: String //TODO: Replace with author name, resolved from ui
+    pub author: String
 }
 
-impl ModrinthModData {
-    pub async fn install_mod(&mut self, destination: &std::path::PathBuf, window: &tauri::Window, pack: &mut pack::Modpack) -> Result<SavedModEntry, String> {
+impl ModrinthVersionData {
+    pub async fn install_mod(&mut self, window: &tauri::Window, author_name: String, destination: &std::path::PathBuf, pack: &mut pack::Modpack) -> Result<SavedModEntry, String> {
         let client = reqwest::Client::new();
         let pack_id = pack.id.as_deref().unwrap();
         let mut filenames = Vec::<String>::new();
@@ -77,14 +77,12 @@ impl ModrinthModData {
                 }
             }
         }
-        let author_id = self.team.as_ref()
-            .or(self.author_id.as_ref()).cloned().unwrap();
         let save_entry = SavedModEntry {
             project_id: self.project_id.clone(),
             version_id: self.id.clone(),
             filenames,
             name: self.name.clone(),
-            author_id
+            author: author_name
         };
         println!("[debug] downloads complete for pack {}", pack_id);
         Ok(save_entry)
@@ -92,7 +90,7 @@ impl ModrinthModData {
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct ModrinthModData {
+pub struct ModrinthVersionData {
     pub id: String,
     pub project_id: String,
     pub author_id: Option<String>,
@@ -100,13 +98,13 @@ pub struct ModrinthModData {
     pub featured: bool,
     pub name: String,
     pub version_number: String,
-    pub changelog: String,
+    pub changelog: Option<String>,
     pub changelog_url: Option<String>,
     pub date_published: String,
     pub downloads: i64,
     pub version_type: String,
     pub files: Vec<ModrinthFile>,
-    // pub dependencies: Vec<Value>,
+    pub dependencies: Option<Vec<ModrinthDependency>>,
     pub game_versions: Vec<String>,
     pub loaders: Vec<String>,
 }
@@ -118,6 +116,13 @@ pub struct ModrinthFile {
     pub filename: String,
     pub primary: bool,
     pub size: i64,
+}
+
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct ModrinthDependency {
+    version_id: String,
+    project_id: String,
+    dependency_type: String
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]

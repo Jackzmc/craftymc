@@ -67,7 +67,7 @@ const installedMods = computed(() => {
     rec[mod.project_id] = mod
   }
   return rec
-})
+}, { deep: true })
 
 let debug = ref<string>()
 let searchQuery = ref<string>()
@@ -86,6 +86,8 @@ async function searchModrinth() {
 
     const queryText = searchQuery.value && searchQuery.value != '' ? `&query=${searchQuery.value}` : ''
     const response = await fetch(`https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`)
+    // TODO: Check versions to see if there is a valid version FOR the modloader
+    // OR wait until modrinth fixes it on their side
     const json = await response.json()
     if(response.ok) {
       debug.value = {...json, _url: `https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`}
@@ -116,10 +118,16 @@ async function installMod(entry: Entry) {
     })
     .sort((a,b) => new Date(b.datePublished) - new Date(a.datePublished))
   console.debug('versions', versions)
+  if(versions.length == 0) {
+    entry.installing = false
+    console.warn(`Could not find versions for mod.`, entry.project)
+    return alert("Could not find any valid versions. Probably a bug. Mod id:", entry.project.id)
+  }
   await invoke('install_mod', {
     packId: props.pack.id,
     modId: entry.project.id,
-    modData: versions[0]
+    authorName: entry.project.author,
+    versionData: versions[0]
   })
 }
 

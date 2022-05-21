@@ -18,8 +18,8 @@ const props = defineProps<{
 
 let selectedPack = ref<Modpack>()
 
-watch(props.modpacks, () => {
-  console.log('something changed, re-selecting.')
+watch(() => props.modpacks, () => {
+  console.debug('without this, code below doesnt work. help me.')
   if(selectedPack.value) {
     const id = selectedPack.value.id
     selectedPack.value = props.modpacks.find(pack => pack.id === id)

@@ -15,13 +15,13 @@
       <div class="level">
         <div class="level-left">
           <div class="level-item" data-tooltip="Downloads">
-            <Icon :icon="['fa', 'download']" text="5.2 M" />
+            <Icon :icon="['fa', 'download']" :text="props.entry.project.downloads.toLocaleString()" />
           </div>
           <div class="level-item" data-tooltip="Last updated">
-            <Icon :icon="['fa', 'clock']" text="5/17/2022" />
+            <Icon :icon="['fa', 'clock']" :text="new Date(props.entry.project.date_modified).toLocaleDateString()" />
           </div>
-          <div class="level-item" data-tooltip="Minecraft version">
-            <Icon :icon="['fa', 'cube']" text="1.16.5" />
+          <div class="level-item" data-tooltip="License">
+            <Icon :icon="['fa', 'book']" :text="props.entry.project.license" />
           </div>
         </div>
       </div>

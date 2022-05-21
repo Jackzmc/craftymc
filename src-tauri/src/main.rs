@@ -148,12 +148,9 @@ fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::M
 #[allow(non_snake_case)]
 #[tauri::command]
 // This works. But I barely understand it. I'm not touching it.
-async fn install_mod(state: tauri::State<'_, AppState>, pack_id: &str, window: tauri::Window, mut mod_data: mods::ModrinthModData) -> Result<(), ()> {
-  println!("waiting for lock");
+async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, author_name: String, mut version_data: mods::ModrinthVersionData) -> Result<(), ()> {
   let mut tuple = fuck_rust(state.modpacks.lock().unwrap(), pack_id);
-  println!("starting install");
-  let entry_data = mod_data.install_mod(&tuple.1, &window, &mut tuple.0).await.unwrap();
-  println!("install end, adding entry");
+  let entry_data = version_data.install_mod(&window, author_name, &tuple.1, &mut tuple.0).await.unwrap();
   state.modpacks.lock().unwrap().add_mod_entry(pack_id, entry_data);
   window.emit("update-modpack", UpdateModpackPayload { modpack: tuple.0.clone() }).unwrap();
   Ok(())

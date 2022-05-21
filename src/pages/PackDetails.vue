@@ -49,24 +49,20 @@
       </div>
     </div>
   </div>
-  <pre>{{ JSON.stringify(props.pack, null, 2) }}</pre>
-  <div class="level">
-    <div class="level-left">
-      <div class="level-item">
-      <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-        <Tab name="Overview">
+  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+    <Tab name='debug'>
+      <pre>{{ JSON.stringify(props.pack, null, 2) }}</pre>
+    </Tab>
+    <Tab name="Overview">
 
-        </Tab>
-        <Tab name="Mods">
-          <Modlist :mods="pack.mods" />
-        </Tab>
-        <Tab name="Versions">
+    </Tab>
+    <Tab name="Mods">
+      <Modlist :mods="pack.mods" />
+    </Tab>
+    <Tab name="Versions">
 
-        </Tab>
-      </Tabs>
-      </div>
-    </div>
-  </div>
+    </Tab>
+  </Tabs>
   </template>
 </div>
 </template>

@@ -13,7 +13,9 @@
   <Field label="Java Memory Settings">
     <input class="is-checkradio" id="enableJavaMemoryModpack" type="checkbox" name="exampleCheckbox" v-model="pack.settings.useCustomMemory">
     <label for="enableJavaMemoryModpack">Use custom memory settings</label>
-    <input v-if="pack.settings.useCustomMemory" id="pack-javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="pack.settings.javaMemory" type="range" :data-tooltip="javaMemory">
+    <input v-if="pack.settings.useCustomMemory" id="pack-javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000"
+      v-model.number="pack.settings.javaMemoryMb" type="range" :data-tooltip="javaMemory"
+    >
   </Field>
   <div class="columns">
     <div class="column">
@@ -75,7 +77,7 @@ let pack = ref<Partial<Modpack>>({
   name: undefined,
   settings: {
     useCustomMemory: false,
-    javaMemory: 1000,
+    javaMemoryMb: 1000,
     mcVersion: undefined,
     modloaderType: undefined,
     modSource: "modrinth"
@@ -86,11 +88,12 @@ let pack = ref<Partial<Modpack>>({
     pack: undefined
   },
   lastPlayed: undefined,
-  created: new Date()
+  created: new Date(),
+  mods: []
 })
 
 const javaMemory = computed(() => {
-  return `${pack.value.settings.javaMemory?.toLocaleString()} MB`
+  return `${pack.value.settings.javaMemoryMb?.toLocaleString()} MB`
 })
 
 interface MCVersion {

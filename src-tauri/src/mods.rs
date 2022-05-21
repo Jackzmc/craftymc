@@ -21,7 +21,9 @@ pub struct ModDownloadErrorPayload {
 pub struct SavedModEntry {
     pub project_id: String,
     pub version_id: String,
-    pub filenames: Vec<String>
+    pub filenames: Vec<String>,
+    pub name: String,
+    pub author_id: String //TODO: Replace with author name, resolved from ui
 }
 
 impl ModrinthModData {
@@ -75,10 +77,14 @@ impl ModrinthModData {
                 }
             }
         }
+        let author_id = self.team.as_ref()
+            .or(self.author_id.as_ref()).cloned().unwrap();
         let save_entry = SavedModEntry {
             project_id: self.project_id.clone(),
             version_id: self.id.clone(),
-            filenames
+            filenames,
+            name: self.name.clone(),
+            author_id
         };
         println!("[debug] downloads complete for pack {}", pack_id);
         Ok(save_entry)
@@ -89,7 +95,8 @@ impl ModrinthModData {
 pub struct ModrinthModData {
     pub id: String,
     pub project_id: String,
-    pub author_id: String,
+    pub author_id: Option<String>,
+    pub team: Option<String>,
     pub featured: bool,
     pub name: String,
     pub version_number: String,

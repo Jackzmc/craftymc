@@ -10,10 +10,10 @@
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <td>Applied Energistics</td>
-      <td>Tom Brady</td>
-      <td>ae2.jar</td>
+    <tr v-for="mod in props.mods" :key="mod.id">
+      <td>{{mod.name}}</td>
+      <td>{{mod.author_id}}</td>
+      <td>{{mod.filename}}</td>
       <td>
         <div class="buttons">
         <a class="button is-small is-white"><Icon :icon="['fas', 'download']" /></a>
@@ -25,9 +25,14 @@
         <label for="mod1-active"></label>
       </td>
     </tr>
-    <!--<tr v-for="mod in modpack.mods" :key="mod.id">
-
-    </tr>-->
   </tbody>
 </table>
 </template>
+
+<script setup lang="ts">
+import { SavedModEntry } from '../types/Pack';
+const props = defineProps<{
+  mods: SavedModEntry[]
+}>()
+
+</script>

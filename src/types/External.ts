@@ -6,7 +6,8 @@ export interface ModrinthModpack extends ModrinthProject {
 export interface ModrinthProject {
   slug: string
   project_type: string
-  team: string
+  author_id?: string,
+  team?: string
   title: string
   description: string
   body: string

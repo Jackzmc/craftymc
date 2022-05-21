@@ -85,13 +85,13 @@ impl ModpackManager {
                                 self.packs.insert(id, modpack);
                             },
                             Err(err) => {
-                                println!("WARN: Directory \"{}\" is either incomplete or invalid json: {}", entry.file_name().to_str().unwrap(), err)
+                                eprintln!("ERROR: Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", entry.file_name().to_str().unwrap(), err)
                             }
                         }
                         
                     },
                     Err(err) => {
-                        println!("WARN: Directory \"{}\"'s manifest.json is unreadable or corrupted: {}", entry.file_name().to_str().unwrap(), err)
+                        eprintln!("ERROR:  Directory \"{}\"'s manifest.json is unreadable or corrupted: {}", entry.file_name().to_str().unwrap(), err)
                     }
                 }
             }

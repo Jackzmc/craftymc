@@ -21,8 +21,9 @@ export interface SavedModEntry {
 
 export interface PackSettings {
   modloaderType: string,
-  javaMemory?: number,
+  javaMemory: number,
   useCustomMemory: boolean,
+  modSource: string
 }
 
 export const enum View {

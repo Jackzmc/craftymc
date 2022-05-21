@@ -30,7 +30,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
   // TODO: Move to Settings
   let config = &mut state.config.lock().unwrap();
   let settings = &mut config.Settings;
-  println!("[debug] Setting {}/{} to \"{}\"", &category, &key, &value);
+  println!("[debug] Setting {}/{} to \"{}\"", category, key, &value);
   match category {
     "general" => {
       match key {
@@ -107,17 +107,36 @@ async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window
 }
 
 #[tauri::command]
-fn save_modpack(state: tauri::State<'_, AppState>, id: &str) -> Result<(), String> {
+fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().unwrap();
-  match modpacks.get_modpack(id) {
-    Some(pack) => Ok(modpacks.save(pack)),
+  println!("[debug] Saved modpack \"{}\"", pack_id);
+  match modpacks.get_modpack(pack_id) {
+    Some(pack) => {
+      window.emit("update-modpack", UpdateModpackPayload { modpack: pack.clone() }).unwrap();
+      Ok(modpacks.save(pack))
+    },
     None => Err("No modpack was found".to_string())
   }
 }
 
 #[tauri::command]
-fn set_pack_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Result<(), String> {
-  Err("Not implemented".to_string())
+fn set_modpack_setting(state: tauri::State<'_, AppState>, pack_id: &str, key: &str, value: String) -> Result<(), String> {
+  let modpacks = &mut state.modpacks.lock().unwrap();
+  let modpack = modpacks.get_modpack_mut(pack_id).expect("[removeme] pack not found");
+  println!("[debug] Setting modpack \"{}\" key {} to \"{}\"", pack_id, key, &value);
+  match key {
+    "name" => modpack.name = value,
+    "modloaderType" => modpack.settings.modloaderType = value,
+    "minecraft" => modpack.versions.minecraft = value,
+    "modloader" => modpack.versions.modloader = value,
+    "pack" => modpack.versions.pack = Some(value),
+    "javaMemoryMb" => modpack.settings.javaMemoryMb = value.parse::<u32>().unwrap(),
+    "javaArgs" => modpack.settings.javaArgs = Some(value),
+    "useCustomMemory" => modpack.settings.useCustomMemory = value.parse::<bool>().unwrap(),
+    "modSource" => modpack.settings.modSource = value,
+    _ => return Err("Unknown key".to_string())
+  };
+  Ok(())
 }
 
 #[tauri::command]
@@ -168,7 +187,7 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_pack_setting, delete_modpack,
+      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack,
       install_mod
     ])
     .run(tauri::generate_context!())

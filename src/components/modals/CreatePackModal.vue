@@ -78,6 +78,7 @@ let pack = ref<Partial<Modpack>>({
     javaMemory: 1000,
     mcVersion: undefined,
     modloaderType: undefined,
+    modSource: "modrinth"
   },
   versions: {
     minecraft: undefined,

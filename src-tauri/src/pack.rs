@@ -39,10 +39,11 @@ pub struct ModpackVersionInfo {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct PackSettings {
-    pub javaMemoryMb: Option<u32>,
+    pub javaMemoryMb: u32,
     pub useCustomMemory: bool,
     pub modloaderType: String,
-    pub javaArgs: Option<String>
+    pub javaArgs: Option<String>,
+    pub modSource: String
 }
 
 impl ModpackManager {

@@ -6,7 +6,7 @@
     </div>
     <div class="column">
       <Field label="Name">
-        <input class="input" type="text" v-model="pack.name" />
+        <input class="input" type="text" v-model="pack.name" @input="updateName" />
       </Field>
     </div>
   </div>
@@ -27,22 +27,43 @@
 import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
-import { ref, computed } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import DefaultPackImage from '@/assets/default_pack.png'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(['close'])
 const props = defineProps<{
   pack: Modpack
 }>()
 
-let pack = ref(props.pack)
+let pack = reactive<Modpack>(JSON.parse(JSON.stringify(props.pack)))
+
+watch(pack.settings, () => {
+  for(const key in pack.settings) {
+    if(props.settings[key] !== settings.value[key]) {
+      invoke('set_setting', {
+        packId: pack.id,
+        key,
+        value: settings.value[key].toString()
+      })
+    }
+  }
+}, { deep: true })
+
+async function updateName() {
+  await invoke('set_modpack_setting', {
+    packId: pack.id,
+    key: 'name',
+    value: pack.name
+  })
+}
 
 const javaMemory = computed(() => {
-  return `${pack.value.settings.javaMemory?.toLocaleString()} MB`
+  return `${pack.settings.javaMemory?.toLocaleString()} MB`
 })
 
-function save() {
-  emit('save', pack.value)
+async function save() {
+  await invoke('save_modpack', { packId: pack.id })
   emit('close')
 }
 

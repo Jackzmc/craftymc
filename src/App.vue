@@ -17,7 +17,7 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
-import { invoke} from '@tauri-apps/api/tauri'
+import { invoke } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
 import { AppSettings } from './types/Settings';
 

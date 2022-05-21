@@ -1,9 +1,13 @@
 use crate::settings;
 use std::fs;
 use std::collections::HashMap;
+use std::io::Write;
 use uuid::Uuid;
 use std::path::{Path,PathBuf};
+use futures::{StreamExt};
+
 use crate::util;
+use crate::mods;
 
 pub struct ModpackManager {
     pub packs: HashMap<String, Modpack>, //id is folder name
@@ -41,6 +45,11 @@ pub struct PackSettings {
 }
 
 impl ModpackManager {
+    pub fn get_downloads_folder(&self) -> PathBuf {
+        Path::new(&self.settings.minecraft.saveDirectory).join("Downloads")
+    }
+
+
     fn get_instances_folder(&self) -> PathBuf {
         Path::new(&self.settings.minecraft.saveDirectory).join("Instances")
     }
@@ -213,6 +222,7 @@ impl ModpackManager {
         profiles.insert(modpack.name.clone(), self.get_launcher_profile(modpack));
         fs::write(&path, serde_json::to_string_pretty(&profile_config).unwrap()).unwrap();
     }
+
 }
 
 #[allow(non_snake_case)]

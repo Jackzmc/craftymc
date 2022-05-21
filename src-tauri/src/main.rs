@@ -11,7 +11,7 @@ mod mods;
 
 struct AppState {
   config: Mutex<settings::SettingsManager>,
-  modpacks: Mutex<pack::ModpackManager>
+  modpacks: Arc<Mutex<pack::ModpackManager>>
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -106,21 +106,34 @@ async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window
   }
 }
 
+
 #[tauri::command]
 fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::Modpack> {
   state.modpacks.lock().unwrap().delete_modpack(id)
 }
 
 
+#[allow(non_snake_case)]
+#[tauri::command]
+// TODO: async this shit. grr
+async fn install_mod(state: tauri::State<'_, AppState>, pack_id: &str, window: tauri::Window, mut mod_data: mods::ModrinthModData) -> Result<(), ()> {
+  let mut tuple = fuck_rust(state.modpacks.lock().unwrap(), pack_id);
+  mod_data.install_mod(&tuple.1, &window, &mut tuple.0).await.unwrap();
+  Ok(())
+}
+
+fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &str) -> (pack::Modpack, std::path::PathBuf) {
+  let mut pack = modpacks.get_modpack(pack_id).expect("pack not found to install mod to").clone();
+  let dest = modpacks.get_downloads_folder();
+  (pack, dest)
+}
+
 ////////////////////////////////////////////////////////////////////////
 /// Mod Commands
 ////////////////////////////////////////////////////////////////////////
 
-#[tauri::command]
-#[allow(non_snake_case)]
-fn install_mod(state: tauri::State<'_, AppState>, packId: &str, modData: mods::ModrinthModData) {
-  
-}
+// Possibly use a queue based downloader... but lazy mode just do it async
+
 
 /* TODO: methods:
   save_modpack(name)
@@ -134,8 +147,8 @@ fn main() {
   let config = settings::SettingsManager::new();
   tauri::Builder::default()
     .manage(AppState {
-      modpacks: Mutex::new(pack::ModpackManager::new(config.Settings.clone())),
-      config: Mutex::new(config)
+      modpacks: Arc::new(Mutex::new(pack::ModpackManager::new(config.Settings.clone()))),
+      config: Mutex::new(config),
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,

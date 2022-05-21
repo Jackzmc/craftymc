@@ -73,6 +73,8 @@ impl SettingsManager {
         let save_dir = SettingsManager::get_save_folder();
         std::fs::create_dir_all(&save_dir).unwrap(); //TODO: Send telemetry when created
         std::fs::create_dir_all(&save_dir.join("Instances")).unwrap();
+        std::fs::create_dir_all(&save_dir.join("Downloads")).unwrap();
+        std::fs::create_dir_all(&save_dir.join("Launcher")).unwrap();
 
         let config_file_path = Path::new(&save_dir).join("settings.json");
         let settings = SettingsManager::load(&save_dir);

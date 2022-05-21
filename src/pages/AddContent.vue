@@ -52,8 +52,10 @@ import FilterControls from '@/components/FilterControls.vue'
 import EntryCard from '@/components/EntryCard.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack';
-import { ref } from 'vue'
+import { ref, onBeforeMount } from 'vue'
 import { createDebounce } from '@/js/utils'
+import { listen } from '@tauri-apps/api/event'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(["close"])
 const props = defineProps<{
@@ -125,5 +127,22 @@ async function getVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
 
 const doSearch = createDebounce(searchModrinth, 500)
 
-searchModrinth()
+onBeforeMount(() => {
+  searchModrinth()
+  listen("download-mod", (event) => {
+    console.log(event)
+  })
+})
+
+/*interface DownloadSuccess {
+  mod_id: string,
+  pack_id: string,
+  file_name: string,
+  error: string,
+}
+interface DownloadFailure {
+  mod_id: string,
+  pack_id: string,
+}*/
+
 </script>

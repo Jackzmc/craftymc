@@ -22,6 +22,8 @@ dirs-next = "*"
 sysinfo = "*"
 uuid = "1.0.0"
 chrono = "*"
+reqwest = { version = "*", features = ["stream"] }
+futures = "*"
 
 [features]
 # by default Tauri runs in production mode

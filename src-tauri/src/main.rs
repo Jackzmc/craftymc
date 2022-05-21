@@ -115,15 +115,17 @@ fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::M
 
 #[allow(non_snake_case)]
 #[tauri::command]
-// TODO: async this shit. grr
+// This works. But I barely understand it. I'm not touching it.
 async fn install_mod(state: tauri::State<'_, AppState>, pack_id: &str, window: tauri::Window, mut mod_data: mods::ModrinthModData) -> Result<(), ()> {
   let mut tuple = fuck_rust(state.modpacks.lock().unwrap(), pack_id);
-  mod_data.install_mod(&tuple.1, &window, &mut tuple.0).await.unwrap();
+  let entry_data = mod_data.install_mod(&tuple.1, &window, &mut tuple.0).await.unwrap();
+  state.modpacks.lock().unwrap().add_mod_entry(pack_id, entry_data);
+  window.emit("update-modpack", UpdateModpackPayload { modpack: tuple.0.clone() }).unwrap();
   Ok(())
 }
 
 fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &str) -> (pack::Modpack, std::path::PathBuf) {
-  let mut pack = modpacks.get_modpack(pack_id).expect("pack not found to install mod to").clone();
+  let pack = modpacks.get_modpack(pack_id).expect("pack not found to install mod to").clone();
   let dest = modpacks.get_downloads_folder();
   (pack, dest)
 }

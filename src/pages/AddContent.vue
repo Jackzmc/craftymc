@@ -22,9 +22,9 @@
         <span class="subtitle is-4" v-else-if="loading">Loading...</span>
         <span class="subtitle is-4" v-else-if="mods.length == 0">No mods were found.</span>
       </p>
-      <EntryCard v-for="entry in mods" :entry="entry" :key="entry.project.id">
+      <EntryCard v-for="entry in mods" :entry="entry" :key="entry.project.project_id">
         <template v-slot:rightColumn>
-            <p v-if="pack.mods && pack.mods[entry.id]">Installed</p> <!-- remove pack.mods once rust has it -->
+            <p v-if="installedMods[entry.project.project_id]">Installed</p> <!-- remove pack.mods once rust has it -->
             <a v-else
               :disabled="entry.installing || undefined"
               :class="['button', 'is-info', {'is-loading': entry.installing }]"
@@ -41,7 +41,6 @@
 
     </Tab>
   </Tabs>
-  <pre>{{JSON.stringify(debug, null, 2)}}</pre>
 </div>
 </template>
 
@@ -52,7 +51,7 @@ import FilterControls from '@/components/FilterControls.vue'
 import EntryCard from '@/components/EntryCard.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack';
-import { ref, onBeforeMount } from 'vue'
+import { ref, onBeforeMount, computed } from 'vue'
 import { createDebounce } from '@/js/utils'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -61,6 +60,14 @@ const emit = defineEmits(["close"])
 const props = defineProps<{
   pack: Modpack
 }>()
+
+const installedMods = computed(() => {
+  let rec: Record<String, SavedModEntry> = {}
+  for(const mod of props.pack.mods) {
+    rec[mod.project_id] = mod
+  }
+  return rec
+})
 
 let debug = ref<string>()
 let searchQuery = ref<string>()
@@ -102,7 +109,7 @@ async function searchModrinth() {
 async function installMod(entry: Entry) {
   entry.installing = true
   console.log(entry.project)
-  const versions = (await getVersions(entry))
+  const versions = (await getModVersions(entry))
     .filter((version) => {
       // TODO: Check against settings for version_type
       return version.version_type && true
@@ -111,11 +118,12 @@ async function installMod(entry: Entry) {
   console.debug('versions', versions)
   await invoke('install_mod', {
     packId: props.pack.id,
+    modId: entry.project.id,
     modData: versions[0]
   })
 }
 
-async function getVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
+async function getModVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
   const response = await fetch(`https://api.modrinth.com/v2/project/${entry.project.slug}/version?loaders=["${props.pack.settings.modloaderType}"]&game_versions=["${props.pack.versions.minecraft}"]`)
   const json = await response.json()
   if(response.ok) {
@@ -130,6 +138,11 @@ const doSearch = createDebounce(searchModrinth, 500)
 onBeforeMount(() => {
   searchModrinth()
   listen("download-mod", (event) => {
+    if(event.payload.error) {
+      alert(event.payload.error)
+    } else {
+      // Don't do anything, will send update-modload event
+    }
     console.log(event)
   })
 })

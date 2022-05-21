@@ -1,22 +1,23 @@
 use crate::settings;
 use std::fs;
 use std::collections::HashMap;
-use std::io::Write;
 use uuid::Uuid;
 use std::path::{Path,PathBuf};
-use futures::{StreamExt};
 
 use crate::util;
 use crate::mods;
 
 pub struct ModpackManager {
-    pub packs: HashMap<String, Modpack>, //id is folder name
+    pub packs: HashMap<String, Modpack>, //key is modpack.id
     settings: settings::Settings
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct Modpack {
+    #[serde(skip_serializing)]
+    pub folder_name: Option<String>,
+
     pub id: Option<String>,
     pub name: String,
     pub author: Option<String>,
@@ -24,7 +25,7 @@ pub struct Modpack {
     pub settings: PackSettings,
     pub lastPlayed: Option<String>,
     pub created: String,
-    // pub mods: HashMap<String, mods::DownloadedMod>
+    pub mods: Vec<mods::SavedModEntry>
 }
 
 
@@ -77,9 +78,10 @@ impl ModpackManager {
                 match fs::read_to_string(&manifest_path) {
                     Ok(str) => {
                         match serde_json::from_str::<Modpack>(&str) {
-                            Ok(modpack) => {
+                            Ok(mut modpack) => {
                                 let id = modpack.id.as_deref().unwrap().to_string();
                                 println!("[debug] Loading modpack uuid = {}", &id);
+                                modpack.folder_name = entry.file_name().into_string().ok();
                                 self.packs.insert(id, modpack);
                             },
                             Err(err) => {
@@ -114,7 +116,8 @@ impl ModpackManager {
         self.packs.get_mut(id)
     }
 
-    pub fn get_modpacks(&self) -> Vec<Modpack> {
+    pub fn get_modpacks(&mut self) -> Vec<Modpack> {
+        self.load();
         self.packs.values()
             .map(|pack| pack.clone())
             .collect::<Vec<Modpack>>()
@@ -141,8 +144,12 @@ impl ModpackManager {
             }
         }
 
-        let save_dir = self.get_instances_folder().join(&pack.name);
-        std::fs::create_dir_all(&save_dir).expect("failed to create modpack folder");
+        let save_dir = &self.get_instances_folder().join(&pack.name);
+        pack.folder_name = save_dir.clone().into_os_string().into_string().ok();
+        std::fs::create_dir_all(save_dir).expect("failed to create modpack folder");
+        // Make folders
+        std::fs::create_dir_all(save_dir.join("mods")).expect("failed to create modpack/mods folder");
+        // Make files
         fs::write(save_dir.join(".mcmm"), pack.id.as_ref().unwrap()).unwrap();
         fs::write(save_dir.join("manifest.json"), serde_json::to_string_pretty(&pack).expect("failed to serialize modpack to manifest")).expect("failed to create modpack manifest");
         println!("[debug] Created new modpack (name = \"{}\") with uuid = {}", &pack.name, pack.id.as_ref().unwrap());
@@ -221,6 +228,21 @@ impl ModpackManager {
         profiles.clear();
         profiles.insert(modpack.name.clone(), self.get_launcher_profile(modpack));
         fs::write(&path, serde_json::to_string_pretty(&profile_config).unwrap()).unwrap();
+    }
+
+    pub fn add_mod_entry(&mut self, pack_id: &str, entry: mods::SavedModEntry) {
+        let pack = self.get_modpack(pack_id).expect("add mod entry to not a modpack");
+        let download_dir = self.get_downloads_folder();
+        let dest = self.get_instances_folder().join(pack.folder_name.as_ref().unwrap()).join("mods");
+        std::fs::create_dir_all(&dest).unwrap();
+        for filename in &entry.filenames {
+            let src_path = download_dir.join(filename);
+            let dest_path = dest.join(filename);
+            println!("[debug] mv {:?} => {:?}", &src_path, &dest_path);
+            std::fs::rename(src_path, dest_path).expect("failed to move download");
+        }
+        let pack = self.get_modpack_mut(pack_id).expect("add mod entry to not a modpack");
+        pack.mods.push(entry);
     }
 
 }

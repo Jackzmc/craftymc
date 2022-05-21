@@ -1,7 +1,7 @@
 <template>
 <div>
 <CreatePackModal v-if="showCreatePack" active @close="showCreatePack = false" @save="pack => emit('update-modpacks', pack)" />
-<nav data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
+<nav draggable="true" data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
       <a @click="emit('sidebar')" class="navbar-item">

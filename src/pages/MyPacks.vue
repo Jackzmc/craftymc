@@ -7,7 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { Modpack } from '@/types/Pack'
 import PackList from '@/components/pack/PackList'
 import PackDetails from '@/pages/PackDetails'
@@ -17,5 +17,13 @@ const props = defineProps<{
 }>()
 
 let selectedPack = ref<Modpack>()
+
+watch(props.modpacks, () => {
+  console.log('something changed, re-selecting.')
+  if(selectedPack.value) {
+    const id = selectedPack.value.id
+    selectedPack.value = props.modpacks.find(pack => pack.id === id)
+  }
+}, { deep: true })
 
 </script>

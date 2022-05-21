@@ -1,4 +1,3 @@
-import { ExternalProject } from './External';
 export interface Modpack {
   id: string,
   name: string,
@@ -11,7 +10,13 @@ export interface Modpack {
   settings: PackSettings,
   created: number,
   lastPlayed?: number,
-  mods: Record<string, ExternalProject>
+  mods: Record<string, SavedModEntry>
+}
+
+export interface SavedModEntry {
+  name: string,
+  version_id: string,
+  filenames: string[]
 }
 
 export interface PackSettings {

@@ -43,7 +43,13 @@ const mainViewClass = computed(() => {
 })
 
 onBeforeMount(async() => {
+  await updateSettings()
+  console.debug('app settings', settings.value)
+  await updateModpacks()
+  console.debug(modpacks.value.length, 'modpacks loaded')
+
   await listen('update-modpack', (event) => {
+    console.debug('update-modpack', event.payload.modpack)
     const newModpack = event.payload.modpack
     for(let i = 0; i < modpacks.value.length; i++) {
       let modpack = modpacks.value[i]
@@ -55,10 +61,6 @@ onBeforeMount(async() => {
     // Modpack to update not found, insert
     modpacks.value.push(newModpack)
   })
-  await updateSettings()
-  console.debug('app settings', settings.value)
-  await updateModpacks()
-  console.debug(modpacks.value.length, 'modpacks loaded')
 })
 
 </script>

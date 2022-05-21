@@ -1,6 +1,5 @@
 use std::io::Write;
 use futures::{StreamExt};
-use std::path::{Path,PathBuf};
 use crate::pack;
 
 
@@ -18,18 +17,19 @@ pub struct ModDownloadErrorPayload {
     pub error: String,
 }
 
-#[derive(Clone, serde::Serialize)]
-pub struct DownloadedMod {
-    pub name: String,
-    pub id: String
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct SavedModEntry {
+    pub project_id: String,
+    pub version_id: String,
+    pub filenames: Vec<String>
 }
 
 impl ModrinthModData {
-    pub async fn install_mod(&mut self, destination: &std::path::PathBuf, window: &tauri::Window, pack: &mut pack::Modpack) -> Result<u8, String> {
+    pub async fn install_mod(&mut self, destination: &std::path::PathBuf, window: &tauri::Window, pack: &mut pack::Modpack) -> Result<SavedModEntry, String> {
         let client = reqwest::Client::new();
-        let mut files_downloaded = 0;
-        let id = pack.id.as_deref().unwrap();
-        println!("[debug] starting downloads of {} files for pack id {}", self.files.len(), id);
+        let pack_id = pack.id.as_deref().unwrap();
+        let mut filenames = Vec::<String>::new();
+        println!("[debug] starting downloads of {} files for pack id {}", self.files.len(), pack_id);
         for file in &self.files {
             println!("[debug] downloading file {}, size {}", &file.filename, &file.size);
             let mut dest = std::fs::File::create(destination.join(&file.filename)).expect("Could not create file");
@@ -53,7 +53,7 @@ impl ModrinthModData {
                                 window.emit("download-mod", ModDownloadErrorPayload {
                                     mod_id: self.id.clone(),
                                     file_name: file.filename.clone(),
-                                    pack_id: id.to_string(),
+                                    pack_id: pack_id.to_string(),
                                     error: err.to_string()
                                 }).ok();
                                 println!("item {} failed:\n{}", &file.filename, &err); 
@@ -62,11 +62,11 @@ impl ModrinthModData {
                         }
                     }
                     println!("[debug] downloaded {}", &file.filename);
-                    files_downloaded += 1;
                     window.emit("download-mod", ModDownloadedPayload {
                         mod_id: self.id.clone(),
-                        pack_id: id.to_string()
+                        pack_id: pack_id.to_string()
                     }).ok();
+                    filenames.push(file.filename.clone());
                     // TODO: insert into pack.mods
                 },
                 Err(err) => {
@@ -75,8 +75,13 @@ impl ModrinthModData {
                 }
             }
         }
-        println!("[debug] downloads complete for pack {}", id);
-        Ok(files_downloaded)
+        let save_entry = SavedModEntry {
+            project_id: self.project_id.clone(),
+            version_id: self.id.clone(),
+            filenames
+        };
+        println!("[debug] downloads complete for pack {}", pack_id);
+        Ok(save_entry)
     }
 }
 

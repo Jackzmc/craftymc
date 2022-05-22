@@ -1,5 +1,6 @@
 use std::io::Write;
 use futures::{StreamExt};
+use log::{info, debug, error};
 use crate::pack;
 
 
@@ -31,9 +32,9 @@ impl ModrinthVersionData {
         let client = reqwest::Client::new();
         let pack_id = pack.id.as_deref().unwrap();
         let mut filenames = Vec::<String>::new();
-        println!("[debug] starting downloads of {} files for pack id {}", self.files.len(), pack_id);
+        info!("Downloading {} files for pack id {}", self.files.len(), pack_id);
         for file in &self.files {
-            println!("[debug] downloading file {}, size {}", &file.filename, &file.size);
+            debug!("[debug] Downloading file = {}, bytes = {}", &file.filename, &file.size);
             let mut dest = std::fs::File::create(destination.join(&file.filename)).expect("Could not create file");
             match client
                 .get(&file.url)
@@ -63,7 +64,7 @@ impl ModrinthVersionData {
                             }
                         }
                     }
-                    println!("[debug] downloaded {}", &file.filename);
+                    debug!("{}: finished", &file.filename);
                     window.emit("download-mod", ModDownloadedPayload {
                         mod_id: self.id.clone(),
                         pack_id: pack_id.to_string()
@@ -72,7 +73,7 @@ impl ModrinthVersionData {
                     // TODO: insert into pack.mods
                 },
                 Err(err) => {
-                    println!("Download failure for {}: {}", &file.filename, err);
+                    error!("Download failure for {}: {}", &file.filename, err);
                     return Err(err.to_string())
                 }
             }
@@ -84,7 +85,7 @@ impl ModrinthVersionData {
             name: self.name.clone(),
             author: author_name
         };
-        println!("[debug] downloads complete for pack {}", pack_id);
+        info!("[debug] Completed download queue for {}", pack_id);
         Ok(save_entry)
     }
 }

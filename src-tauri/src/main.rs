@@ -3,6 +3,8 @@
   windows_subsystem = "windows"
 )]
 use std::sync::{Arc, Mutex};
+use tauri_plugin_log::{LogTarget, LoggerBuilder};
+use log::{info, debug, error};
 
 mod settings;
 mod pack;
@@ -31,7 +33,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
   // TODO: Move to Settings
   let config = &mut state.config.lock().unwrap();
   let settings = &mut config.Settings;
-  println!("[debug] Setting {}/{} to \"{}\"", category, key, &value);
+  debug!("Setting {}/{} to \"{}\"", category, key, &value);
   match category {
     "general" => {
       match key {
@@ -68,10 +70,10 @@ fn save_settings(state: tauri::State<'_, AppState>) {
   state.modpacks.lock().unwrap().set_settings(config.Settings.clone());
   match config.save() {
     Ok(_) => {
-      println!("[debug] Saved settings to file.");
+      info!("[debug] Saved current settings to file.");
     },
     Err(err) => {
-      println!("WARN: Failed to save settings to file: {}", err);
+      error!("Failed to save settings to file: {}", err);
     }
   }
   
@@ -117,7 +119,7 @@ async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window
 #[tauri::command]
 fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().unwrap();
-  println!("[debug] Saved modpack \"{}\"", pack_id);
+  info!("Saved modpack \"{}\" data", pack_id);
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
       window.emit("update-modpack", UpdateModpackPayload { modpack: pack.clone() }).unwrap();
@@ -131,7 +133,7 @@ fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_i
 fn set_modpack_setting(state: tauri::State<'_, AppState>, pack_id: &str, key: &str, value: String) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().unwrap();
   let modpack = modpacks.get_modpack_mut(pack_id).expect("[removeme] pack not found");
-  println!("[debug] Setting modpack \"{}\" key {} to \"{}\"", pack_id, key, &value);
+  debug!("Setting modpack \"{}\" key {} to \"{}\"", pack_id, key, &value);
   match key {
     "name" => modpack.name = value,
     "modloaderType" => modpack.settings.modloaderType = value,
@@ -189,6 +191,7 @@ fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &st
 
 fn main() {
   let config = settings::SettingsManager::new();
+  let logs = std::path::Path::new(&config.Settings.minecraft.saveDirectory).join("Logs");
   tauri::Builder::default()
     .manage(AppState {
       modpacks: Arc::new(Mutex::new(pack::ModpackManager::new(config.Settings.clone()))),
@@ -199,6 +202,13 @@ fn main() {
       create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack,
       install_mod
     ])
+    .plugin(
+      LoggerBuilder::new().targets([
+        LogTarget::Folder(logs),
+        LogTarget::Stdout,
+      ])
+      .build()
+    )
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }

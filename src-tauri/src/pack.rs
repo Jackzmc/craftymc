@@ -3,6 +3,7 @@ use std::fs;
 use std::collections::HashMap;
 use uuid::Uuid;
 use std::path::{Path,PathBuf};
+use log::{info, debug, error};
 
 use crate::util;
 use crate::mods;
@@ -80,18 +81,18 @@ impl ModpackManager {
                         match serde_json::from_str::<Modpack>(&str) {
                             Ok(mut modpack) => {
                                 let id = modpack.id.as_deref().unwrap().to_string();
-                                println!("[debug] Loading modpack uuid = {}", &id);
+                                debug!("loading modpack id = {}", &id);
                                 modpack.folder_name = entry.file_name().into_string().ok();
                                 self.packs.insert(id, modpack);
                             },
                             Err(err) => {
-                                eprintln!("ERROR: Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", entry.file_name().to_str().unwrap(), err)
+                                error!("Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", entry.file_name().to_str().unwrap(), err)
                             }
                         }
                         
                     },
                     Err(err) => {
-                        eprintln!("ERROR:  Directory \"{}\"'s manifest.json is unreadable or corrupted: {}", entry.file_name().to_str().unwrap(), err)
+                        error!("Directory \"{}\"'s manifest.json is unreadable or corrupted: {}", entry.file_name().to_str().unwrap(), err)
                     }
                 }
             }
@@ -105,9 +106,8 @@ impl ModpackManager {
     }
 
     pub fn get_modpack_by_name(&self, name: &str) -> Option<&Modpack> {
-        for (id, pack) in self.packs.iter() {
+        for (_id, pack) in self.packs.iter() {
             if pack.name == name {
-                println!("[debug] Found modpack with id = {}", id);
                 return Some(pack)
             }
         }
@@ -158,7 +158,7 @@ impl ModpackManager {
         // Make files
         fs::write(save_dir.join(".mcmm"), pack.id.as_ref().unwrap()).unwrap();
         fs::write(save_dir.join("manifest.json"), serde_json::to_string_pretty(&pack).expect("failed to serialize modpack to manifest")).expect("failed to create modpack manifest");
-        println!("[debug] Created new modpack (name = \"{}\") with uuid = {}", &pack.name, pack.id.as_ref().unwrap());
+        info!("Created new modpack (name = \"{}\") with uuid = {}", &pack.name, pack.id.as_ref().unwrap());
         let id = pack.id.clone().unwrap();
         let clone = pack.clone();
         self.packs.insert(id, pack);
@@ -171,7 +171,7 @@ impl ModpackManager {
     }
 
     pub fn launch_modpack(&mut self, id: &str) -> Result<std::process::Child, String> {
-        println!("[debug] attempting to launch {}", id);
+        debug!("attempting to launch {}", id);
         match self.get_modpack_mut(id) {
             Some(modpack) => {
                 /*
@@ -181,7 +181,7 @@ impl ModpackManager {
                 let modpack = self.get_modpack(id).unwrap();
                 self.set_launcher_config(&modpack);
                 let work_dir = self.get_install_folder();
-                println!("[debug] launching modpack \"{}\" with args: \"-w {}\"", &modpack.name, &work_dir.to_string_lossy());
+                debug!("launching modpack \"{}\" with args: \"-w {}\"", &modpack.name, &work_dir.to_string_lossy());
                 match std::process::Command::new(self.get_install_folder().join("MinecraftLauncher.exe"))
                     .arg("-w")
                     .arg(work_dir)
@@ -207,7 +207,7 @@ impl ModpackManager {
             gameDir: Some(game_dir),
             javaArgs: java_args,
             lastUsed: util::get_iso8601(None),
-            lastVersionId: "1.16.5".to_string(), //TODO: Use correct jar
+            lastVersionId: modpack.versions.minecraft.clone(), //TODO: Use correct jar, instead of just minecraft jar
             name: modpack.name.clone(),
             resolution: Some(ProfileResolution {
                 height: self.settings.minecraft.height,

@@ -1,5 +1,5 @@
 <template>
-  <table class="table is-fullwidth">
+<table class="table is-fullwidth">
   <thead>
     <tr>
       <th>Name</th>
@@ -32,7 +32,6 @@
 <script setup lang="ts">
 import { SavedModEntry } from '../types/Pack';
 const props = defineProps<{
-  mods: SavedModEntry[]
+  mods: SavedModEntry[],
 }>()
-
 </script>

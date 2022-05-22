@@ -5,7 +5,7 @@
       <HorizontalField label="Sort by">
         <div class="select">
           <select v-model="sort">
-            <option v-for="(display, key) in SORTS" :key="key" :value="key">{{display}}</option>
+            <option v-for="(display, key) in props.sorts" :key="key" :value="key">{{display}}</option>
           </select>
         </div>
       </HorizontalField>
@@ -29,11 +29,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import HorizontalField from '@/components/form/HorizontalField.vue'
 
-const emit = defineEmits(['update:cardsize'])
-const props = defineProps<{cardsize?: number, showSize?: boolean}>()
+const emit = defineEmits(['update:cardsize', 'update:sort', 'update:filter'])
+const props = defineProps<{
+  cardsize?: number,
+  showSize?: boolean,
+  sorts: Record<string, string>,
+  defaultSort: string
+}>()
 
 const FILTERS = {
   all: "All Modpacks",
@@ -42,17 +47,15 @@ const FILTERS = {
   thirdparty: "External Modpacks"
 }
 
-const SORTS = {
-  recentlyPlayed: "Recently Played",
-  mostPlayed: "Most Played",
-  name: "Name",
-  mcVersion: "Game Version",
-  created: "Creation Date"
-}
+//"relevance" "downloads" "follows" "newest" "updated"
 
-const sort = ref('recentlyPlayed')
-const filter = ref('all')
+let sort = ref(props.defaultSort)
+let filter = ref('all')
 let size = ref(props.cardsize || 3)
+
+watch(sort, (value) => emit('update:sort', value))
+watch(filter, (value) => emit('update:filter', value))
+
 const sizeName = computed(() => {
   switch(size.value) {
     case 2: return "S"

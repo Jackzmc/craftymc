@@ -16,7 +16,7 @@
   </div>
   <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
     <Tab name="Mods">
-      <FilterControls />
+      <FilterControls :sorts="SORTS" defaultSort="relevance" @update:sort="(val) => sort = val"  @update:filter="(val) => filter = val" />
       <p class="has-text-centered mx-5 my-5">
         <span class="has-text-danger" v-if="error">{{error}}</span>
         <span class="subtitle is-4" v-else-if="loading">Loading...</span>
@@ -32,6 +32,7 @@
             >Install</a>
         </template>
       </EntryCard>
+      <div ref="scrollComponent" />
     </Tab>
     <Tab name="Resource Packs">
 
@@ -51,10 +52,12 @@ import FilterControls from '@/components/FilterControls.vue'
 import EntryCard from '@/components/EntryCard.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack';
-import { ref, onBeforeMount, computed } from 'vue'
+import { ref, onBeforeMount, computed, onUnmounted } from 'vue'
 import { createDebounce } from '@/js/utils'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
+
+const MAX_FETCH_PER_PAGE = 20
 
 const emit = defineEmits(["close"])
 const props = defineProps<{
@@ -69,15 +72,35 @@ const installedMods = computed(() => {
   return rec
 }, { deep: true })
 
+const SORTS = computed(() => {
+  if(props.pack.settings.modSource === "modrinth") {
+    return {
+      relevance: "Relevance",
+      downloads: "Downloads",
+      follows: "Follows",
+      newest: "Newest",
+      updated: "Updated"
+    }
+  } else {
+    console.warn("Unsupported or unknown modsource", props.pack.settings.modsource)
+    return []
+  }
+})
+
+let scrollComponent = ref()
+let sort = ref('relevance')
+let filter = ref('all')
 let debug = ref<string>()
 let searchQuery = ref<string>()
 let loading = ref(false)
 let error = ref<string>()
 let mods = ref<ModrinthProject[]>([])
+let page = ref(0)
 
-async function searchModrinth() {
+async function searchModrinth(nextPage: boolean = false) {
   loading.value = true
   error.value = undefined
+  if(nextPage) page.value++
   try {
     const facets = ["project_type:mod"]
     facets.push(`categories:${props.pack.settings.modloaderType}`)
@@ -85,19 +108,21 @@ async function searchModrinth() {
     const facetsString = `[["${facets.join('"],["')}"]]`
 
     const queryText = searchQuery.value && searchQuery.value != '' ? `&query=${searchQuery.value}` : ''
-    const response = await fetch(`https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`)
+    const offset = MAX_FETCH_PER_PAGE * page.value
+    const response = await fetch(`https://api.modrinth.com/v2/search?limit=${MAX_FETCH_PER_PAGE}&offset=${offset}&index=${sort.value}&facets=${facetsString}${queryText}`)
     // TODO: Check versions to see if there is a valid version FOR the modloader
     // OR wait until modrinth fixes it on their side
     const json = await response.json()
     if(response.ok) {
       debug.value = {...json, _url: `https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`}
-      mods.value = (json.hits as ModrinthProject[])
+      mods.value = mods.value.concat((json.hits as ModrinthProject[])
         .map(pack => {
           return {
             project: pack,
             installing: false
           }
         })
+      )
     } else {
       error.value = json.message || json.error
     }
@@ -153,7 +178,18 @@ onBeforeMount(() => {
     }
     console.log(event)
   })
+  window.addEventListener("scroll", handleScroll)
 })
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll)
+})
+
+function handleScroll() {
+  if (scrollComponent.value.getBoundingClientRect().bottom < window.innerHeight) {
+    doSearch(true)
+  }
+}
 
 /*interface DownloadSuccess {
   mod_id: string,

@@ -1,6 +1,6 @@
 <template>
 <div>
-  <FilterControls v-model:cardsize="cardSize" show-size />
+  <FilterControls :sorts="SORTS" defaultSort="recentlyPlayed" v-model:cardsize="cardSize" show-size />
   <div class="columns is-multiline" v-if="props.packs.length > 0">
     <div :class="columnClass" v-for="pack of props.packs" :key="pack.name">
       <Pack :pack="pack" @select="pack => emit('select', pack)" />
@@ -23,6 +23,14 @@ const emit = defineEmits(["select"])
 const props = defineProps<{
   packs: Modpack[]
 }>()
+
+const SORTS = {
+  recentlyPlayed: "Recently Played",
+  mostPlayed: "Most Played",
+  name: "Name",
+  mcVersion: "Game Version",
+  created: "Creation Date"
+}
 
 const cardSize = ref(3)
 

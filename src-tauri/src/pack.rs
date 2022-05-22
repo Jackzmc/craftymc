@@ -236,7 +236,7 @@ impl ModpackManager {
         fs::write(&path, serde_json::to_string_pretty(&profile_config).unwrap()).unwrap();
     }
 
-    pub fn add_mod_entry(&mut self, pack_id: &str, entry: mods::SavedModEntry) {
+    pub fn add_mod_entry(&mut self, pack_id: &str, entry: mods::SavedModEntry) -> Modpack {
         let mut pack = self.get_modpack(pack_id).expect("add mod entry to not a modpack").clone();
         let download_dir = self.get_downloads_folder();
         let dest = self.get_instances_folder().join(pack.folder_name.as_ref().unwrap()).join("mods");
@@ -248,7 +248,8 @@ impl ModpackManager {
         }
         pack.mods.push(entry);
         self.save(&pack);
-        self.packs.insert(pack.id.clone().unwrap(), pack);
+        self.packs.insert(pack.id.clone().unwrap(), pack.clone());
+        pack
     }
 
 }

@@ -49,14 +49,14 @@
       </div>
     </div>
   </div>
-  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
+  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false, defaultTabHash: 'mods'}">
     <Tab name='debug'>
       <pre>{{ JSON.stringify(props.pack, null, 2) }}</pre>
     </Tab>
     <Tab name="Overview">
 
     </Tab>
-    <Tab name="Mods">
+    <Tab name="Mods" id="mods">
       <Modlist :mods="pack.mods" />
     </Tab>
     <Tab name="Versions">
@@ -81,7 +81,6 @@ const props = defineProps<{
   pack: Modpack
 }>()
 
-
 const enum Subview {
   SettingsModal = 1,
   AddContent = 2
@@ -92,7 +91,7 @@ function formatRelative(value: number, locale?: string) {
   const date = new Date(value*1000);
   const deltaDays = (date.getTime() - Date.now()) / (1000 * 3600 * 24);
   if(deltaDays <= 0) return "Today"
-  else if(deltaADays <= 1) return "Yesterday"
+  else if(deltaDays <= 1) return "Yesterday"
   const formatter = new Intl.RelativeTimeFormat(locale);
   return formatter.format(Math.round(deltaDays), 'days');
 }

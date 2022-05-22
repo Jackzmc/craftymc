@@ -151,8 +151,9 @@ fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::M
 async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, author_name: String, mut version_data: mods::ModrinthVersionData) -> Result<(), ()> {
   let mut tuple = fuck_rust(state.modpacks.lock().unwrap(), pack_id);
   let entry_data = version_data.install_mod(&window, author_name, &tuple.1, &mut tuple.0).await.unwrap();
-  state.modpacks.lock().unwrap().add_mod_entry(pack_id, entry_data);
-  window.emit("update-modpack", UpdateModpackPayload { modpack: tuple.0.clone() }).unwrap();
+  let mut packs = state.modpacks.lock().unwrap();
+  let pack = packs.add_mod_entry(pack_id, entry_data);
+  window.emit("update-modpack", UpdateModpackPayload { modpack: pack }).unwrap();
   Ok(())
 }
 

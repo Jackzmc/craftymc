@@ -9,7 +9,7 @@
       </Field>
     </div>
   </div>
-  <FilterControls />
+  <FilterControls :sorts="SORTS" defaultSort="recentlyPlayed" />
   <p class="has-text-centered my-6 subtitle is-4" v-if="loading">Loading...</p>
   <p class="has-text-centered my-6 subtitle is-4" v-else-if="modpacks.length == 0">No packs were found.</p>
   <EntryCard v-for="entry in props.modpacks" :entry="entry" :key="entry.project.project_id">
@@ -31,6 +31,14 @@ import Field from '@/components/form/Field.vue'
 import { InstallState } from '@/types/Pack';
 import { createDebounce } from '@/js/utils';
 import { ref } from 'vue'
+
+const SORTS = {
+  recentlyPlayed: "Recently Played",
+  mostPlayed: "Most Played",
+  name: "Name",
+  mcVersion: "Game Version",
+  created: "Creation Date"
+}
 
 const emit = defineEmits(['search'])
 const props = defineProps<{

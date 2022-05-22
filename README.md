@@ -6,6 +6,10 @@ Name is still pending.
 
 Built with Tauri (rust + edge webview) with Vue.js & TS on the UI
 
+## Preview
+
+![app_1653166952](https://user-images.githubusercontent.com/4030546/169668926-1c878b8b-a49b-40f0-8b24-d6d48a85d473.gif)
+
 ### Current Roadmap, for alpha release
 
 1. Overall UI mockup (mostly done)

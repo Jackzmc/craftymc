@@ -2,6 +2,8 @@ use std::path::Path;
 use sysinfo::SystemExt;
 use std::fs;
 
+
+
 #[allow(non_snake_case)]
 pub struct SettingsManager {
     pub Settings: Settings,
@@ -19,7 +21,7 @@ pub struct Settings {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct GeneralSettings {
-
+    pub telemetryState: i8
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -49,7 +51,7 @@ impl Settings {
                 maxMemoryMb: system.total_memory() / 1000,
             },
             general: GeneralSettings {
-
+                telemetryState: -1
             },
             minecraft: MinecraftSettings {
                 saveDirectory: save_dir.to_str().unwrap().to_string(),

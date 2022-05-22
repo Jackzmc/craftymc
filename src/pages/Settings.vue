@@ -5,7 +5,9 @@
     <div class="column is-8">
       <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
         <Tab name="General">
-
+          <Field label="Telemetry">
+            <TelemetryList @change="setTelemetry" />
+          </Field>
         </Tab>
         <Tab name="Minecraft">
           <h4 class="title is-4">Minecraft</h4>
@@ -15,7 +17,7 @@
           <Field label="Preferred Release">
             <div class="select">
               <select>
-                <option v-for="(display, release) in RELEASES" :key="release">{{display}}</option>
+                 <option v-for="(display, release) in RELEASES" :key="release">{{display}}</option>
               </select>
             </div>
           </Field>
@@ -65,6 +67,7 @@ import HorizontalField from '@/components/form/HorizontalField.vue'
 import { ref, computed, watch } from 'vue'
 import { AppSettings } from '../types/Settings';
 import { invoke } from '@tauri-apps/api/tauri'
+import TelemetryList from '@/components/TelemetryList.vue'
 import { onBeforeRouteLeave } from 'vue-router'
 
 const emit = defineEmits(["update-settings"])
@@ -82,11 +85,14 @@ const RELEASES = {
 
 let settings = ref<AppSettings>(JSON.parse(JSON.stringify(props.settings)))
 
-watch(settings, () => {
+watch(settings, findAnyChange, { deep: true, immediate: true })
+
+async function findAnyChange() {
   for(const category in settings.value) {
     for(const key in settings.value[category]) {
+      if(key === "telemetryState") continue //why is vue3 watchers so janky
       if(props.settings[category][key] !== settings.value[category][key]) {
-        invoke('set_setting', {
+        await invoke('set_setting', {
           category,
           key,
           value: settings.value[category][key].toString()
@@ -94,13 +100,23 @@ watch(settings, () => {
       }
     }
   }
-}, { deep: true })
+}
+
+async function setTelemetry(value) {
+  settings.value.general.telemetryState = value
+  await invoke('set_setting', {
+    category: "general",
+    key: "telemetryState",
+    value: value.toString()
+  })
+}
 
 const javaMemory = computed(() => {
   return `${settings.value.minecraft.javaMemoryMb.toLocaleString()} MB`
 })
 
 onBeforeRouteLeave(async() => {
+  await findAnyChange()
   await invoke('save_settings')
   emit('update-settings', settings.value)
 })

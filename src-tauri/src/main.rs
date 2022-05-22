@@ -8,6 +8,7 @@ mod settings;
 mod pack;
 mod util;
 mod mods;
+mod telemetry;
 
 struct AppState {
   config: Mutex<settings::SettingsManager>,
@@ -34,6 +35,13 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
   match category {
     "general" => {
       match key {
+        "telemetryState" => {
+          let prev = settings.general.telemetryState.clone(); 
+          settings.general.telemetryState = value.parse::<i8>().unwrap();
+          if prev == -1 && settings.general.telemetryState != prev {
+            let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo);
+          }
+        },
         _ => return Err("Invalid key".to_string())
       };
     },

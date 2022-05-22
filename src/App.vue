@@ -1,5 +1,6 @@
 <template>
 <div>
+  <AskTelemetryModal v-if="settings && settings.general.telemetryState < 0" @result="(level) => settings.general.telemetryState = level" />
   <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" @update-modpacks="updateModpacks" />
   <br>
   <div class="columns mt-6" v-if="settings">
@@ -20,6 +21,7 @@ import SideBar from '@/components/SideBar.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
 import { AppSettings } from './types/Settings';
+import AskTelemetryModal from '@/components/modals/AskTelemetryModal.vue'
 
 const hasSidebar = ref(true)
 let settings = ref<AppSettings>()

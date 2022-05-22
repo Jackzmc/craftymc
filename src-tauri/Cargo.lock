@@ -60,6 +60,7 @@ dependencies = [
  "chrono",
  "dirs-next",
  "futures",
+ "os_info",
  "reqwest",
  "serde",
  "serde_json",

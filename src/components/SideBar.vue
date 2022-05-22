@@ -37,6 +37,9 @@
         right-icon-class="has-text-info" :icon-right="['fas', 'arrow-up-right-from-square']"
       />
     </a></li>
+    <li><router-link to="/about">
+      <Icon :icon="['fa', 'info-circle']" text="About" />
+    </router-link></li>
   </ul>
   <ul class="menu-label">
     Ad

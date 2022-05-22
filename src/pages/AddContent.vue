@@ -168,9 +168,9 @@ async function getModVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
 
 const doSearch = createDebounce(searchModrinth, 500)
 
-onBeforeMount(() => {
+onBeforeMount(async() => {
   searchModrinth()
-  listen("download-mod", (event) => {
+  listen("download-mod", async(event) => {
     if(event.payload.error) {
       alert(event.payload.error)
     } else {

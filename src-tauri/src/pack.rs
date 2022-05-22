@@ -10,7 +10,8 @@ use crate::mods;
 
 pub struct ModpackManager {
     pub packs: HashMap<String, Modpack>, //key is modpack.id
-    settings: settings::Settings
+    settings: settings::Settings,
+    pub root_folder: PathBuf
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -49,22 +50,21 @@ pub struct PackSettings {
 
 impl ModpackManager {
     pub fn get_downloads_folder(&self) -> PathBuf {
-        Path::new(&self.settings.minecraft.saveDirectory).join("Downloads")
+        self.root_folder.join("Downloads")
+    }
+    pub fn get_instances_folder(&self) -> PathBuf {
+        self.root_folder.join("Instances")
     }
 
-
-    fn get_instances_folder(&self) -> PathBuf {
-        Path::new(&self.settings.minecraft.saveDirectory).join("Instances")
-    }
-
-    fn get_install_folder(&self) -> PathBuf {
-        Path::new(&self.settings.minecraft.saveDirectory).join("Launcher")
+    pub fn get_install_folder(&self) -> PathBuf {
+        self.root_folder.join("Launcher")
     }
 
     pub fn new(settings: settings::Settings) -> ModpackManager {
         let manager = ModpackManager {
             packs: HashMap::new(),
-            settings 
+            root_folder: Path::new(&settings.minecraft.saveDirectory).to_path_buf(),
+            settings
         };
         manager
     }
@@ -168,6 +168,7 @@ impl ModpackManager {
     // Updates the internal settings
     pub fn set_settings(&mut self, settings: settings::Settings) {
         self.settings = settings;
+        self.root_folder = Path::new(&self.settings.minecraft.saveDirectory).to_path_buf()
     }
 
     pub fn launch_modpack(&mut self, id: &str) -> Result<std::process::Child, String> {

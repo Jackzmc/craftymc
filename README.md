@@ -20,6 +20,13 @@ Built with Tauri (rust + edge webview) with Vue.js & TS on the UI
     * Filtering and some minor bug squashing
 
 
+### Using
+
+First setup requires two manual setups:
+a. Minecraft launcher must be installed in Documents\McModManager\Instance, 
+    Copying from your actual minecraft install (C:\program files (X86)\ does work fine)
+b. Modloaders (like forge) need to be manually installed, then setup in instance's manifest
+
 #### Development
 
 `yarn serve` to run the web server for port 8080

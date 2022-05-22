@@ -59,7 +59,7 @@
   <template v-slot:footer>
     <div class="buttons">
       <div :class="['button','is-success',{'is-loading': saving}]" :disabled="saveDisabled" @click="save">Create</div>
-      <div class="button" :disabled="saving" @click="close">Cancel</div>
+      <div class="button" :disabled="saving || undefined" @click="close">Cancel</div>
     </div>
   </template>
 </BaseModal>
@@ -70,6 +70,7 @@ import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
 import { ref, computed, onMounted } from 'vue'
 import DefaultPackImage from '@/assets/default_pack.png'
+// eslint-disable-next-line
 import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(['close', 'save'])
@@ -138,8 +139,8 @@ async function save() {
   saving.value = true
   if(!saveDisabled) return alert("Cannot save: Please fill in all fields.")
   try {
-    const savedPack = await invoke('create_modpack', { modpack: pack.value as Modpack })
-    emit('save', savedPack)
+    // const savedPack = await invoke('create_modpack', { modpack: pack.value as Modpack }) // FIXME: RESTORE THIS
+    await emit('save', pack.value)
     saving.value = false
     emit('close')
   } catch(err) {

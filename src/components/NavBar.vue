@@ -1,6 +1,7 @@
 <template>
 <div>
-<CreatePackModal v-if="showCreatePack" active @close="showCreatePack = false" @save="pack => emit('update-modpacks', pack)" />
+<CreatePackModal v-if="showCreatePack" active @close="showCreatePack = false" @save="onModpackCreated" />
+<ModloaderInstaller v-if="pendingModpackInstall" :pack="pendingModpackInstall" active />
 <nav draggable="true" data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">
@@ -44,6 +45,7 @@
 import { appWindow } from '@tauri-apps/api/window'
 import { computed, ref } from 'vue'
 import CreatePackModal from '@/components/modals/CreatePackModal.vue'
+import ModloaderInstaller from '@/components/modals/ModloaderInstaller.vue'
 // eslint-disable-next-line
 const props = defineProps<{
   hasSidebar: boolean
@@ -51,6 +53,12 @@ const props = defineProps<{
 const emit = defineEmits(["sidebar", "update-modpacks"])
 
 let showCreatePack = ref(false)
+let pendingModpackInstall = ref<Modpack>()
+
+async function onModpackCreated(pack) {
+  await emit('update-modpacks', pack)
+  pendingModpackInstall.value = pack
+}
 
 const sidebarIcon = computed(() => {
   return [

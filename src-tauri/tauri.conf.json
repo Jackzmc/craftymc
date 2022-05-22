@@ -37,7 +37,9 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
+      "resources": [
+        "../resources/*"
+      ],
       "shortDescription": "",
       "targets": "all",
       "windows": {
@@ -61,7 +63,8 @@
         "width": 1280,
         "decorations": false,
         "minHeight": 585,
-        "minWidth": 1040
+        "minWidth": 1040,
+        "fileDropEnabled": false
       }
     ]
   }

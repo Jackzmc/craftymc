@@ -77,7 +77,7 @@ impl SettingsManager {
         std::fs::create_dir_all(&save_dir.join("Instances")).unwrap();
         std::fs::create_dir_all(&save_dir.join("Downloads")).unwrap();
         std::fs::create_dir_all(&save_dir.join("Launcher")).unwrap();
-
+        
         let config_file_path = Path::new(&save_dir).join("settings.json");
         let settings = SettingsManager::load(&save_dir);
         

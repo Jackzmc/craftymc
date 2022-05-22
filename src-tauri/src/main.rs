@@ -3,10 +3,12 @@
   windows_subsystem = "windows"
 )]
 use std::sync::{Arc, Mutex};
+use tauri::Manager;
 use tauri_plugin_log::{LogTarget, LoggerBuilder};
 use log::{info, debug, error};
 
 mod settings;
+mod setup;
 mod pack;
 mod util;
 mod mods;
@@ -41,7 +43,10 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
           let prev = settings.general.telemetryState.clone(); 
           settings.general.telemetryState = value.parse::<i8>().unwrap();
           if prev == -1 && settings.general.telemetryState != prev {
+            // First time setup runs here:
             let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo);
+            let mut setup = setup::FirstTimeSetup::new(&state.modpacks.lock().unwrap());
+            setup.download_launcher();
           }
         },
         _ => return Err("Invalid key".to_string())
@@ -174,24 +179,37 @@ fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &st
   (pack, dest)
 }
 
+
+#[tauri::command]
+async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), ()>{
+  match watch_for_download() {
+    Ok(file) => {
+      let modpacks = state.modpacks.lock().unwrap();
+      let modpack = modpacks.get_modpack(pack_id).unwrap();
+      let dest_dir = modpacks.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
+      // debug!("found downloaded modloader: {}", &file);
+      std::fs::rename(file.path(), dest_dir).expect("mv modloader failed");
+      window.emit("modloader_download_complete", EmptyPayload()).unwrap()
+    },
+    Err(err) => window.emit("modloader_download_error", ErrorPayload(err)).unwrap()
+  };
+  Ok(())
+}
+
+
 ////////////////////////////////////////////////////////////////////////
-/// Mod Commands
+/// debug Commands
 ////////////////////////////////////////////////////////////////////////
 
-// Possibly use a queue based downloader... but lazy mode just do it async
-
-
-/* TODO: methods:
-  save_modpack(name)
-  [x] get_modpack(name)
-  [x] get_modpacks()
-  set_modpack_setting(category, key, value)
-  possibly: reload_modpacks
-*/
-
+#[tauri::command]
+fn debug_install_launcher(state: tauri::State<'_, AppState>) {
+  let mut setup = setup::FirstTimeSetup::new(&state.modpacks.lock().unwrap());
+  setup.download_launcher().expect("download launcher failed");
+}
 fn main() {
   let config = settings::SettingsManager::new();
-  let logs = std::path::Path::new(&config.Settings.minecraft.saveDirectory).join("Logs");
+  let save_folder = std::path::Path::new(&config.Settings.minecraft.saveDirectory).to_path_buf();
+  let logs = save_folder.join("Logs");
   tauri::Builder::default()
     .manage(AppState {
       modpacks: Arc::new(Mutex::new(pack::ModpackManager::new(config.Settings.clone()))),
@@ -199,16 +217,70 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack,
-      install_mod
+      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack, watch_modloader_download,
+      install_mod,
+      debug_install_launcher
     ])
     .plugin(
       LoggerBuilder::new().targets([
         LogTarget::Folder(logs),
         LogTarget::Stdout,
       ])
+      .level(log::LevelFilter::Debug)
       .build()
-    )
+    ).setup(move |app| {
+      let window = app.get_window("main").unwrap();
+      window.open_devtools();
+      // Move all resources to folder:
+      let paths = std::fs::read_dir(app.path_resolver().resource_dir().unwrap()
+        .join("_up_").join("resources")
+      ).unwrap();
+      /*let dest_dir = save_folder.join("Launcher");
+      for entry in paths {
+        let file = entry.unwrap();
+        let path = file.path();
+        // TODO: Figure out solution to copy resources to folder.
+        debug!("mv {:?} to {:?}", &path, &dest_dir);
+        std::fs::copy(&path, &dest_dir).expect("copy failed");
+        std::fs::remove_file(&path).expect("rm failed");
+      }*/
+      Ok(())
+    })
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
+}
+
+/*
+1. UI will emit this, and 5s later open a download window for forge
+2. Keep polling until a downloaded jar appears (and optionally check if it looks valid, like forge-xxx)
+3. Send event to UI telling them you got it:
+  a. ui will close window handle and show mod list
+  b. rust will attempt to run the installer in the background?
+*/
+#[derive(Clone, serde::Serialize)]
+struct EmptyPayload();
+#[derive(Clone, serde::Serialize)]
+struct ErrorPayload(String);
+
+fn watch_for_download() -> Result<std::fs::DirEntry, String> {
+  let downloads_dir = &dirs_next::download_dir().expect("cannot find download dir");
+  let now = std::time::SystemTime::now();
+  while now.elapsed().unwrap().as_secs() < 120 {
+    let paths = std::fs::read_dir(downloads_dir).expect("cannot read dir");
+    for path in paths {
+      let file = path.unwrap();
+      match file.metadata().unwrap().created() { 
+        Ok(created) => {
+          if file.file_type().unwrap().is_file() && created.duration_since(now).unwrap().as_secs() <= 60 {
+            let filename = &file.file_name().into_string().unwrap();
+            if filename.ends_with(".jar") {
+              return Ok(file)
+            }
+          }
+        },
+        Err(err) => return Err(err.to_string())
+      };
+    }
+  }
+  Err("Watch timed out".to_string())
 }

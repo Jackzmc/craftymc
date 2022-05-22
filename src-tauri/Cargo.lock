@@ -61,7 +61,6 @@ dependencies = [
  "dirs-next",
  "futures",
  "log",
- "os_info",
  "reqwest",
  "serde",
  "serde_json",

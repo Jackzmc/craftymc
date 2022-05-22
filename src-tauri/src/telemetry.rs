@@ -1,3 +1,5 @@
+use sysinfo::{SystemExt, System};
+
 pub enum TelemetryFlags {
     None,
     GeneralInfo = 1,
@@ -9,8 +11,12 @@ pub fn send_telemetry(level: TelemetryFlags) -> Result<(), String> {
     let client = reqwest::blocking::Client::new();
     match level {
         TelemetryFlags::GeneralInfo => {
-            let info = os_info::get();
-            let url = format!("https://api.lgs.jackz.me/mmm-telemetry.php?type=general&type={}&version={}", info.os_type(), info.version());
+            let mut sys = System::new_all();
+            sys.refresh_all();
+            let url = format!(
+                "https://api.lgs.jackz.me/mmm-telemetry.php?type=general&type={}&version={}", 
+                sys.name().unwrap_or_default(), sys.os_version().unwrap_or_default()
+            );
             let _ = client
                 .post(url)
                 .header("User-Agent", "mc-mod-manager/v1.0-alpha")

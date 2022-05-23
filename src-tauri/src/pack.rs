@@ -71,6 +71,7 @@ impl ModpackManager {
 
     pub fn load(&mut self) {
         let paths = fs::read_dir(self.get_instances_folder()).unwrap();
+        self.packs.clear();
         for path in paths {
             let entry = path.unwrap();
             if entry.file_type().unwrap().is_dir() {

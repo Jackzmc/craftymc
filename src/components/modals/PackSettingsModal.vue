@@ -1,8 +1,10 @@
 <template>
 <BaseModal active title="Edit modpack" @close="close" show-header>
   <div class="columns is-mobile is-centered is-vcentered">
-    <div class="column is-3">
-      <img :src="props.pack.imageUrl || DefaultPackImage" />
+    <div class="column is-3 has-tooltip-bottom" data-tooltip="Click to change">
+      <figure class="image is-128x128">
+        <img :src="props.pack.imageUrl" @click="choosePackImage" />
+      </figure>
     </div>
     <div class="column">
       <Field label="Name">
@@ -28,7 +30,6 @@ import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
 import { reactive, computed, watch } from 'vue'
-import DefaultPackImage from '@/assets/default_pack.png'
 import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(['close'])
@@ -61,6 +62,11 @@ async function updateName() {
 const javaMemory = computed(() => {
   return `${pack.settings.javaMemory?.toLocaleString()} MB`
 })
+
+async function choosePackImage() {
+  await invoke("choose_modpack_image", { packId: props.pack.id })
+}
+
 
 async function save() {
   await invoke('save_modpack', { packId: pack.id })

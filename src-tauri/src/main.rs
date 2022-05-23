@@ -271,6 +271,33 @@ async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tau
   Ok(())
 }
 
+#[tauri::command]
+fn choose_modpack_image(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: String) {
+  let modpacks = state.modpacks.blocking_lock();
+  let cl_modpacks = state.modpacks.clone();
+  let pack = modpacks.get_modpack(&pack_id).unwrap();
+  let dest_dir = modpacks.get_instances_folder().join(pack.folder_name.as_ref().unwrap());
+  debug!("opening image picker for modpack id = {}", pack_id);
+  tauri::api::dialog::FileDialogBuilder::new()
+    .set_title("Choose an image for the modpack")
+    .add_filter("image", &["png","jpg","webp"])
+    .pick_file(move |result| {
+      if let Some(filepath) = result {
+        let ext = filepath.extension().expect("no file ext").to_str().unwrap();
+        std::fs::copy(&filepath, dest_dir.join(
+          format!("pack.{}", &ext)
+        ));
+        let mut modpacks = cl_modpacks.blocking_lock();
+        let mut modpack = modpacks.get_modpack_mut(&pack_id).unwrap();
+        modpack.img_ext = Some(ext.to_string());
+        window.emit("update-modpack", UpdateModpackPayload { 
+          modpack: modpack.clone(),
+          deleted: false
+        }).unwrap();
+      }
+    });
+}
+
 
 ////////////////////////////////////////////////////////////////////////
 /// debug Commands
@@ -281,6 +308,8 @@ fn debug_install_launcher(state: tauri::State<'_, AppState>) {
   let mut setup = setup::Setup::new(&state.modpacks.blocking_lock());
   setup.download_launcher().expect("download launcher failed");
 }
+
+
 fn main() {
   let config = settings::SettingsManager::new();
   let save_folder = std::path::Path::new(&config.Settings.minecraft.saveDirectory).to_path_buf();
@@ -293,7 +322,7 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack, watch_modloader_download, open_modpack_folder,
+      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack, watch_modloader_download, open_modpack_folder, choose_modpack_image,
       install_mod,
       debug_install_launcher
     ])

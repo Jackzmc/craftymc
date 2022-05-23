@@ -2,7 +2,7 @@
 <BaseModal active title="New Modpack" @close="close" show-header>
   <div class="columns is-mobile is-centered is-vcentered">
     <div class="column is-3">
-      <img :src="pack.imageUrl || DefaultPackImage" />
+      <img :src="pack.imageUrl" />
     </div>
     <div class="column">
       <Field label="Name">
@@ -69,7 +69,6 @@ import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
 import { ref, computed, onBeforeMount } from 'vue'
-import DefaultPackImage from '@/assets/default_pack.png'
 // eslint-disable-next-line
 import { invoke } from '@tauri-apps/api/tauri'
 

@@ -1,8 +1,8 @@
 <template>
 <div>
   <h4 class="title is-4" v-if="!selectedPack">Installed Modpacks</h4>
-  <PackDetails v-if="selectedPack" :pack="selectedPack" @goback="selectedPack = undefined" />
-  <PackList v-else :packs="props.modpacks" @select="(pack) => selectedPack = pack" />
+  <PackDetails v-if="selectedPack" :pack="selectedPack" @goback="selectedPack = undefined" :edit-selected="editSelected" />
+  <PackList v-else :packs="props.modpacks" @select="pack => selectPack(pack)" @edit="pack => selectPack(pack, true)" />
 </div>
 </template>
 
@@ -17,6 +17,7 @@ const props = defineProps<{
 }>()
 
 let selectedPack = ref<Modpack>()
+let editSelected = ref(false)
 
 watch(() => props.modpacks, () => {
   console.debug('without this, code below doesnt work. help me.')
@@ -25,5 +26,10 @@ watch(() => props.modpacks, () => {
     selectedPack.value = props.modpacks.find(pack => pack.id === id)
   }
 }, { deep: true })
+
+function selectPack(pack: Modpack, edit = false) {
+  selectedPack.value = pack
+  editSelected.value = edit
+}
 
 </script>

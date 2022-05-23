@@ -1,4 +1,7 @@
 export interface Modpack {
+  folder_name: string,
+  img_ext?: string,
+
   id: string,
   name: string,
   author?: string,

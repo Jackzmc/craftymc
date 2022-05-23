@@ -18,10 +18,13 @@
 import { ref, onBeforeMount, computed } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke, convertFileSrc } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
 import { AppSettings } from './types/Settings';
+import { documentDir, join } from '@tauri-apps/api/path'
 import AskTelemetryModal from '@/components/modals/AskTelemetryModal.vue'
+import DefaultPackImage from '@/assets/default_pack.png'
+
 
 const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
@@ -33,8 +36,22 @@ async function updateSettings(newSettings?: AppSettings) {
 }
 
 async function updateModpacks(newModpack?: Modpack) {
-  if(!newModpack) modpacks.value = await invoke('get_modpacks')
-  else modpacks.value.push(newModpack)
+  if(!newModpack) {
+    const packs = await invoke('get_modpacks')
+    for(let pack of packs) {
+      pack.imageUrl = await _get_img_url(pack)
+    }
+    modpacks.value = packs
+  }
+  else {
+    newModpack.imageUrl = await _get_img_url(pack)
+    modpacks.value.push(newModpack)
+  }
+}
+async function _get_img_url(modpack: Modpack): Promise<Modpack> {
+  return (modpack.img_ext)
+    ? await convertFileSrc(await join(await documentDir(), `MCModDownloader/Instances/${modpack.folder_name}/pack.${modpack.img_ext}`))
+    : DefaultPackImage
 }
 
 const mainViewClass = computed(() => {
@@ -50,9 +67,10 @@ onBeforeMount(async() => {
   await updateModpacks()
   console.debug(modpacks.value.length, 'modpacks loaded')
 
-  await listen('update-modpack', (event) => {
+  await listen('update-modpack', async(event) => {
     console.debug('update-modpack', event.payload.modpack)
     const newModpack = event.payload.modpack
+    newModpack.imageUrl = await _get_img_url(newModpack)
     for(let i = 0; i < modpacks.value.length; i++) {
       if(modpacks.value[i].id === newModpack.id) {
         if(event.payload.deleted)

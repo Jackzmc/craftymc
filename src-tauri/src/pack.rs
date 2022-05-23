@@ -17,8 +17,10 @@ pub struct ModpackManager {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct Modpack {
-    #[serde(skip_serializing)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub folder_name: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub img_ext: Option<String>,
 
     pub id: Option<String>,
     pub name: String,
@@ -82,8 +84,10 @@ impl ModpackManager {
                         match serde_json::from_str::<Modpack>(&str) {
                             Ok(mut modpack) => {
                                 let id = modpack.id.as_deref().unwrap().to_string();
-                                debug!("loading modpack id = {}", &id);
-                                modpack.folder_name = entry.file_name().into_string().ok();
+                                let folder_name = entry.file_name().into_string().ok().unwrap();
+                                debug!("loading modpack id = {} in \"{}\"", &id, &folder_name);
+                                modpack.img_ext = self.get_pack_img_ext(&folder_name);
+                                modpack.folder_name = Some(folder_name);
                                 self.packs.insert(id, modpack);
                             },
                             Err(err) => {
@@ -100,10 +104,26 @@ impl ModpackManager {
         }
     }
 
+    fn get_pack_img_ext(&self, folder_name: &str) -> Option<String> {
+        let root = self.get_instances_folder().join(folder_name);
+        if root.join("pack.png").exists() {
+            Some("png".to_string())
+        } else if root.join("pack.jpg").exists() {
+            Some("jpg".to_string())
+        } else if root.join("pack.webp").exists() {
+            Some("webp".to_string())
+        } else {
+            None
+        }
+    }
+
     pub fn save(&self, modpack: &Modpack) {
         let folder_name = modpack.folder_name.as_ref().expect("modpack has no save folder");
         let manifest = self.get_instances_folder().join(folder_name).join("manifest.json");
-        std::fs::write(manifest, serde_json::to_string_pretty(modpack).unwrap().as_bytes()).expect("save failed");
+        let mut modpack = modpack.clone();
+        modpack.folder_name = None;
+        modpack.img_ext = None;
+        std::fs::write(manifest, serde_json::to_string_pretty(&modpack).unwrap().as_bytes()).expect("save failed");
     }
 
     pub fn get_modpack_by_name(&self, name: &str) -> Option<&Modpack> {

@@ -2,7 +2,7 @@
 <div class="card" @mouseover="setActive(true)" @mouseleave="setActive(false)">
   <a class="card-image" @click="emit('select', pack)">
     <figure class="image is-4by3">
-      <img :src="props.pack.imageUrl || DefaultPackImage" alt="Placeholder image">
+      <img :src="props.pack.imageUrl" alt="Modpack image">
       <span class="is-overlay pr-2 py-2">
         <div class="tags has-addons is-pulled-right ml-2"  data-tooltip="Game version">
           <span class="tag">
@@ -33,7 +33,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Modpack } from '@/types/Pack'
-import DefaultPackImage from '@/assets/default_pack.png'
 import { invoke } from '@tauri-apps/api/tauri'
 
 const emit = defineEmits(["select"])

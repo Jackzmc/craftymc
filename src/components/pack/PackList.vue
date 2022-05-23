@@ -20,7 +20,7 @@
             <li><a class="has-text-info" @click="launch(slotProps.ctx)">
               <Icon :icon="['fa', 'play']" text="Play" />
             </a></li>
-            <li><a @click="emit('select', slotProps.ctx); contextMenu.close()">
+            <li><a @click="emit('edit', slotProps.ctx); contextMenu.close()">
               <Icon :icon="['fa', 'pencil']" text="Edit" />
             </a></li>
             <li><a @click="invoke('open_modpack_folder', { packId: slotProps.ctx.id })">
@@ -48,7 +48,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 let component = ref()
 let componentPack = ref()
 
-const emit = defineEmits(["select"])
+const emit = defineEmits(["select", "edit"])
 
 const props = defineProps<{
   packs: Modpack[]

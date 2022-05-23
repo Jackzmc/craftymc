@@ -1,7 +1,7 @@
 <template>
 <div>
-  <component :is="component" :pack="props.pack" v-if="component" @close="component = undefined"/>
-  <template v-else> <!-- a little hacky -->
+  <component :is="component" :pack="props.pack" v-if="component" @close="showSubview(Subview.None)"/>
+  <template v-if="!hideSelf"> <!-- a little hacky -->
   <a class="button mb-2">
     <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
   </a>
@@ -9,7 +9,7 @@
     <div class="columns is-mobile is-centered is-vcentered">
       <div class="column is-2">
         <figure class="image is-128x128 is-pulled-left">
-          <img :src="props.pack.imageUrl || DefaultPackImage" />
+          <img style="width:128px;height:128px" :src="props.pack.imageUrl" />
         </figure>
       </div>
       <div class="column">
@@ -87,21 +87,23 @@
 <script setup lang="ts">
 import { Tabs, Tab } from 'vue3-tabs-component'
 import { Modpack } from '@/types/Pack'
-import { ref, defineAsyncComponent, markRaw } from 'vue'
-import DefaultPackImage from '@/assets/default_pack.png'
+import { ref, defineAsyncComponent, markRaw, onMounted } from 'vue'
 import Modlist from '@/components/Modlist.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
-import { invoke } from '@tauri-apps/api/tauri'
+import { invoke} from '@tauri-apps/api/tauri'
 
 let contextMenu = ref()
 let component = ref()
+let hideSelf = ref(false)
 
 const emit = defineEmits(["goback"])
 const props = defineProps<{
-  pack: Modpack
+  pack: Modpack,
+  editSelected: boolean
 }>()
 
 const enum Subview {
+  None = 0,
   SettingsModal = 1,
   AddContent = 2,
   DeletePack = 3
@@ -124,11 +126,18 @@ async function launch() {
 }
 
 async function showSubview(subview: Subview) {
+  hideSelf.value = false
   switch(subview) {
+    case Subview.None:
+      component.value = undefined
+      if(props.editSelected)
+        emit('goback')
+      break
     case Subview.SettingsModal:
       component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/PackSettingsModal.vue')))
       break
     case Subview.AddContent:
+      hideSelf.value = true
       component.value = markRaw(defineAsyncComponent(() => import('@/pages/AddContent.vue')))
       break
     case Subview.DeletePack:
@@ -138,5 +147,7 @@ async function showSubview(subview: Subview) {
   contextMenu.value.close()
 }
 
-
+onMounted(async() => {
+  if(props.editSelected) await showSubview(Subview.SettingsModal)
+})
 </script>

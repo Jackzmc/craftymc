@@ -1,7 +1,6 @@
 <template>
 <div>
-  <PackSettingsModal v-if="activeSubview && activeSubview === Subview.SettingsModal" :pack="pack" @close="activeSubview = undefined" />
-  <AddContent v-if="activeSubview && activeSubview === Subview.AddContent" :pack="pack" @close="activeSubview = undefined" />
+  <component :is="component" :pack="props.pack" v-if="component" @close="component = undefined"/>
   <template v-else> <!-- a little hacky -->
   <a class="button mb-2">
     <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
@@ -35,10 +34,10 @@
           <div class="level-right">
             <div class="level-item">
               <div class="buttons">
-                <a class="button is-dark" @click="activeSubview = Subview.SettingsModal">
-                  <Icon :icon="['fas', 'cog']" />
+                <a class="button is-dark" @click="event => contextMenu.open(event)">
+                  <Icon :icon="['fas', 'ellipsis-vertical']" />
                 </a>
-                <a class="button is-success" @click="activeSubview = Subview.AddContent">
+                <a class="button is-success" @click="showSubview(Subview.AddContent)">
                   <Icon :icon="['fas', 'plus']" text="Add Content" />
                 </a>
                 <a class="button is-info" style="width: 6em" @click="launch">Play</a>
@@ -64,17 +63,38 @@
     </Tab>
   </Tabs>
   </template>
+  <ContextMenu class="box" ref="contextMenu">
+    <aside class="menu">
+      <ul class="menu-list">
+        <li><a class="has-text-info" @click="launch()">
+          <Icon :icon="['fa', 'play']" text="Play" />
+        </a></li>
+        <li><a @click="showSubview(Subview.SettingsModal)">
+          <Icon :icon="['fa', 'cog']" text="Settings" />
+        </a></li>
+        <li><a @click="invoke('open_modpack_folder', { packId: props.pack.id })">
+          <Icon :icon="['fa', 'folder']" text="Open Folder" />
+        </a></li>
+        <li><a class="has-text-danger"  @click="showSubview(Subview.DeletePack)">
+          <Icon :icon="['fa', 'trash']" text="Delete" />
+        </a></li>
+      </ul>
+    </aside>
+  </ContextMenu>
 </div>
 </template>
 
 <script setup lang="ts">
 import { Tabs, Tab } from 'vue3-tabs-component'
 import { Modpack } from '@/types/Pack'
-import { ref } from 'vue'
-import PackSettingsModal from '@/components/modals/PackSettingsModal.vue'
+import { ref, defineAsyncComponent, markRaw } from 'vue'
 import DefaultPackImage from '@/assets/default_pack.png'
 import Modlist from '@/components/Modlist.vue'
-import AddContent from '@/pages/AddContent.vue'
+import ContextMenu from '@/components/ContextMenu.vue'
+import { invoke } from '@tauri-apps/api/tauri'
+
+let contextMenu = ref()
+let component = ref()
 
 const emit = defineEmits(["goback"])
 const props = defineProps<{
@@ -83,7 +103,8 @@ const props = defineProps<{
 
 const enum Subview {
   SettingsModal = 1,
-  AddContent = 2
+  AddContent = 2,
+  DeletePack = 3
 }
 
 function formatRelative(value: number, locale?: string) {
@@ -101,5 +122,21 @@ async function launch() {
   const exitCode = await invoke('launch_modpack', { id: props.pack.id })
   console.info('launched modpack exited with code', exitCode)
 }
-let activeSubview = ref<Subview>()
+
+async function showSubview(subview: Subview) {
+  switch(subview) {
+    case Subview.SettingsModal:
+      component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/PackSettingsModal.vue')))
+      break
+    case Subview.AddContent:
+      component.value = markRaw(defineAsyncComponent(() => import('@/pages/AddContent.vue')))
+      break
+    case Subview.DeletePack:
+      component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/DeletePackConfirmModal.vue')))
+      break
+  }
+  contextMenu.value.close()
+}
+
+
 </script>

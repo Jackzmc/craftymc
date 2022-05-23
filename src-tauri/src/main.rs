@@ -108,7 +108,8 @@ fn get_modpacks(state: tauri::State<'_, AppState>) -> Vec<pack::Modpack> {
 
 #[derive(Clone, serde::Serialize)]
 struct UpdateModpackPayload {
-  modpack: pack::Modpack
+  modpack: pack::Modpack,
+  deleted: bool
 }
 
 #[tauri::command]
@@ -117,7 +118,10 @@ async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window
   let mut packs = state.modpacks.lock().await;
   match packs.launch_modpack(id) {
     Ok(mut child) => {
-      window.emit("update-modpack", UpdateModpackPayload { modpack: packs.get_modpack(id).unwrap().clone() }).unwrap();
+      window.emit("update-modpack", UpdateModpackPayload { 
+        modpack: packs.get_modpack(id).unwrap().clone(),
+        deleted: false
+      }).unwrap();
       child.wait().expect("wait for child failed").code().ok_or("killed by signal".to_string())
     },
     Err(err) => Err(err)
@@ -130,7 +134,10 @@ fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_i
   info!("Saved modpack \"{}\" data", pack_id);
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
-      window.emit("update-modpack", UpdateModpackPayload { modpack: pack.clone() }).unwrap();
+      window.emit("update-modpack", UpdateModpackPayload { 
+        modpack: pack.clone(),
+        deleted: false
+      }).unwrap();
       Ok(modpacks.save(pack))
     },
     None => Err("No modpack was found".to_string())
@@ -158,8 +165,18 @@ fn set_modpack_setting(state: tauri::State<'_, AppState>, pack_id: &str, key: &s
 }
 
 #[tauri::command]
-fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::Modpack> {
-  state.modpacks.blocking_lock().delete_modpack(id)
+fn delete_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: String) {
+  if let Some(pack) = state.modpacks.blocking_lock().delete_modpack(&pack_id) {
+    window.emit("update-modpack", UpdateModpackPayload { 
+      modpack: pack,
+      deleted: false
+    }).unwrap();
+  }
+}
+
+#[tauri::command]
+fn open_modpack_folder(state: tauri::State<'_, AppState>, pack_id: &str) -> Result<(), String> {
+  state.modpacks.blocking_lock().open_modpack_folder(pack_id)
 }
 
 
@@ -171,7 +188,10 @@ async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Window, p
   let entry_data = version_data.install_mod(&window, author_name, &tuple.1, &mut tuple.0).await.unwrap();
   let mut packs = state.modpacks.lock().await;
   let pack = packs.add_mod_entry(pack_id, entry_data);
-  window.emit("update-modpack", UpdateModpackPayload { modpack: pack }).unwrap();
+  window.emit("update-modpack", UpdateModpackPayload { 
+    modpack: pack,
+    deleted: false
+   }).unwrap();
   Ok(())
 }
 
@@ -265,6 +285,7 @@ fn main() {
   let config = settings::SettingsManager::new();
   let save_folder = std::path::Path::new(&config.Settings.minecraft.saveDirectory).to_path_buf();
   let logs = save_folder.join("Logs");
+
   tauri::Builder::default()
     .manage(AppState {
       modpacks: Arc::new(Mutex::new(pack::ModpackManager::new(config.Settings.clone()))),
@@ -272,7 +293,7 @@ fn main() {
     })
     .invoke_handler(tauri::generate_handler![
       get_settings, set_setting, save_settings,
-      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack, watch_modloader_download,
+      create_modpack, get_modpack, get_modpacks, launch_modpack, save_modpack, set_modpack_setting, delete_modpack, watch_modloader_download, open_modpack_folder,
       install_mod,
       debug_install_launcher
     ])

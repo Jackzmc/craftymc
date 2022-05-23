@@ -131,6 +131,7 @@ impl ModpackManager {
     }
 
     pub fn delete_modpack(&mut self, id: &str) -> Option<Modpack> {
+        info!("removed modpack id = {}", id);
         self.packs.remove(id)
     }
 
@@ -193,6 +194,8 @@ impl ModpackManager {
         match std::process::Command::new(self.get_install_folder().join("MinecraftLauncher.exe"))
             .arg("-w")
             .arg(work_dir)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
             .spawn()
         {
             Ok(child) => Ok(child),
@@ -255,6 +258,28 @@ impl ModpackManager {
         self.save(&pack);
         self.packs.insert(pack.id.clone().unwrap(), pack.clone());
         pack
+    }
+
+    pub fn open_modpack_folder(&self, pack_id: &str) -> Result<(), String> {
+        match self.get_modpack(pack_id) {
+            Some(pack) => {
+              let folder_path = self.get_instances_folder().join(&pack.folder_name.as_ref().expect("invalid modpack"));
+              let mut command = match std::env::consts::OS {
+                "windows" => std::process::Command::new("explorer"),
+                "macos" => std::process::Command::new("open"),
+                "linux" => std::process::Command::new("xdg-open"),
+                _ => panic!("Unsupported OS")
+              };
+              match command
+                .arg(folder_path)
+                .spawn()
+              {
+                Ok(_) => return Ok(()),
+                Err(err) => return Err(err.to_string())
+              }
+            },
+            None => return Err("No modpack found".to_string())
+        }
     }
 
 }

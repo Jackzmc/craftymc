@@ -54,9 +54,11 @@ onBeforeMount(async() => {
     console.debug('update-modpack', event.payload.modpack)
     const newModpack = event.payload.modpack
     for(let i = 0; i < modpacks.value.length; i++) {
-      let modpack = modpacks.value[i]
-      if(modpack.id === newModpack.id) {
-        modpacks.value[i] = newModpack
+      if(modpacks.value[i].id === newModpack.id) {
+        if(event.payload.deleted)
+          modpacks.slice(i, 1)
+        else
+          modpacks.value[i] = newModpack
         return
       }
     }

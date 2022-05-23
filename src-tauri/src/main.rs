@@ -179,19 +179,51 @@ fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &st
   (pack, dest)
 }
 
-
+/*
+watch_modloader_download -- download has started
+  modloader_download_found -- jar found, prompt ui to close
+  modloader_download_ready -- window has closed
+  modloader_download_complete -- modloader acquired and moved
+Ok(())
+*/
 #[tauri::command]
-async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), ()>{
+async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), String>{
   match watch_for_download() {
     Ok(file) => {
       let modpacks = state.modpacks.lock().unwrap();
       let modpack = modpacks.get_modpack(pack_id).unwrap();
       let dest_dir = modpacks.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
-      // debug!("found downloaded modloader: {}", &file);
-      std::fs::rename(file.path(), dest_dir).expect("mv modloader failed");
-      window.emit("modloader_download_complete", EmptyPayload()).unwrap()
+      window.emit("modloader_download_found", EmptyPayload());
+      // Wait until window is closed:
+      let cl_window = window.clone();
+      window.listen("modloader_download_ready", move |event| {
+        // Rust can't copy but this can as admin.... stupid but it works
+        runas::Command::new(r"C:\Windows\System32\cmd.exe")
+          .gui(true)
+          .arg("/c")
+          .arg("copy")
+          .arg(file.path().to_str().unwrap())
+          .arg(dest_dir.to_str().unwrap())
+          .status()
+          .unwrap();
+
+        // Also for fucking idk why I can't run two commands at once. WORKS FINE IN CMD.EXE NORMALLY BUT RUST FUCKS IT UP
+        runas::Command::new(r"C:\Windows\System32\cmd.exe")
+          .gui(true)
+          .arg("/c")
+          .arg("del")
+          .arg(file.path().to_str().unwrap())
+          .status()
+          .unwrap();
+        // std::fs::copy(file.path(), &dest_dir).expect("cp modloader failed");
+        // std::fs::remove_file(file.path()).expect("rm modloader failed");
+        cl_window.emit("modloader_download_complete", EmptyPayload()).unwrap()
+      });
     },
-    Err(err) => window.emit("modloader_download_error", ErrorPayload(err)).unwrap()
+    Err(msg) => {
+      window.emit("modloader_download_error", ErrorPayload(msg.clone())).unwrap();
+      return Err(msg);
+    }
   };
   Ok(())
 }
@@ -271,10 +303,14 @@ fn watch_for_download() -> Result<std::fs::DirEntry, String> {
       let file = path.unwrap();
       match file.metadata().unwrap().created() { 
         Ok(created) => {
-          if file.file_type().unwrap().is_file() && created.duration_since(now).unwrap().as_secs() <= 60 {
-            let filename = &file.file_name().into_string().unwrap();
-            if filename.ends_with(".jar") {
-              return Ok(file)
+          if file.file_type().unwrap().is_file() {
+            if let Ok(duration) = created.duration_since(now) {
+              if duration.as_secs() > 5 && duration.as_secs() <= 12 {
+                let filename = &file.file_name().into_string().unwrap();
+                if filename.ends_with(".jar") {
+                  return Ok(file)
+                }
+              }
             }
           }
         },

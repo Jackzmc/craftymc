@@ -1,7 +1,7 @@
 <template>
 <div>
 <CreatePackModal v-if="showCreatePack" active @close="showCreatePack = false" @save="onModpackCreated" />
-<ModloaderInstaller v-if="pendingModpackInstall" :pack="pendingModpackInstall" active />
+<ModloaderInstaller v-if="pendingModpackInstall" :pack="pendingModpackInstall" active  @save="pendingModpackInstall = undefined" />
 <nav draggable="true" data-tauri-drag-region class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu">
     <div class="navbar-start">

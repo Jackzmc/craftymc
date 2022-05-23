@@ -139,8 +139,8 @@ async function save() {
   saving.value = true
   if(!saveDisabled) return alert("Cannot save: Please fill in all fields.")
   try {
-    // const savedPack = await invoke('create_modpack', { modpack: pack.value as Modpack }) // FIXME: RESTORE THIS
-    await emit('save', pack.value)
+    const savedPack = await invoke('create_modpack', { modpack: pack.value as Modpack }) // FIXME: RESTORE THIS
+    await emit('save', savedPack)
     saving.value = false
     emit('close')
   } catch(err) {

@@ -182,18 +182,21 @@ impl ModpackManager {
                 modpack.lastPlayed = Some(util::get_iso8601(None));
                 let modpack = self.get_modpack(id).unwrap();
                 self.set_launcher_config(&modpack);
-                let work_dir = self.get_install_folder();
-                debug!("launching modpack \"{}\" with args: \"-w {}\"", &modpack.name, &work_dir.to_string_lossy());
-                match std::process::Command::new(self.get_install_folder().join("MinecraftLauncher.exe"))
-                    .arg("-w")
-                    .arg(work_dir)
-                    .spawn()
-                {
-                    Ok(child) => Ok(child),
-                    Err(err) => Err(err.to_string())
-                }
+                self.run_minecraft_launcher()
             },
             None => Err("No modpack found with id".to_string())
+        }
+    }
+
+    pub fn run_minecraft_launcher(&self) -> Result<std::process::Child, String>  {
+        let work_dir = self.get_install_folder();
+        match std::process::Command::new(self.get_install_folder().join("MinecraftLauncher.exe"))
+            .arg("-w")
+            .arg(work_dir)
+            .spawn()
+        {
+            Ok(child) => Ok(child),
+            Err(err) => Err(err.to_string())
         }
     }
 
@@ -205,10 +208,10 @@ impl ModpackManager {
             .or(Some(&"".to_string()))
             .cloned();
         LauncherProfile {
-            created: modpack.created.clone(),
+            created: Some(modpack.created.clone()),
             gameDir: Some(game_dir),
             javaArgs: java_args,
-            lastUsed: util::get_iso8601(None),
+            lastUsed: Some(util::get_iso8601(None)),
             lastVersionId: modpack.versions.minecraft.clone(), //TODO: Use correct jar, instead of just minecraft jar
             name: modpack.name.clone(),
             resolution: Some(ProfileResolution {
@@ -259,10 +262,10 @@ impl ModpackManager {
 #[allow(non_snake_case)]
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 struct LauncherProfile {
-    pub created: String,
+    pub created: Option<String>,
     pub gameDir: Option<String>,
     pub javaArgs: Option<String>,
-    pub lastUsed: String,
+    pub lastUsed: Option<String>,
     pub lastVersionId: String,
     pub name: String,
     pub resolution: Option<ProfileResolution>,

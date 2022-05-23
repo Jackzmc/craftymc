@@ -4,9 +4,13 @@
   <p>A window will open in 5 seconds, please select a version of your modloader to download.</p>
   <p>The window will automatically close once a download is completed.</p>
 
-  <div class="has-text-centered my-5 subtitle is-4" v-if="waiting">
+  <div class="has-text-centered my-5 subtitle is-4" v-if="waitingInstall">
+    <fa-icon :icon="['fa', 'hourglass']" /><span> Installing modloader...</span>
+  </div>
+  <div class="has-text-centered my-5 subtitle is-4" v-else-if="waiting">
     <fa-icon :icon="['fa', 'hourglass']" /><span> Waiting for download...</span>
   </div>
+
   <template v-slot:footer>
 
   </template>
@@ -26,6 +30,7 @@ const props = defineProps<{
 }>()
 
 let waiting = ref(false)
+let waitingInstall = ref(false)
 let waitForCloseTimer = ref<number>()
 
 /*
@@ -62,6 +67,7 @@ async function checkWindow(windowHandle) {
   if(windowHandle.closed && waiting.value) {
     clearInterval(waitForCloseTimer.value)
     appEmit('modloader_download_ready')
+    waitingInstall.value = true
 
     appListen("modloader_download_complete", () => {
       waiting.value = false

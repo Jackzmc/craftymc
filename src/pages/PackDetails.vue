@@ -41,7 +41,7 @@
                 <a class="button is-success" @click="activeSubview = Subview.AddContent">
                   <Icon :icon="['fas', 'plus']" text="Add Content" />
                 </a>
-                <a class="button is-info" style="width: 6em">Play</a>
+                <a class="button is-info" style="width: 6em" @click="launch">Play</a>
               </div>
             </div>
           </div>
@@ -94,6 +94,12 @@ function formatRelative(value: number, locale?: string) {
   else if(deltaDays <= 1) return "Yesterday"
   const formatter = new Intl.RelativeTimeFormat(locale);
   return formatter.format(Math.round(deltaDays), 'days');
+}
+
+async function launch() {
+  // TODO: Show that launcher is running
+  const exitCode = await invoke('launch_modpack', { id: props.pack.id })
+  console.info('launched modpack exited with code', exitCode)
 }
 let activeSubview = ref<Subview>()
 </script>

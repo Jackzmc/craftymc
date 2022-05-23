@@ -129,16 +129,19 @@ impl Setup {
     pub async fn install_fml(&self, modpack: &pack::Modpack) -> Result<(), String> {
         match self.download_fml_installer().await {
             Ok(cli_path) => {
-                debug!("running: java -jar {:?} --installer {:?} --target {:?}", &cli_path, self.instances_folder.join(&modpack.versions.modloader), &self.launcher_folder);
-                std::process::Command::new("java")
+                let installer_path = self.instances_folder.join(modpack.folder_name.as_ref().unwrap()).join(&modpack.versions.modloader);
+                debug!("running: java -jar {:?} --installer {:?} --target {:?}", &cli_path, &installer_path, &self.launcher_folder);
+                let res = std::process::Command::new("java")
                     .arg("-jar")
                     .arg(cli_path)
                     .arg("--installer")
-                    .arg(self.instances_folder.join(modpack.folder_name.as_ref().unwrap()).join(&modpack.versions.modloader))
+                    .arg(&installer_path)
                     .arg("--target")
                     .arg(&self.launcher_folder)
                     .status()
-                    .unwrap()
+                    .unwrap();
+                std::fs::remove_file(&installer_path).expect("cleanup installer failed");
+                res
             },
             Err(err) => return Err(err) 
         };

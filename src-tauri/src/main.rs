@@ -49,6 +49,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
             let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo);
             let mut setup = setup::Setup::new(&state.modpacks.blocking_lock());
             setup.download_launcher().unwrap();
+            state.modpacks.blocking_lock().run_minecraft_launcher().unwrap();
           }
         },
         _ => return Err("Invalid key".to_string())
@@ -234,6 +235,7 @@ async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tau
           match setup.install_fml(&modpack).await {
             Ok(()) => {
               debug!("fml install complete. finishing modloader setup");
+              modpack.versions.modloader = file.file_name().to_str().unwrap().replace("-installer", "");
               cl_window.emit("modloader_download_complete", EmptyPayload()).unwrap();
             },
             Err(msg) => cl_window.emit("modloader_download_error", ErrorPayload(msg.clone())).unwrap()

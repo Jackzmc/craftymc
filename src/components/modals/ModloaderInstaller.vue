@@ -4,7 +4,9 @@
   <p>A window will open in 5 seconds, please select a version of your modloader to download.</p>
   <p>The window will automatically close once a download is completed.</p>
 
-  <div class="has-text-centered my-5" v-if="waiting">Waiting for download</div>
+  <div class="has-text-centered my-5 subtitle is-4" v-if="waiting">
+    <fa-icon :icon="['fa', 'hourglass']" /><span> Waiting for download...</span>
+  </div>
   <template v-slot:footer>
 
   </template>

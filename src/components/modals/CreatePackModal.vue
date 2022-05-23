@@ -68,7 +68,7 @@
 import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onBeforeMount } from 'vue'
 import DefaultPackImage from '@/assets/default_pack.png'
 // eslint-disable-next-line
 import { invoke } from '@tauri-apps/api/tauri'
@@ -152,7 +152,7 @@ async function save() {
 function close() {
   emit('close')
 }
-onMounted(async() => {
+onBeforeMount(async() => {
   await getMCVersions()
 })
 </script>

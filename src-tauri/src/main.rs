@@ -2,10 +2,12 @@
   all(not(debug_assertions), target_os = "windows"),
   windows_subsystem = "windows"
 )]
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
+use tauri::async_runtime::Mutex;
 use tauri::Manager;
 use tauri_plugin_log::{LogTarget, LoggerBuilder};
 use log::{info, debug, error};
+use tokio::sync::MutexGuard;
 
 mod settings;
 mod setup;
@@ -25,7 +27,7 @@ struct AppState {
 
 #[tauri::command]
 fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
-  state.config.lock().unwrap().Settings.clone()
+  state.config.blocking_lock().Settings.clone()
 }
 
 #[tauri::command]
@@ -33,7 +35,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
   // Categories are passed in lowercase. 
   // Keys are case-sensitive, may not be lowercase.
   // TODO: Move to Settings
-  let config = &mut state.config.lock().unwrap();
+  let config = &mut state.config.blocking_lock();
   let settings = &mut config.Settings;
   debug!("Setting {}/{} to \"{}\"", category, key, &value);
   match category {
@@ -45,8 +47,8 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
           if prev == -1 && settings.general.telemetryState != prev {
             // First time setup runs here:
             let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo);
-            let mut setup = setup::FirstTimeSetup::new(&state.modpacks.lock().unwrap());
-            setup.download_launcher();
+            let mut setup = setup::Setup::new(&state.modpacks.blocking_lock());
+            setup.download_launcher().unwrap();
           }
         },
         _ => return Err("Invalid key".to_string())
@@ -71,8 +73,8 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
 
 #[tauri::command]
 fn save_settings(state: tauri::State<'_, AppState>) {
-  let config = &mut state.config.lock().unwrap();
-  state.modpacks.lock().unwrap().set_settings(config.Settings.clone());
+  let config = &mut state.config.blocking_lock();
+  state.modpacks.blocking_lock().set_settings(config.Settings.clone());
   match config.save() {
     Ok(_) => {
       info!("[debug] Saved current settings to file.");
@@ -90,17 +92,17 @@ fn save_settings(state: tauri::State<'_, AppState>) {
 
 #[tauri::command]
 fn create_modpack(state: tauri::State<'_, AppState>, modpack: pack::Modpack) -> Result<pack::Modpack, String> {
-  state.modpacks.lock().unwrap().create_modpack(modpack)
+  state.modpacks.blocking_lock().create_modpack(modpack)
 }
 
 #[tauri::command]
 fn get_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::Modpack> {
-  state.modpacks.lock().unwrap().get_modpack(id).cloned()
+  state.modpacks.blocking_lock().get_modpack(id).cloned()
 }
 
 #[tauri::command]
 fn get_modpacks(state: tauri::State<'_, AppState>) -> Vec<pack::Modpack> {
-  state.modpacks.lock().unwrap().get_modpacks()
+  state.modpacks.blocking_lock().get_modpacks()
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -111,7 +113,7 @@ struct UpdateModpackPayload {
 #[tauri::command]
 // TODO: Possibly not make ui wait for return and instead use events
 async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, id: &str) -> Result<i32, String> {
-  let mut packs = state.modpacks.lock().unwrap();
+  let mut packs = state.modpacks.lock().await;
   match packs.launch_modpack(id) {
     Ok(mut child) => {
       window.emit("update-modpack", UpdateModpackPayload { modpack: packs.get_modpack(id).unwrap().clone() }).unwrap();
@@ -123,7 +125,7 @@ async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window
 
 #[tauri::command]
 fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), String> {
-  let modpacks = &mut state.modpacks.lock().unwrap();
+  let modpacks = &mut state.modpacks.blocking_lock();
   info!("Saved modpack \"{}\" data", pack_id);
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
@@ -136,7 +138,7 @@ fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_i
 
 #[tauri::command]
 fn set_modpack_setting(state: tauri::State<'_, AppState>, pack_id: &str, key: &str, value: String) -> Result<(), String> {
-  let modpacks = &mut state.modpacks.lock().unwrap();
+  let modpacks = &mut state.modpacks.blocking_lock();
   let modpack = modpacks.get_modpack_mut(pack_id).expect("[removeme] pack not found");
   debug!("Setting modpack \"{}\" key {} to \"{}\"", pack_id, key, &value);
   match key {
@@ -156,7 +158,7 @@ fn set_modpack_setting(state: tauri::State<'_, AppState>, pack_id: &str, key: &s
 
 #[tauri::command]
 fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::Modpack> {
-  state.modpacks.lock().unwrap().delete_modpack(id)
+  state.modpacks.blocking_lock().delete_modpack(id)
 }
 
 
@@ -164,16 +166,16 @@ fn delete_modpack(state: tauri::State<'_, AppState>, id: &str) -> Option<pack::M
 #[tauri::command]
 // This works. But I barely understand it. I'm not touching it.
 async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, author_name: String, mut version_data: mods::ModrinthVersionData) -> Result<(), ()> {
-  let mut tuple = fuck_rust(state.modpacks.lock().unwrap(), pack_id);
+  let mut tuple = fuck_rust(state.modpacks.lock().await, pack_id);
   let entry_data = version_data.install_mod(&window, author_name, &tuple.1, &mut tuple.0).await.unwrap();
-  let mut packs = state.modpacks.lock().unwrap();
+  let mut packs = state.modpacks.lock().await;
   let pack = packs.add_mod_entry(pack_id, entry_data);
   window.emit("update-modpack", UpdateModpackPayload { modpack: pack }).unwrap();
   Ok(())
 }
 
 
-fn fuck_rust(modpacks: std::sync::MutexGuard<pack::ModpackManager>, pack_id: &str) -> (pack::Modpack, std::path::PathBuf) {
+fn fuck_rust(modpacks: MutexGuard<pack::ModpackManager>, pack_id: &str) -> (pack::Modpack, std::path::PathBuf) {
   let pack = modpacks.get_modpack(pack_id).expect("pack not found to install mod to").clone();
   let dest = modpacks.get_downloads_folder();
   (pack, dest)
@@ -188,15 +190,21 @@ Ok(())
 */
 #[tauri::command]
 async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str) -> Result<(), String>{
-  match watch_for_download() {
+  match setup::Setup::watch_for_download().await {
     Ok(file) => {
-      let modpacks = state.modpacks.lock().unwrap();
-      let modpack = modpacks.get_modpack(pack_id).unwrap();
-      let dest_dir = modpacks.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
-      window.emit("modloader_download_found", EmptyPayload());
+      let modpacks = state.modpacks.lock().await;
+      let setup = setup::Setup::new(&modpacks);
+      let instances_dir = modpacks.get_instances_folder();
+      let modpack = modpacks.get_modpack(pack_id).unwrap().clone();
+      let dest_dir = instances_dir.join(&modpack.folder_name.as_ref().unwrap());
+      drop(modpacks);
+
+      window.emit("modloader_download_found", EmptyPayload()).unwrap();
       // Wait until window is closed:
       let cl_window = window.clone();
-      window.listen("modloader_download_ready", move |event| {
+      let cl_modpacks = state.modpacks.clone();
+      let pack_id = pack_id.to_string();
+      window.once("modloader_download_ready", move | _event | { 
         // Rust can't copy but this can as admin.... stupid but it works
         runas::Command::new(r"C:\Windows\System32\cmd.exe")
           .gui(true)
@@ -215,9 +223,22 @@ async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tau
           .arg(file.path().to_str().unwrap())
           .status()
           .unwrap();
-        // std::fs::copy(file.path(), &dest_dir).expect("cp modloader failed");
-        // std::fs::remove_file(file.path()).expect("rm modloader failed");
-        cl_window.emit("modloader_download_complete", EmptyPayload()).unwrap()
+          
+        tokio::spawn(async move {
+
+          let mut modpacks = cl_modpacks.lock().await;
+          let mut modpack = modpacks.get_modpack_mut(&pack_id).unwrap().clone();
+          modpack.versions.modloader = file.file_name().to_str().unwrap().to_string();
+
+          debug!("waiting for fml install");
+          match setup.install_fml(&modpack).await {
+            Ok(()) => {
+              debug!("fml install complete. finishing modloader setup");
+              cl_window.emit("modloader_download_complete", EmptyPayload()).unwrap();
+            },
+            Err(msg) => cl_window.emit("modloader_download_error", ErrorPayload(msg.clone())).unwrap()
+          };
+        });
       });
     },
     Err(msg) => {
@@ -235,7 +256,7 @@ async fn watch_modloader_download(state: tauri::State<'_, AppState>, window: tau
 
 #[tauri::command]
 fn debug_install_launcher(state: tauri::State<'_, AppState>) {
-  let mut setup = setup::FirstTimeSetup::new(&state.modpacks.lock().unwrap());
+  let mut setup = setup::Setup::new(&state.modpacks.blocking_lock());
   setup.download_launcher().expect("download launcher failed");
 }
 fn main() {
@@ -293,30 +314,3 @@ fn main() {
 struct EmptyPayload();
 #[derive(Clone, serde::Serialize)]
 struct ErrorPayload(String);
-
-fn watch_for_download() -> Result<std::fs::DirEntry, String> {
-  let downloads_dir = &dirs_next::download_dir().expect("cannot find download dir");
-  let now = std::time::SystemTime::now();
-  while now.elapsed().unwrap().as_secs() < 120 {
-    let paths = std::fs::read_dir(downloads_dir).expect("cannot read dir");
-    for path in paths {
-      let file = path.unwrap();
-      match file.metadata().unwrap().created() { 
-        Ok(created) => {
-          if file.file_type().unwrap().is_file() {
-            if let Ok(duration) = created.duration_since(now) {
-              if duration.as_secs() > 5 && duration.as_secs() <= 12 {
-                let filename = &file.file_name().into_string().unwrap();
-                if filename.ends_with(".jar") {
-                  return Ok(file)
-                }
-              }
-            }
-          }
-        },
-        Err(err) => return Err(err.to_string())
-      };
-    }
-  }
-  Err("Watch timed out".to_string())
-}

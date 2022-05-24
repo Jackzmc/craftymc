@@ -29,7 +29,7 @@ let level = ref(0)
 
 
 async function enable() {
-  await invoke("set_setting", {
+  await invoke("plugin:config|set_setting", {
     category: "general",
     key: "telemetryState",
     value: level.value.toString()

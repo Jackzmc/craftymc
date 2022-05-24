@@ -1,7 +1,7 @@
 <template>
 <div class="field is-horizontal">
   <div class="field-label is-normal">
-    <label class="label" style="white-space: nowrap">{{props.label}}</label>
+    <label class="label" :style="'white-space: nowrap'">{{props.label}}</label>
   </div>
   <div class="field-body">
     <div class="field">

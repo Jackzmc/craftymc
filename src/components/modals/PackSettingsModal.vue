@@ -42,7 +42,7 @@ let pack = reactive<Modpack>(JSON.parse(JSON.stringify(props.pack)))
 watch(pack.settings, () => {
   for(const key in pack.settings) {
     if(props.settings[key] !== settings.value[key]) {
-      invoke('set_setting', {
+      invoke('plugin:config|set_setting', {
         packId: pack.id,
         key,
         value: settings.value[key].toString()

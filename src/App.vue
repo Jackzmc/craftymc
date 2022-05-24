@@ -30,7 +30,7 @@ let settings = ref<AppSettings>()
 let modpacks = ref<Modpack[]>([])
 
 async function updateSettings(newSettings?: AppSettings) {
-  if(!newSettings) settings.value = await invoke('get_settings')
+  if(!newSettings) settings.value = await invoke('plugin:config|get_settings')
   else settings.value = newSettings
 }
 

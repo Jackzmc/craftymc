@@ -24,7 +24,10 @@
     </div>
     <div class="column is-4">
       <h6 class="title is-6">debug commands</h6>
-      <a @click="invoke('debug_install_launcher')">debug_install_launcher</a>
+      <ul>
+        <li><a @click="invoke('plugin:debug|install_launcher')">debug_install_launcher</a></li>
+        <li><a @click="invoke('plugin:debug|echo', {msg: 'hello!'})">debug_echo</a></li>
+        </ul>
     </div>
   </div>
 </div>

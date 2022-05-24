@@ -9,7 +9,7 @@
     <div class="columns is-mobile is-centered is-vcentered">
       <div class="column is-2">
         <figure class="image is-128x128 is-pulled-left">
-          <img style="width:128px;height:128px" :src="props.pack.imageUrl" />
+          <img :style="'width:128px;height:128px'" :src="props.pack.imageUrl" />
         </figure>
       </div>
       <div class="column">
@@ -40,7 +40,7 @@
                 <a class="button is-success" @click="showSubview(Subview.AddContent)">
                   <Icon :icon="['fas', 'plus']" text="Add Content" />
                 </a>
-                <a class="button is-info" style="width: 6em" @click="launch">Play</a>
+                <a class="button is-info" :style="'width: 6em'" @click="launch">Play</a>
               </div>
             </div>
           </div>

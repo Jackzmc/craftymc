@@ -1,5 +1,5 @@
 <template>
-<aside class="menu" style="position: fixed">
+<aside class="menu" :style="'position: fixed'">
   <p class="menu-label  has-text-centered">
     Dashboard
   </p>

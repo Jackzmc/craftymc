@@ -28,6 +28,7 @@
     "@babel/eslint-parser": "^7.17.0",
     "@creativebulma/bulma-tooltip": "^1.2.0",
     "@tauri-apps/api": "^1.0.0-rc.5",
+    "@tauri-apps/cli": "^1.0.0-rc.11",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
     "@vue/cli-plugin-babel": "~5.0.4",

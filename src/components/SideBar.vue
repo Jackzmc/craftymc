@@ -41,12 +41,12 @@
       <Icon :icon="['fa', 'info-circle']" text="About" />
     </router-link></li>
   </ul>
-  <ul class="menu-label">
+  <!--<ul class="menu-label">
     Ad
   </ul>
   <figure class="image is-9by16">
     <img src="https://via.placeholder.com/1280x960/?text=Ad">
-  </figure>
+  </figure>-->
 </aside>
 </template>
 

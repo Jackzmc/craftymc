@@ -11,7 +11,7 @@
   },
   "tauri": {
     "allowlist": {
-      "all": true,
+      // "all": true,
       "protocol": {
         "assetScope": [
           "$DOCUMENT/MCModDownloader/*"
@@ -25,6 +25,13 @@
         "close": true,
         "unmaximize": true,
         "unminimize": true
+      },
+      "dialog": {
+        "open": true,
+        "save": true
+      }, 
+      "path": {
+        "all": true
       }
     },
     "bundle": {
@@ -54,7 +61,7 @@
       "resources": [
         "../resources/*"
       ],
-      "shortDescription": "Open source alternative to curseforge, supporting modrinth ",
+      "shortDescription": "Open source alternative to curseforge, supporting modrinth",
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,
@@ -63,7 +70,7 @@
       },
     },
     "security": {
-      "csp": null
+      "csp": "default-src 'self' *modrinth.com"
     },
     "updater": {
       "active": false

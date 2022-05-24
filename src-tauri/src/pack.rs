@@ -345,7 +345,7 @@ impl LauncherSettings {
     pub fn get_default() -> LauncherSettings {
         LauncherSettings {
             crashAssistance: true,
-            enableAdvanced: false,
+            enableAdvanced: true,
             enableAnalytics: true,
             enableHistorical: false,
             enableReleases: true,

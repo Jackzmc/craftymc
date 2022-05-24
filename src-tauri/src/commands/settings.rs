@@ -69,9 +69,9 @@ fn save_settings(state: tauri::State<'_, AppState>) {
 
 pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("config")
-      .invoke_handler(tauri::generate_handler![
+        .invoke_handler(tauri::generate_handler![
           get_settings, set_setting, save_settings,
         ])
-      .build()
+        .build()
   }
   

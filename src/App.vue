@@ -36,7 +36,7 @@ async function updateSettings(newSettings?: AppSettings) {
 
 async function updateModpacks(newModpack?: Modpack) {
   if(!newModpack) {
-    const packs = await invoke('get_modpacks')
+    const packs = await invoke('plugin:modpacks|get_modpacks')
     for(let pack of packs) {
       pack.imageUrl = await _get_img_url(pack)
     }

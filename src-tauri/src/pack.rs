@@ -178,7 +178,6 @@ impl ModpackManager {
         // Make folders
         std::fs::create_dir_all(save_dir.join("mods")).expect("failed to create modpack/mods folder");
         // Make files
-        fs::write(save_dir.join(".mcmm"), pack.id.as_ref().unwrap()).unwrap();
         fs::write(save_dir.join("manifest.json"), serde_json::to_string_pretty(&pack).expect("failed to serialize modpack to manifest")).expect("failed to create modpack manifest");
         info!("Created new modpack (name = \"{}\") with uuid = {}", &pack.name, pack.id.as_ref().unwrap());
         let id = pack.id.clone().unwrap();

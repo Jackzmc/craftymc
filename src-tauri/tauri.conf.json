@@ -18,6 +18,14 @@
         ],
         "asset": true
       },
+      "window": {
+        "startDragging": true,
+        "maximize": true,
+        "minimize": true,
+        "close": true,
+        "unmaximize": true,
+        "unminimize": true
+      }
     },
     "bundle": {
       "active": true,

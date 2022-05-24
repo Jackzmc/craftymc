@@ -25,7 +25,6 @@ import { documentDir, join } from '@tauri-apps/api/path'
 import AskTelemetryModal from '@/components/modals/AskTelemetryModal.vue'
 import DefaultPackImage from '@/assets/default_pack.png'
 
-
 const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
 let modpacks = ref<Modpack[]>([])

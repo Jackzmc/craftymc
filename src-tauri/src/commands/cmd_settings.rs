@@ -1,17 +1,17 @@
+use crate::AppState;
 use crate::setup;
 use crate::settings;
-use crate::AppState;
 use crate::telemetry;
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
 
 #[tauri::command]
-fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
+pub fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
   state.config.blocking_lock().Settings.clone()
 }
 
 #[tauri::command]
-fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Result<(), String> {
+pub fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, value: String) -> Result<(), String> {
   // Categories are passed in lowercase. 
   // Keys are case-sensitive, may not be lowercase.
   // TODO: Move to Settings
@@ -53,7 +53,7 @@ fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str, val
 }
 
 #[tauri::command]
-fn save_settings(state: tauri::State<'_, AppState>) {
+pub fn save_settings(state: tauri::State<'_, AppState>) {
   let config = &mut state.config.blocking_lock();
   state.modpacks.blocking_lock().set_settings(config.Settings.clone());
   match config.save() {
@@ -66,12 +66,3 @@ fn save_settings(state: tauri::State<'_, AppState>) {
   }
   
 }
-
-pub fn init<R: tauri::Runtime>() -> tauri::plugin::TauriPlugin<R> {
-    tauri::plugin::Builder::new("config")
-        .invoke_handler(tauri::generate_handler![
-          get_settings, set_setting, save_settings,
-        ])
-        .build()
-  }
-  

@@ -26,6 +26,9 @@
             <li><a @click="invoke('open_modpack_folder', { packId: slotProps.ctx.id })">
               <Icon :icon="['fa', 'folder']" text="Open Folder" />
             </a></li>
+            <li><a @click="invoke('export_modpack', { packId: slotProps.ctx.id, fileName: slotProps.ctx.name + '.zip' })">
+              <Icon :icon="['fa', 'file-export']" text="Export" />
+            </a></li>
             <li><a class="has-text-danger" @click="showDeleteConfirm(slotProps.ctx)">
               <Icon :icon="['fa', 'trash']" text="Delete" />
             </a></li>

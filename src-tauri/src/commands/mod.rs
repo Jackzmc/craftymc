@@ -1,4 +1,4 @@
-pub mod debug;
-pub mod settings;
-pub mod modpacks;
-pub mod mods;
+pub mod cmd_debug;
+pub mod cmd_settings;
+pub mod cmd_packs;
+pub mod cmd_mods;

@@ -92,7 +92,7 @@ async function findAnyChange() {
     for(const key in settings.value[category]) {
       if(key === "telemetryState") continue //why is vue3 watchers so janky
       if(props.settings[category][key] !== settings.value[category][key]) {
-        await invoke('plugin:config|set_setting', {
+        await invoke('set_setting', {
           category,
           key,
           value: settings.value[category][key].toString()
@@ -104,7 +104,7 @@ async function findAnyChange() {
 
 async function setTelemetry(value) {
   settings.value.general.telemetryState = value
-  await invoke('plugin:config|set_setting', {
+  await invoke('set_setting', {
     category: "general",
     key: "telemetryState",
     value: value.toString()

@@ -3,7 +3,8 @@ use std::fs;
 use std::collections::HashMap;
 use uuid::Uuid;
 use std::path::{Path,PathBuf};
-use log::{info, debug, error};
+use log::{info, debug, error, warn};
+use std::io::{Read, Write};
 
 use crate::util;
 use crate::mods;
@@ -97,7 +98,17 @@ impl ModpackManager {
                         
                     },
                     Err(err) => {
-                        error!("Directory \"{}\"'s manifest.json is unreadable or corrupted: {}", entry.file_name().to_str().unwrap(), err)
+                        match err.kind() {
+                            std::io::ErrorKind::NotFound => {
+                                warn!("Directory \"{}\" is missing a manifest.json", entry.file_name().to_str().unwrap());
+                            },
+                            std::io::ErrorKind::PermissionDenied => {
+                                error!("Cannot read \"{}\"/manifest.json: Permission Denied", entry.file_name().to_str().unwrap());
+                            },
+                            _ => {
+                                error!("Error reading \"{}\"'s manifest.json: {}", entry.file_name().to_str().unwrap(), err);
+                            }
+                        }
                     }
                 }
             }
@@ -299,6 +310,32 @@ impl ModpackManager {
             },
             None => return Err("No modpack found".to_string())
         }
+    }
+
+    pub fn export(&self, pack_id: &str, file_name: &str) {
+        let modpack = self.get_modpack(pack_id).expect("unknown modpack");
+        let exp_path = self.root_folder.join("Exports").join(file_name);
+        let src_path = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
+        let out_file = std::fs::File::create(&exp_path).unwrap();
+
+        let mut zip = zip::ZipWriter::new(out_file);
+        for entry in std::fs::read_dir(&src_path).unwrap() {
+            let file = entry.unwrap();
+            let file_type = file.file_type().unwrap();
+            if file_type.is_file() {
+                let mut src_file = std::fs::File::open(file.path()).unwrap();
+                let mut buffer = Vec::new();
+                src_file.read_to_end(&mut buffer).unwrap();
+                zip.start_file(
+                    file.file_name().to_str().unwrap(), 
+                    zip::write::FileOptions::default()
+                ).unwrap();
+                zip.write_all(&buffer).unwrap();
+            } else if file_type.is_dir() {
+
+            }
+        }
+        zip.finish().expect("failed to create zip file");
     }
 
 }

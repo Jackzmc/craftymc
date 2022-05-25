@@ -30,13 +30,13 @@ let settings = ref<AppSettings>()
 let modpacks = ref<Modpack[]>([])
 
 async function updateSettings(newSettings?: AppSettings) {
-  if(!newSettings) settings.value = await invoke('plugin:config|get_settings')
+  if(!newSettings) settings.value = await invoke('get_settings')
   else settings.value = newSettings
 }
 
 async function updateModpacks(newModpack?: Modpack) {
   if(!newModpack) {
-    const packs = await invoke('plugin:modpacks|get_modpacks')
+    const packs = await invoke('get_modpacks')
     for(let pack of packs) {
       pack.imageUrl = await _get_img_url(pack)
     }

@@ -75,6 +75,9 @@
         <li><a @click="invoke('open_modpack_folder', { packId: props.pack.id })">
           <Icon :icon="['fa', 'folder']" text="Open Folder" />
         </a></li>
+        <li><a @click="showSubview(Subview.Export)">
+          <Icon :icon="['fa', 'file-export']" text="Export" />
+        </a></li>
         <li><a class="has-text-danger"  @click="showSubview(Subview.DeletePack)">
           <Icon :icon="['fa', 'trash']" text="Delete" />
         </a></li>
@@ -106,7 +109,8 @@ const enum Subview {
   None = 0,
   SettingsModal = 1,
   AddContent = 2,
-  DeletePack = 3
+  DeletePack = 3,
+  Export = 4
 }
 
 function formatRelative(value: number, locale?: string) {
@@ -139,6 +143,9 @@ async function showSubview(subview: Subview) {
     case Subview.AddContent:
       hideSelf.value = true
       component.value = markRaw(defineAsyncComponent(() => import('@/pages/AddContent.vue')))
+      break
+    case Subview.Export:
+      component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/ExportModal.vue')))
       break
     case Subview.DeletePack:
       component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/DeletePackConfirmModal.vue')))

@@ -33,7 +33,13 @@ const props = defineProps<{
 }>()
 
 function save() {
-  console.log('selected', getSelected(rootFile.value, ""))
+  const selected = getSelected(rootFile.value)
+  console.log('selected', selected)
+  invoke('export_modpack', {
+    packId: props.pack.id,
+    fileName: props.pack.name + ".zip",
+    paths: selected
+  })
 }
 
 function getSelected(root: Node, prefix = "") {
@@ -128,6 +134,10 @@ onMounted(async() => {
   _recurseDown(null, root, (parent, node) => {
     node.parent = parent
     node.indeterminate = false
+    if(node.id == "manifest.json") {
+      node.selected = true
+      node.readOnly = true
+    }
     return true
   })
   rootFile.value = root

@@ -2,7 +2,7 @@
 <div class="ml-5 my-2">
   <!-- <Icon :icon="['fa', props.node?.children ? 'folder' : 'cube']" :text="props.node.name" /> -->
   <div class="field" v-if="!props.hidden">
-    <input ref="checkbox" class="is-checkradio" :id="props.node.id" type="checkbox" @input="onSelect" :style="'display: none'">
+    <input ref="checkbox" class="is-checkradio" :id="props.node.id" type="checkbox" @input="onSelect" :style="'display: none'" :disabled="props.node.readOnly" :checked="props.node.selected">
     <label :for="props.node.id" >
       <fa-icon :icon="icon" />
       {{props.node.name}}
@@ -29,6 +29,7 @@ let checkbox = ref()
 let children = ref(props.node.children)
 
 function onSelect() {
+  if(props.node.readOnly) return
   const selected = checkbox.value.checked
   /*if(children.value) {
     for(let child of children.value) {

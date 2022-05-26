@@ -312,14 +312,36 @@ impl ModpackManager {
         }
     }
 
-    pub fn export(&self, pack_id: &str, file_name: &str) {
+    pub fn export(&self, pack_id: &str, file_name: &str, paths: &[&str]) {
         let modpack = self.get_modpack(pack_id).expect("unknown modpack");
         let exp_path = self.root_folder.join("Exports").join(file_name);
         let src_path = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
         let out_file = std::fs::File::create(&exp_path).unwrap();
 
         let mut zip = zip::ZipWriter::new(out_file);
-        for entry in std::fs::read_dir(&src_path).unwrap() {
+        for path in paths {
+            let mut rel_path = path.to_string();
+            rel_path.remove(0);
+            let file_path = src_path.join(&rel_path);
+            if file_path.is_file() {
+                debug!("reading {:?}.", &file_path);
+                match std::fs::File::open(&file_path) {
+                    Ok(mut src_file) => {
+                        let mut buffer = Vec::new();
+                        src_file.read_to_end(&mut buffer).unwrap();
+                        zip.start_file(
+                            rel_path, 
+                            zip::write::FileOptions::default()
+                        ).unwrap();
+                        zip.write_all(&buffer).unwrap();
+                    },
+                    Err(err) => {
+                        warn!("Could not read file \"{}\": {}", &rel_path, err);
+                    }
+                }
+            }
+        }
+        /*for entry in std::fs::read_dir(&src_path).unwrap() {
             let file = entry.unwrap();
             let file_type = file.file_type().unwrap();
             if file_type.is_file() {
@@ -334,7 +356,7 @@ impl ModpackManager {
             } else if file_type.is_dir() {
 
             }
-        }
+        }*/
         zip.finish().expect("failed to create zip file");
     }
 

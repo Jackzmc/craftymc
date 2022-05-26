@@ -192,12 +192,12 @@ pub fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pa
 }
 
 #[tauri::command]
-pub async fn export_modpack(state: tauri::State<'_, AppState>, pack_id: &str, file_name: &str) -> Result<(), String> {
+pub async fn export_modpack(state: tauri::State<'_, AppState>, pack_id: &str, file_name: &str, paths: Vec<&str>) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().await;
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
       info!("Exporting modpack id = {}", &pack.id.as_ref().unwrap());
-      modpacks.export(pack_id, file_name);
+      modpacks.export(pack_id, file_name, &paths);
       Ok(())
     },
     None => Err("No modpack was found".to_string())

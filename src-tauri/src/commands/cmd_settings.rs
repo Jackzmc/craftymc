@@ -7,7 +7,7 @@ use log::{info, debug, error, warn};
 
 #[tauri::command]
 pub fn get_settings(state: tauri::State<'_, AppState>) -> settings::Settings {
-  state.config.blocking_lock().Settings.clone()
+  state.config.blocking_lock().settings.clone()
 }
 
 #[tauri::command]
@@ -16,7 +16,7 @@ pub fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str,
   // Keys are case-sensitive, may not be lowercase.
   // TODO: Move to Settings
   let config = &mut state.config.blocking_lock();
-  let settings = &mut config.Settings;
+  let settings = &mut config.settings;
   debug!("Setting {}/{} to \"{}\"", category, key, &value);
   match category {
     "general" => {
@@ -55,7 +55,7 @@ pub fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str,
 #[tauri::command]
 pub fn save_settings(state: tauri::State<'_, AppState>) {
   let config = &mut state.config.blocking_lock();
-  state.modpacks.blocking_lock().set_settings(config.Settings.clone());
+  state.modpacks.blocking_lock().set_settings(config.settings.clone());
   match config.save() {
     Ok(_) => {
       info!("[debug] Saved current settings to file.");

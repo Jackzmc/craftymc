@@ -31,12 +31,12 @@ pub struct AppState {
 
 fn main() {
   let config = settings::SettingsManager::new();
-  let save_folder = std::path::Path::new(&config.Settings.minecraft.saveDirectory).to_path_buf();
+  let save_folder = std::path::Path::new(&config.settings.minecraft.saveDirectory).to_path_buf();
   let logs = save_folder.join("Logs");
 
   tauri::Builder::default()
     .manage(AppState {
-      modpacks: Arc::new(Mutex::new(pack::ModpackManager::new(config.Settings.clone()))),
+      modpacks: Arc::new(Mutex::new(pack::ModpackManager::new(config.settings.clone()))),
       config: Mutex::new(config),
     })
     .invoke_handler(tauri::generate_handler![
@@ -55,20 +55,8 @@ fn main() {
     )
     .setup(move |app| {
       let window = app.get_window("main").unwrap();
+      #[cfg(debug_assertions)]
       window.open_devtools();
-      // Move all resources to folder:
-      let paths = std::fs::read_dir(app.path_resolver().resource_dir().unwrap()
-        .join("_up_").join("resources")
-      ).unwrap();
-      /*let dest_dir = save_folder.join("Launcher");
-      for entry in paths {
-        let file = entry.unwrap();
-        let path = file.path();
-        // TODO: Figure out solution to copy resources to folder.
-        debug!("mv {:?} to {:?}", &path, &dest_dir);
-        std::fs::copy(&path, &dest_dir).expect("copy failed");
-        std::fs::remove_file(&path).expect("rm failed");
-      }*/
       Ok(())
     })
     .run(tauri::generate_context!())

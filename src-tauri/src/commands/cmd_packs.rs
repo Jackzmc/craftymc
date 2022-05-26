@@ -168,12 +168,17 @@ pub fn choose_modpack_image(state: tauri::State<'_, AppState>, window: tauri::Wi
 }
 
 #[tauri::command]
-pub fn delete_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: String) {
-  if let Some(pack) = state.modpacks.blocking_lock().delete_modpack(&pack_id) {
-    window.emit("update-modpack", payloads::UpdateModpackPayload { 
-      modpack: pack,
-      deleted: false
-    }).unwrap();
+pub fn delete_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: String) -> Result<(), String> {
+  match state.modpacks.blocking_lock().delete_modpack(&pack_id) {
+    Ok(Some(pack)) => {
+      window.emit("update-modpack", payloads::UpdateModpackPayload { 
+        modpack: pack,
+        deleted: true
+      }).unwrap();
+      Ok(())
+    },
+    Err(err) => Err(err),
+    _ => Ok(())
   }
 }
 

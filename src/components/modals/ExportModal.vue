@@ -16,8 +16,8 @@
   </template>
   <template v-slot:footer>
     <div class="buttons">
-      <a class="button is-info" @click="save" :disabled="cantExport || undefined" :loading="exporting">Export</a>
-      <a class="button" @click="emit('close')" :loading="exporting">Cancel</a>
+      <a :class="['button','is-info', {'is-loading': exporting}]" @click="save" :disabled="cantExport || undefined" >Export</a>
+      <a :class="['button',{'is-loading': exporting}]" @click="emit('close')">Cancel</a>
     </div>
   </template>
 </BaseModal>

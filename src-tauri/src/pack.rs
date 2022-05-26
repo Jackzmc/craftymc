@@ -173,9 +173,20 @@ impl ModpackManager {
             .collect::<Vec<Modpack>>()
     }
 
-    pub fn delete_modpack(&mut self, id: &str) -> Option<Modpack> {
-        info!("removed modpack id = {}", id);
-        self.packs.remove(id)
+    pub fn delete_modpack(&mut self, id: &str) -> Result<Option<Modpack>, String> {
+      info!("removed modpack id = {}", id);
+      if let Some(pack) = self.packs.remove(id) {
+        let folder_name = pack.folder_name.as_ref().unwrap();
+        match std::fs::remove_dir_all(self.get_instances_folder().join(folder_name)) {
+          Ok(_) => Ok(Some(pack)),
+          Err(err) => {
+            error!("Error deleting modpack \"{}\": {}", folder_name , &err);
+            return Err(format!("Could not delete modpack folder \"{}\": {}", folder_name, err).to_string());
+          }
+        }
+      } else {
+        return Ok(None)
+      }
     }
 
     fn get_suitable_name(&self, name: &str) -> Option<String> {

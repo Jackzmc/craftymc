@@ -73,7 +73,7 @@ onBeforeMount(async() => {
     for(let i = 0; i < modpacks.value.length; i++) {
       if(modpacks.value[i].id === newModpack.id) {
         if(event.payload.deleted)
-          modpacks.slice(i, 1)
+          modpacks.value.splice(i, 1)
         else
           modpacks.value[i] = newModpack
         return

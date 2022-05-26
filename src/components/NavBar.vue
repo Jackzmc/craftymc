@@ -6,12 +6,7 @@
   <div id="navbarBasicExample" class="navbar-menu" data-tauri-drag-region>
     <div class="navbar-start">
       <a @click="emit('sidebar')" class="navbar-item">
-        <span class="icon-text">
-          <span class="icon">
-            <fa-icon :icon="sidebarIcon" />
-          </span>
-          <span>Minecraft Mod Manager</span>
-        </span>
+        <Icon :icon="sidebarIcon" text="Minecraft Mod Manager" class="has-tooltip-bottom" data-tooltip="Toggles the sidebar" />
       </a>
     </div>
 

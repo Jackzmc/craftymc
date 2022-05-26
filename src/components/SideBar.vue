@@ -20,11 +20,11 @@
   <p class="menu-label  has-text-centered">
     Sources
   </p>
-  <ul class="menu-list">
+  <!--<ul class="menu-list">
     <li><a>CurseForge</a></li>
     <li><a>Modrinth</a></li>
-    <!-- <li><a>ModManager</a></li> -->
-  </ul>
+    <li><a>ModManager</a></li>
+  </ul>-->
   <p class="menu-label  has-text-centered">
     Misc
   </p>

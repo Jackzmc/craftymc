@@ -11,6 +11,23 @@ pub fn get_iso8601(mut timestamp: Option<i64>) -> String {
     DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(timestamp.unwrap(), 0), Utc).to_rfc3339()
 }
 
+pub fn open_folder(path: &std::path::PathBuf) -> Result<(), String> {
+    let mut command = match std::env::consts::OS {
+        "windows" => std::process::Command::new("explorer"),
+        "macos" => std::process::Command::new("open"),
+        "linux" => std::process::Command::new("xdg-open"),
+        _ => panic!("Unsupported OS")
+    };
+
+    match command
+        .arg(path)
+        .spawn()
+    {
+        Ok(_) => return Ok(()),
+        Err(err) => return Err(err.to_string())
+    }
+}
+
 pub fn get_directory_tree(path: &std::path::Path) -> TreeEntry {
     _recurse_dir(path, path)
 }

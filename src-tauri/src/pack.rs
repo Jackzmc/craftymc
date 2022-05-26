@@ -8,6 +8,7 @@ use std::io::{Read, Write};
 
 use crate::util;
 use crate::mods;
+use crate::payloads;
 
 pub struct ModpackManager {
     pub packs: HashMap<String, Modpack>, //key is modpack.id
@@ -290,29 +291,7 @@ impl ModpackManager {
         pack
     }
 
-    pub fn open_modpack_folder(&self, pack_id: &str) -> Result<(), String> {
-        match self.get_modpack(pack_id) {
-            Some(pack) => {
-              let folder_path = self.get_instances_folder().join(&pack.folder_name.as_ref().expect("invalid modpack"));
-              let mut command = match std::env::consts::OS {
-                "windows" => std::process::Command::new("explorer"),
-                "macos" => std::process::Command::new("open"),
-                "linux" => std::process::Command::new("xdg-open"),
-                _ => panic!("Unsupported OS")
-              };
-              match command
-                .arg(folder_path)
-                .spawn()
-              {
-                Ok(_) => return Ok(()),
-                Err(err) => return Err(err.to_string())
-              }
-            },
-            None => return Err("No modpack found".to_string())
-        }
-    }
-
-    pub fn export(&self, pack_id: &str, file_name: &str, paths: &[&str]) {
+    pub fn export(&self, window: tauri::Window, pack_id: &str, file_name: &str, paths: &[&str]) {
         let modpack = self.get_modpack(pack_id).expect("unknown modpack");
         let exp_path = self.root_folder.join("Exports").join(file_name);
         let src_path = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
@@ -325,6 +304,7 @@ impl ModpackManager {
             let file_path = src_path.join(&rel_path);
             if file_path.is_file() {
                 debug!("reading {:?}.", &file_path);
+                window.emit("export_progress", payloads::ExportPayload(rel_path.clone()));
                 match std::fs::File::open(&file_path) {
                     Ok(mut src_file) => {
                         let mut buffer = Vec::new();
@@ -341,23 +321,8 @@ impl ModpackManager {
                 }
             }
         }
-        /*for entry in std::fs::read_dir(&src_path).unwrap() {
-            let file = entry.unwrap();
-            let file_type = file.file_type().unwrap();
-            if file_type.is_file() {
-                let mut src_file = std::fs::File::open(file.path()).unwrap();
-                let mut buffer = Vec::new();
-                src_file.read_to_end(&mut buffer).unwrap();
-                zip.start_file(
-                    file.file_name().to_str().unwrap(), 
-                    zip::write::FileOptions::default()
-                ).unwrap();
-                zip.write_all(&buffer).unwrap();
-            } else if file_type.is_dir() {
-
-            }
-        }*/
         zip.finish().expect("failed to create zip file");
+        util::open_folder(&exp_path);
     }
 
     

@@ -47,7 +47,10 @@ pub fn set_modpack_setting(state: tauri::State<'_, AppState>, pack_id: &str, key
 
 #[tauri::command]
 pub fn open_modpack_folder(state: tauri::State<'_, AppState>, pack_id: &str) -> Result<(), String> {
-  state.modpacks.blocking_lock().open_modpack_folder(pack_id)
+  let modpacks = state.modpacks.blocking_lock();
+  let modpack = modpacks.get_modpack(pack_id).unwrap();
+  let path = modpacks.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
+  util::open_folder(&path)
 }
   
 /*
@@ -192,12 +195,12 @@ pub fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pa
 }
 
 #[tauri::command]
-pub async fn export_modpack(state: tauri::State<'_, AppState>, pack_id: &str, file_name: &str, paths: Vec<&str>) -> Result<(), String> {
+pub async fn export_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, file_name: &str, paths: Vec<&str>) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().await;
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
       info!("Exporting modpack id = {}", &pack.id.as_ref().unwrap());
-      modpacks.export(pack_id, file_name, &paths);
+      modpacks.export(window, pack_id, file_name, &paths);
       Ok(())
     },
     None => Err("No modpack was found".to_string())

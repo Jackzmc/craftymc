@@ -10,3 +10,5 @@ pub struct UpdateModpackPayload {
 pub struct EmptyPayload();
 #[derive(Clone, serde::Serialize)]
 pub struct ErrorPayload(pub String);
+#[derive(Clone, serde::Serialize)]
+pub struct ExportPayload(pub String);

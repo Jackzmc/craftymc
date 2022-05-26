@@ -1,6 +1,6 @@
 <template>
 <div>
-  <component :is="component" :pack="componentPack" v-if="component" />
+  <component :is="component" :pack="componentPack" v-if="component" @close="closeComponent" />
   <FilterControls :sorts="SORTS" defaultSort="recentlyPlayed" v-model:cardsize="cardSize" show-size />
   <div class="columns is-multiline" v-if="props.packs.length > 0">
     <div :class="columnClass" v-for="pack of props.packs" :key="pack.id">
@@ -26,7 +26,7 @@
             <li><a @click="invoke('open_modpack_folder', { packId: slotProps.ctx.id })">
               <Icon :icon="['fa', 'folder']" text="Open Folder" />
             </a></li>
-            <li><a @click="invoke('export_modpack', { packId: slotProps.ctx.id, fileName: slotProps.ctx.name + '.zip' })">
+            <li><a @click="openExportMenu(slotProps.ctx)">
               <Icon :icon="['fa', 'file-export']" text="Export" />
             </a></li>
             <li><a class="has-text-danger" @click="showDeleteConfirm(slotProps.ctx)">
@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent } from 'vue'
+import { ref, computed, defineAsyncComponent, markRaw } from 'vue'
 import { Modpack } from '@/types/Pack'
 import FilterControls from '@/components/FilterControls.vue'
 import Pack from '@/components/pack/Pack.vue'
@@ -73,7 +73,7 @@ const columnClass = computed(() => {
 })
 
 async function showDeleteConfirm(pack: Modpack) {
-  component.value = defineAsyncComponent(() => import('@/components/modals/DeletePackConfirmModal.vue'))
+  component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/DeletePackConfirmModal.vue')))
   componentPack.value = pack
   contextMenu.value.close()
 }
@@ -83,6 +83,17 @@ async function launch(pack: Modpack) {
   const exitCode = await invoke('launch_modpack', { id: pack.id })
   console.info('launched modpack exited with code', exitCode)
   contextMenu.value.close()
+}
+
+function openExportMenu(pack: Modpack) {
+  component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/ExportModal.vue')))
+  componentPack.value = pack
+  contextMenu.value.close()
+  // invoke('export_modpack', { packId: pack.id, fileName: `${pack.folder}.zip` })
+}
+
+function closeComponent() {
+  component.value = undefined
 }
 
 </script>

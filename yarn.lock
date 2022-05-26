@@ -8495,6 +8495,11 @@ vue3-tabs-component@jackzmc/vue3-tabs-component:
   dependencies:
     jest "^28.1.0"
 
+vue3-tree-vue@^1.0.15:
+  version "1.0.15"
+  resolved "https://registry.yarnpkg.com/vue3-tree-vue/-/vue3-tree-vue-1.0.15.tgz#a0170d46d4adeb3d740ed557fd330891f0bd0240"
+  integrity sha512-35f1eFLP8Fqa8pbRbnyon0nIJefNT3Y6pPD3ceY1pe0K9uLZy9o1RPjVye7rpso03fL8Yk7fUfJzAStca42Weg==
+
 vue@^3.2.13:
   version "3.2.33"
   resolved "https://registry.yarnpkg.com/vue/-/vue-3.2.33.tgz#7867eb16a3293a28c4d190a837bc447878bd64c2"

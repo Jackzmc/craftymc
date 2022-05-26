@@ -2,6 +2,7 @@ use crate::setup;
 use crate::AppState;
 use crate::pack;
 use crate::payloads;
+use crate::util;
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
 /// COMMANDS
@@ -195,9 +196,18 @@ pub async fn export_modpack(state: tauri::State<'_, AppState>, pack_id: &str, fi
   let modpacks = &mut state.modpacks.lock().await;
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
+      info!("Exporting modpack id = {}", &pack.id.as_ref().unwrap());
       modpacks.export(pack_id, file_name);
       Ok(())
     },
     None => Err("No modpack was found".to_string())
   }
+}
+
+#[tauri::command]
+pub async fn get_instance_tree(state: tauri::State<'_, AppState>, pack_id: &str) -> Result<util::TreeEntry, String> {
+  let modpacks = state.modpacks.lock().await;
+  let pack = modpacks.get_modpack(pack_id).unwrap();
+  let root = modpacks.get_instances_folder().join(pack.folder_name.as_ref().unwrap());
+  Ok(util::get_directory_tree(&root))
 }

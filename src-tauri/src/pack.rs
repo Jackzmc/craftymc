@@ -338,6 +338,8 @@ impl ModpackManager {
         zip.finish().expect("failed to create zip file");
     }
 
+    
+
 }
 
 #[allow(non_snake_case)]

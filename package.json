@@ -22,7 +22,8 @@
     "core-js": "^3.8.3",
     "vue": "^3.2.13",
     "vue-router": "^4.0.13",
-    "vue3-tabs-component": "jackzmc/vue3-tabs-component"
+    "vue3-tabs-component": "jackzmc/vue3-tabs-component",
+    "vue3-tree-vue": "^1.0.15"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.17.0",

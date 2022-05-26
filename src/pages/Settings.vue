@@ -11,13 +11,15 @@
         </Tab>
         <Tab name="Minecraft">
           <h4 class="title is-4">Minecraft</h4>
-          <Field label="Save Directory">
+          <!--<Field label="Save Directory">
             <input class="input" type="text" v-model="settings.minecraft.saveDirectory" />
           </Field>
+          TODO: Remove or use this
+          -->
           <Field label="Preferred Release">
             <div class="select">
-              <select>
-                 <option v-for="(display, release) in RELEASES" :key="release">{{display}}</option>
+              <select v-model="settings.minecraft.preferredRelease">
+                 <option v-for="(display, release) in RELEASES" :key="release" :value="release">{{display}}</option>
               </select>
             </div>
           </Field>
@@ -78,7 +80,7 @@ const props = defineProps<{
 // TODO: tauri invoke to get appmeta and settings
 
 const RELEASES = {
-  stable: "Stable (Recommended)",
+  release: "Stable (Recommended)",
   beta: "Beta",
   alpha: "Alpha"
 }

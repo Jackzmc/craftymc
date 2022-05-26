@@ -19,7 +19,7 @@
       <div class="navbar-item">
         <div class="buttons">
           <a class="button">
-            <Icon :icon="['fas', 'plus']" text="Import" />
+            <Icon :icon="['fas', 'plus']" text="Import" @click="importModpack" />
           </a>
           <a class="button is-info">
             <Icon :icon="['fas', 'plus']" text="New Modpack" @click="showCreatePack = true" />
@@ -46,6 +46,7 @@ import { appWindow } from '@tauri-apps/api/window'
 import { computed, ref } from 'vue'
 import CreatePackModal from '@/components/modals/CreatePackModal.vue'
 import ModloaderInstaller from '@/components/modals/ModloaderInstaller.vue'
+import { invoke } from '@tauri-apps/api/tauri'
 // eslint-disable-next-line
 const props = defineProps<{
   hasSidebar: boolean
@@ -58,6 +59,10 @@ let pendingModpackInstall = ref<Modpack>()
 async function onModpackCreated(pack) {
   await emit('update-modpacks', pack)
   pendingModpackInstall.value = pack
+}
+
+async function importModpack() {
+  await invoke("import_modpack", {})
 }
 
 const sidebarIcon = computed(() => {

@@ -208,6 +208,32 @@ pub async fn export_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
 }
 
 #[tauri::command]
+pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Window) -> Result<(), String> { 
+  let modpacks = state.modpacks.clone();
+  tauri::api::dialog::FileDialogBuilder::new()
+    .set_title("Import a modpack")
+    .add_filter("modpack archive", &["zip"])
+    .pick_file(move |result| {
+      if let Some(filepath) = result {
+        let mut modpacks = modpacks.blocking_lock();
+        let modpack = modpacks.import(&filepath);
+        match modpacks.import(&filepath) {
+          Ok(pack) => {
+            window.emit("update-modpack", payloads::UpdateModpackPayload { 
+              modpack: pack,
+              deleted: false
+            }).unwrap();
+          },
+          Err(err) => {
+            // TODO: Pass to ui
+          }
+        }
+      }
+    });
+  Ok(())
+}
+
+#[tauri::command]
 pub async fn get_instance_tree(state: tauri::State<'_, AppState>, pack_id: &str) -> Result<util::TreeEntry, String> {
   let modpacks = state.modpacks.lock().await;
   let pack = modpacks.get_modpack(pack_id).unwrap();

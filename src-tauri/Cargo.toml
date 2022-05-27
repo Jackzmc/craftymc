@@ -18,7 +18,7 @@ tauri-build = { version = "1.0.0-rc.8", features = [] }
 tokio = "*"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.0.0-rc.11", features = ["dialog-message", "dialog-open", "dialog-save", "path-all", "protocol-asset", "window-close", "window-maximize", "window-minimize", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
+tauri = { version = "1.0.0-rc.11", features = ["dialog-message", "dialog-open", "dialog-save", "path-all", "protocol-asset", "shell-open", "window-close", "window-maximize", "window-minimize", "window-start-dragging", "window-unmaximize", "window-unminimize"] }
 dirs-next = "2.0.0"
 sysinfo = "0.23"
 uuid = "1.0"

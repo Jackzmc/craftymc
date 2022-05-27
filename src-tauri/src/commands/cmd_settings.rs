@@ -26,7 +26,7 @@ pub fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str,
           settings.general.telemetryState = value.parse::<i8>().unwrap();
           if prev == -1 && settings.general.telemetryState != prev {
             // First time setup runs here:
-            let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo);
+            let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo, &settings);
             let mut setup = setup::Setup::new(&state.modpacks.blocking_lock());
             setup.download_launcher().unwrap();
             state.modpacks.blocking_lock().run_minecraft_launcher().unwrap();

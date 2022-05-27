@@ -6,7 +6,7 @@
   <div id="navbarBasicExample" class="navbar-menu" data-tauri-drag-region>
     <div class="navbar-start">
       <a @click="emit('sidebar')" class="navbar-item">
-        <Icon :icon="sidebarIcon" text="Minecraft Mod Manager" class="has-tooltip-bottom" data-tooltip="Toggles the sidebar" />
+        <Icon :icon="sidebarIcon" text="CraftyMc Mod Manager" class="has-tooltip-bottom" data-tooltip="Toggles the sidebar" />
       </a>
     </div>
 

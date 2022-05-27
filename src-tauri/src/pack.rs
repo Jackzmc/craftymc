@@ -190,17 +190,17 @@ impl ModpackManager {
     }
 
     fn get_suitable_name(&self, name: &str) -> Option<String> {
+    let mut new_name = name.to_string();
       if self.get_modpack_by_name(name).is_some() {
-        let new_name = name;
         for n in 1..50 {
-          let new_name = format!("{} ({})", name, n);
+          new_name = format!("{} ({})", name, n);
           if self.get_modpack_by_name(&new_name).is_none() {
             return Some(new_name);
           }
         }
         return None
       }
-      Some(name.to_string())
+      Some(new_name)
     }
 
     pub fn create_modpack(&mut self, mut pack: Modpack) -> Result<Modpack, String> {

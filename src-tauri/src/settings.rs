@@ -38,7 +38,8 @@ pub struct MinecraftSettings {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[allow(non_snake_case)]
 pub struct MetaInfo {
-    maxMemoryMb: u64
+    pub maxMemoryMb: u64,
+    pub appVersion: Option<String>
 }
 
 impl Settings {
@@ -101,6 +102,7 @@ impl SettingsManager {
         system.refresh_all();
         settings.meta = Some(MetaInfo {
             maxMemoryMb: system.total_memory() / 1000,
+            appVersion: None,
         });
         settings
     }
@@ -111,5 +113,9 @@ impl SettingsManager {
         copy.meta = None;
         let json_str = serde_json::to_string_pretty(&copy).unwrap();
         fs::write(&self.file_path, json_str)
+    }
+
+    pub fn set_version(&mut self, version: String) {
+        self.settings.meta.as_mut().unwrap().appVersion = Some(version);
     }
 }

@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "mc-mod-manager",
+    "productName": "CraftyMc",
     "version": "0.3.0-alpha"
   },
   "tauri": {
@@ -81,7 +81,7 @@
         "fullscreen": false,
         "height": 960,
         "resizable": true,
-        "title": "Minecraft Mod Manager",
+        "title": "CraftyMc Mod Manager",
         "width": 1280,
         "decorations": false,
         "minHeight": 585,

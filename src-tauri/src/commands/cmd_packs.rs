@@ -155,7 +155,7 @@ pub fn choose_modpack_image(state: tauri::State<'_, AppState>, window: tauri::Wi
         let ext = filepath.extension().expect("no file ext").to_str().unwrap();
         std::fs::copy(&filepath, dest_dir.join(
           format!("pack.{}", &ext)
-        ));
+        )).expect("copy pack image failed");
         let mut modpacks = cl_modpacks.blocking_lock();
         let mut modpack = modpacks.get_modpack_mut(&pack_id).unwrap();
         modpack.img_ext = Some(ext.to_string());
@@ -221,7 +221,6 @@ pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
     .pick_file(move |result| {
       if let Some(filepath) = result {
         let mut modpacks = modpacks.blocking_lock();
-        let modpack = modpacks.import(&filepath);
         match modpacks.import(&filepath) {
           Ok(pack) => {
             window.emit("update-modpack", payloads::UpdateModpackPayload { 
@@ -229,7 +228,7 @@ pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
               deleted: false
             }).unwrap();
           },
-          Err(err) => {
+          Err(_) => {
             // TODO: Pass to ui
           }
         }

@@ -173,6 +173,11 @@ impl ModpackManager {
             .collect::<Vec<Modpack>>()
     }
 
+    pub fn replace(&mut self, modpack: Modpack) {
+        let id = modpack.id.as_ref().unwrap();
+        self.packs.insert(id.clone(), modpack);
+    }
+
     pub fn delete_modpack(&mut self, id: &str) -> Result<Option<Modpack>, String> {
       info!("removed modpack id = {}", id);
       if let Some(pack) = self.packs.remove(id) {
@@ -264,12 +269,20 @@ impl ModpackManager {
             .or(self.settings.minecraft.javaArgs.as_ref())
             .or(Some(&"".to_string()))
             .cloned();
+        let lastVersionId = match modpack.settings.modloaderType.as_str() {
+            "forge" => format!("{}-forge-{}", 
+                modpack.versions.minecraft, 
+                modpack.versions.modloader
+            ),
+            // "fabric" => format!(""),
+            _ => panic!("Unsupported modloader")
+        };
         LauncherProfile {
             created: Some(modpack.created.clone()),
             gameDir: Some(game_dir),
             javaArgs: java_args,
             lastUsed: Some(util::get_iso8601(None)),
-            lastVersionId: modpack.versions.minecraft.clone(), //TODO: Use correct jar, instead of just minecraft jar
+            lastVersionId,
             name: modpack.name.clone(),
             resolution: Some(ProfileResolution {
                 height: self.settings.minecraft.height,

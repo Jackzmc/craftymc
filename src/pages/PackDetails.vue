@@ -25,6 +25,11 @@
             <div class="level-item" data-tooltip="Game version">
               <Icon :icon="['fas', 'cube']" icon-class="has-text-white" :text="props.pack.versions.minecraft" />
             </div>
+            <div class="level-item" data-tooltip="Mod loader">
+              <div class="icon-text has-text-white" >
+                <Icon :icon="['fa', 'hammer']" icon-class="has-text-white" :text="props.pack.settings.modloaderType + '-' + props.pack.versions.modloader" />
+              </div>
+            </div>
             <div class="level-item" data-tooltip="Pack version" v-if="props.pack.versions.pack">
               <div class="icon-text has-text-white" >
                 <span>{{props.pack.versions.pack}}</span>

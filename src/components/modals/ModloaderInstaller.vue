@@ -23,7 +23,7 @@ import BaseModal from './BaseModal.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen as appListen, emit as appEmit } from '@tauri-apps/api/event'
 
-const emit = defineEmits(["close"])
+const emit = defineEmits(["close", "save"])
 
 const props = defineProps<{
   pack: Partial<Modpack>

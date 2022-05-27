@@ -36,7 +36,7 @@
           <select v-model="pack.settings.modloaderType" @input="getModloaderVersions">
             <option :value="undefined" v-if="!pack.settings.modloaderType">Select a modloader</option>
             <option value="forge">Forge</option>
-            <option value="forge">Fabric</option>
+            <!-- <option value="forge">Fabric</option> -->
           </select>
         </div>
       </Field>

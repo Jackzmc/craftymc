@@ -100,14 +100,16 @@ pub async fn watch_modloader_download(state: tauri::State<'_, AppState>, window:
 
           let mut modpacks = cl_modpacks.lock().await;
           let mut modpack = modpacks.get_modpack_mut(&pack_id).unwrap().clone();
+          // Pass installer name to fml
           modpack.versions.modloader = file.file_name().to_str().unwrap().to_string();
 
           debug!("waiting for fml install");
-          match setup.install_fml(&modpack).await {
+          match setup.install_fml(&mut modpack).await {
             Ok(()) => {
               debug!("fml install complete. finishing modloader setup");
-              modpack.versions.modloader = file.file_name().to_str().unwrap().replace("-installer", "");
               cl_window.emit("modloader_download_complete", payloads::EmptyPayload()).unwrap();
+              modpacks.save(&modpack);
+              modpacks.replace(modpack);
             },
             Err(msg) => cl_window.emit("modloader_download_error", payloads::ErrorPayload(msg.clone())).unwrap()
           };

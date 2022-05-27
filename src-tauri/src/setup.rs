@@ -126,10 +126,12 @@ impl Setup {
         Ok(path)
     }
 
-    pub async fn install_fml(&self, modpack: &pack::Modpack) -> Result<(), String> {
+    pub async fn install_fml(&self, modpack: &mut pack::Modpack) -> Result<(), String> {
         match self.download_fml_installer().await {
             Ok(cli_path) => {
-                let installer_path = self.instances_folder.join(modpack.folder_name.as_ref().unwrap()).join(&modpack.versions.modloader);
+                let installer_path = self.instances_folder
+                    .join(modpack.folder_name.as_ref().unwrap())
+                    .join(&modpack.versions.modloader);
                 debug!("running: java -jar {:?} --installer {:?} --target {:?}", &cli_path, &installer_path, &self.launcher_folder);
                 let res = std::process::Command::new("java")
                     .arg("-jar")
@@ -140,6 +142,9 @@ impl Setup {
                     .arg(&self.launcher_folder)
                     .status()
                     .unwrap();
+                // forge-1.16.5-36.2.35-installer.jar ---> 1.16.5-forge-36.2.3
+                modpack.versions.modloader = modpack.versions.modloader.split("-").collect::<Vec<&str>>()[2].to_string();
+                
                 std::fs::remove_file(&installer_path).expect("cleanup installer failed");
                 res
             },

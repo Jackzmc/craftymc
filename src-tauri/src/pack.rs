@@ -250,7 +250,13 @@ impl ModpackManager {
 
     pub fn run_minecraft_launcher(&self) -> Result<std::process::Child, String>  {
         let work_dir = self.get_install_folder();
-        match std::process::Command::new(self.get_install_folder().join("MinecraftLauncher.exe"))
+        let executable = match std::env::consts::OS {
+            "windows" => "MinecraftLauncher.exe",
+            "linux" => "minecraft-launcher",
+            _ => panic!("Unsupported OS")
+        };
+
+        match std::process::Command::new(self.get_install_folder().join(executable))
             .arg("-w")
             .arg(work_dir)
             .stdout(std::process::Stdio::null())

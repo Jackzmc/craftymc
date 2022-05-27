@@ -56,6 +56,7 @@ impl Setup {
                 .spawn()
                 .unwrap();
 
+            // Poll status to check if it's done
             let now = std::time::Instant::now();
             let mut success = false;
             while now.elapsed().as_secs() < 120 {
@@ -91,9 +92,15 @@ impl Setup {
                 .status()
                 .expect("Launcher failed to start");
         } else if cfg!(unix) {
-            println!("this is unix alike");
+            //tar -xf Minecraft.tar.gz --strip-components=1 -C ../Launcher minecraft-launcher/
+            
+            std::process::Command::new("tar")
+                .args(["-xf", src_file.to_str().unwrap(), "--strip-components=1", "-C"])
+                .arg(self.launcher_folder.to_str().unwrap())
+                .status()
+                .expect("tar failed");
         }
-
+        std::fs::remove_file(src_file).expect("rm src file failed");
         info!("Minecraft launcher install is complete.");
         Ok(())
     }

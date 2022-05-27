@@ -43,7 +43,7 @@ async function updateModpacks(newModpack?: Modpack) {
     modpacks.value = packs
   }
   else {
-    newModpack.imageUrl = await _get_img_url(pack)
+    newModpack.imageUrl = await _get_img_url(newModpack)
     modpacks.value.push(newModpack)
   }
 }

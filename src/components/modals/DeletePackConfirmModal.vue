@@ -1,6 +1,6 @@
 <template>
-<BaseModal active show-header :title="'Deleting ' + props.pack.name">
-  <p class="subtitle is-4">Are you sure you want to delete this modpack?</p>
+<BaseModal active show-header title="Delete Modpack">
+  <p class="subtitle is-4">Are you sure you want to delete <b>{{props.pack.name}}?</b></p>
   <p>This will delete any saved backups</p>
   <template v-slot:footer>
     <div class="buttons">

@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref } from 'vue'
+import { onBeforeMount, ref, computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen as appListen, emit as appEmit } from '@tauri-apps/api/event'
@@ -68,7 +68,7 @@ onBeforeMount(async() => {
 const modloaderUrl = computed(() => {
 if(props.pack.settings.modloaderType === "forge")
     return `https://files.minecraftforge.net/net/minecraftforge/forge/index_${props.pack.versions.minecraft}.html`
-  return
+  return undefined
 })
 async function checkWindow(windowHandle) {
   if(windowHandle.closed && waiting.value) {

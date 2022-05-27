@@ -1,6 +1,6 @@
 <template>
 <div>
-  <component :is="component" :pack="props.pack" v-if="component" @close="showSubview(Subview.None)"/>
+  <component :is="component" :pack="props.pack" v-if="component" @close="showSubview(Subview.None)" @change-modloader="changeModloader"/>
   <template v-if="!hideSelf"> <!-- a little hacky -->
   <a class="button mb-2">
     <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
@@ -104,7 +104,7 @@ let contextMenu = ref()
 let component = ref()
 let hideSelf = ref(false)
 
-const emit = defineEmits(["goback"])
+const emit = defineEmits(["goback", "change-modloader"])
 const props = defineProps<{
   pack: Modpack,
   editSelected: boolean
@@ -157,6 +157,11 @@ async function showSubview(subview: Subview) {
       break
   }
   contextMenu.value.close()
+}
+
+function changeModloader(pack) {
+  emit('change-modloader', pack)
+  showSubview(Subview.None)
 }
 
 onMounted(async() => {

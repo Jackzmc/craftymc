@@ -11,7 +11,7 @@
     </section>
     <footer class="modal-card-foot">
       <slot name="footer">
-        <button class="button">Close</button>
+        <button class="button" @click="emit('close')">Close</button>
       </slot>
     </footer>
   </div>

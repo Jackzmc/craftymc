@@ -1,7 +1,9 @@
 <template>
 <div>
   <h4 class="title is-4" v-if="!selectedPack">Installed Modpacks</h4>
-  <PackDetails v-if="selectedPack" :pack="selectedPack" @goback="selectedPack = undefined" :edit-selected="editSelected" />
+  <PackDetails v-if="selectedPack" :pack="selectedPack"
+    @goback="selectedPack = undefined" :edit-selected="editSelected" @change-modloader="v => emit('change-modloader', v)"
+  />
   <PackList v-else :packs="props.modpacks" @select="pack => selectPack(pack)" @edit="pack => selectPack(pack, true)" />
 </div>
 </template>
@@ -11,6 +13,8 @@ import { ref, watch } from 'vue'
 import { Modpack } from '@/types/Pack'
 import PackList from '@/components/pack/PackList'
 import PackDetails from '@/pages/PackDetails'
+
+const emit = defineEmits(["change-modloader"])
 
 const props = defineProps<{
   modpacks: Modpack[]

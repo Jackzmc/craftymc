@@ -1,33 +1,38 @@
 <template>
 <div>
-  <AskTelemetryModal v-if="settings && settings.general.telemetryState < 0" @result="(level) => settings.general.telemetryState = level" />
-  <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" @update-modpacks="updateModpacks" />
+  <component v-if="modal?.component" :is="modal.component" :pack="modal.pack" active
+    @result="(level) => settings.general.telemetryState = level"
+    @close="modal = undefined"
+  />
+  <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" @update-modpacks="updateModpacks" @installModloader="installModloader" />
   <br>
   <div class="columns mt-6" v-if="settings">
     <div class="column is-2 ml-1" v-show="hasSidebar">
       <SideBar />
     </div>
     <div :class="mainViewClass">
-      <router-view :settings="settings" :modpacks="modpacks" @update-settings="updateSettings"  />
+      <router-view :settings="settings" :modpacks="modpacks" @update-settings="updateSettings" @change-modloader="installModloader" />
     </div>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from 'vue'
+import { ref, onBeforeMount, onMounted, computed, defineAsyncComponent, markRaw } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
+
 import { invoke, convertFileSrc } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
-import { AppSettings } from './types/Settings';
 import { documentDir, join } from '@tauri-apps/api/path'
-import AskTelemetryModal from '@/components/modals/AskTelemetryModal.vue'
+
+import { AppSettings } from './types/Settings';
 import DefaultPackImage from '@/assets/default_pack.png'
 
 const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
 let modpacks = ref<Modpack[]>([])
+let modal = ref<{ component: any, pack: any}>()
 
 async function updateSettings(newSettings?: AppSettings) {
   if(!newSettings) settings.value = await invoke('get_settings')
@@ -83,6 +88,17 @@ onBeforeMount(async() => {
     modpacks.value.push(newModpack)
   })
 })
+
+onMounted(() => {
+  if(settings.value && settings.value.general.telemetryState < 0) {
+    modal.value = { component: markRaw(defineAsyncComponent(()  => import('@/components/modals/AskTelemetryModal.vue'))), pack: null }
+  }
+})
+
+function installModloader(pack: Modpack) {
+  console.debug('installing modloader', pack)
+  modal.value = { component: markRaw(defineAsyncComponent(() => import('@/components/modals/ModloaderInstaller.vue'))), pack: pack}
+}
 
 </script>
 

@@ -8,8 +8,17 @@ use log::{info, debug, error, warn};
 /// COMMANDS
 
 #[tauri::command]
-pub fn create_modpack(state: tauri::State<'_, AppState>, modpack: pack::Modpack) -> Result<pack::Modpack, String> {
-  state.modpacks.blocking_lock().create_modpack(modpack)
+pub fn create_modpack(state: tauri::State<'_, AppState>,  window: tauri::Window, modpack: pack::Modpack) -> Result<(), String> {
+  match state.modpacks.blocking_lock().create_modpack(modpack) {
+    Ok(modpack) => {
+      window.emit("update-modpack", payloads::UpdateModpackPayload { 
+        modpack,
+        deleted: false
+      }).unwrap();
+      Ok(())
+    },
+    Err(e) => Err(e)
+  }
 }
 
 #[tauri::command]
@@ -68,9 +77,10 @@ pub async fn watch_modloader_download(state: tauri::State<'_, AppState>, window:
       let setup = setup::Setup::new(&modpacks);
       let instances_dir = modpacks.get_instances_folder();
       let modpack = modpacks.get_modpack(pack_id).unwrap().clone();
-      let dest_dir = instances_dir.join(&modpack.folder_name.as_ref().unwrap());
+      let dest_path = instances_dir.join(&modpack.folder_name.as_ref().unwrap());
       drop(modpacks);
 
+      debug!("Found modloader installer");
       window.emit("modloader_download_found", payloads::EmptyPayload()).unwrap();
       // Wait until window is closed:
       let cl_window = window.clone();
@@ -78,21 +88,24 @@ pub async fn watch_modloader_download(state: tauri::State<'_, AppState>, window:
       let pack_id = pack_id.to_string();
       window.once("modloader_download_ready", move | _event | { 
         // Rust can't copy but this can as admin.... stupid but it works
+        // TODO: Linux support
+        let src_path = file.path();
+        debug!("cmd /c copy {:?} {:?}", &src_path, &dest_path);
         runas::Command::new(r"C:\Windows\System32\cmd.exe")
           .gui(true)
           .arg("/c")
           .arg("copy")
-          .arg(file.path().to_str().unwrap())
-          .arg(dest_dir.to_str().unwrap())
+          .arg(&src_path)
+          .arg(&dest_path)
           .status()
           .unwrap();
 
-        // Also for fucking idk why I can't run two commands at once. WORKS FINE IN CMD.EXE NORMALLY BUT RUST FUCKS IT UP
+        debug!("cmd /c del {:?}", &src_path);
         runas::Command::new(r"C:\Windows\System32\cmd.exe")
           .gui(true)
           .arg("/c")
           .arg("del")
-          .arg(file.path().to_str().unwrap())
+          .arg(src_path)
           .status()
           .unwrap();
           

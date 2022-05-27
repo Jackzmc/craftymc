@@ -1,7 +1,6 @@
 <template>
 <div>
 <CreatePackModal v-if="showCreatePack" active @close="showCreatePack = false" @save="onModpackCreated" />
-<ModloaderInstaller v-if="pendingModpackInstall" :pack="pendingModpackInstall" active  @save="pendingModpackInstall = undefined" />
 <nav class="navbar is-black is-fixed-top" role="navigation" aria-label="main navigation">
   <div id="navbarBasicExample" class="navbar-menu" data-tauri-drag-region>
     <div class="navbar-start">
@@ -40,20 +39,18 @@
 import { appWindow } from '@tauri-apps/api/window'
 import { computed, ref } from 'vue'
 import CreatePackModal from '@/components/modals/CreatePackModal.vue'
-import ModloaderInstaller from '@/components/modals/ModloaderInstaller.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 // eslint-disable-next-line
 const props = defineProps<{
   hasSidebar: boolean
 }>()
-const emit = defineEmits(["sidebar", "update-modpacks"])
+const emit = defineEmits(["sidebar", "installModloader"])
 
 let showCreatePack = ref(false)
-let pendingModpackInstall = ref<Modpack>()
 
 async function onModpackCreated(pack) {
-  await emit('update-modpacks', pack)
-  pendingModpackInstall.value = pack
+  // await emit('update-modpacks', pack)
+  await emit('installModloader', pack)
 }
 
 async function importModpack() {

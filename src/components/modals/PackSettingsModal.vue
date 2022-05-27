@@ -17,6 +17,10 @@
     <label for="enableJavaMemory">Use custom memory settings</label>
     <input v-if="pack.settings.useCustomMemory" id="pack-javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="pack.settings.javaMemory" type="range" :data-tooltip="javaMemory">
   </Field>
+  <Field label="Modloader">
+    <p>{{modloaderDisplay}}</p>
+    <a class="button is-info is-small" @click="changeModloader">Change</a>
+  </Field>
   <template v-slot:footer>
     <div class="buttons">
       <div class="button is-success" @click="save">Save Changes</div>
@@ -32,7 +36,7 @@ import { Modpack } from '@/types/Pack'
 import { reactive, computed, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'change-modloader'])
 const props = defineProps<{
   pack: Modpack
 }>()
@@ -59,9 +63,17 @@ async function updateName() {
   })
 }
 
+const modloaderDisplay = computed(() => {
+  return `${props.pack.settings.modloaderType.charAt(0).toUpperCase() + props.pack.settings.modloaderType.slice(1)} v${props.pack.versions.modloader}`
+})
+
 const javaMemory = computed(() => {
   return `${pack.settings.javaMemory?.toLocaleString()} MB`
 })
+
+function changeModloader() {
+  emit("change-modloader", props.pack)
+}
 
 async function choosePackImage() {
   await invoke("choose_modpack_image", { packId: props.pack.id })

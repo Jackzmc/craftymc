@@ -18,7 +18,10 @@
     <Tab name="Mods">
       <FilterControls :sorts="SORTS" defaultSort="relevance" @update:sort="(val) => sort = val"  @update:filter="(val) => filter = val" />
       <p class="has-text-centered mx-5 my-5">
-        <span class="has-text-danger" v-if="error">{{error}}</span>
+        <span class="has-text-danger" v-if="error">
+          {{error}}
+          <a class="button is-info" @click="searchModrinth">Refresh</a>
+        </span>
         <span class="subtitle is-4" v-else-if="loading">Loading...</span>
         <span class="subtitle is-4" v-else-if="mods.length == 0">No mods were found.</span>
       </p>

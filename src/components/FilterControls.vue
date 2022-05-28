@@ -14,7 +14,7 @@
       <HorizontalField label="Filter by">
         <div class="select">
           <select v-model="filter">
-            <option v-for="(display, key) in FILTERS" :key="key" :value="key">{{display}}</option>
+            <option v-for="(display, key) in props.filters" :key="key" :value="key">{{display}}</option>
           </select>
         </div>
       </HorizontalField>
@@ -37,20 +37,15 @@ const props = defineProps<{
   cardsize?: number,
   showSize?: boolean,
   sorts: Record<string, string>,
-  defaultSort: string
+  filters: Record<string, string>,
+  defaultSort: string,
+  defaultFilter: string
 }>()
-
-const FILTERS = {
-  all: "All Modpacks",
-  own: "My Modpacks",
-  featured: "Featured Modpacks",
-  thirdparty: "External Modpacks"
-}
 
 //"relevance" "downloads" "follows" "newest" "updated"
 
 let sort = ref(props.defaultSort)
-let filter = ref('all')
+let filter = ref(props.defaultFilter)
 let size = ref(props.cardsize || 3)
 
 watch(sort, (value) => emit('update:sort', value))

@@ -46,6 +46,7 @@ const props = defineProps<{
   loading?: boolean
 }>()
 
+
 let search = ref<string>()
 const sendSearch = createDebounce(() => {
   emit('search', search.value)

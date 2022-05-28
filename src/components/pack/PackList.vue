@@ -1,9 +1,11 @@
 <template>
 <div>
   <component :is="component" :pack="componentPack" v-if="component" @close="closeComponent" />
-  <FilterControls :sorts="SORTS" defaultSort="recentlyPlayed" v-model:cardsize="cardSize" show-size />
+  <FilterControls :sorts="SORTS" defaultSort="recentlyPlayed" :filters="FILTERS" defaultFilter="all"
+    v-model:cardsize="cardSize" show-size @update:sort="(val) => packSort = val"  @update:filter="(val) => packFilter = val"
+  />
   <div class="columns is-multiline" v-if="props.packs.length > 0">
-    <div :class="columnClass" v-for="pack of props.packs" :key="pack.id">
+    <div :class="columnClass" v-for="pack of sortedPacks" :key="pack.id">
       <Pack :pack="pack" @select="pack => emit('select', pack)" @contextmenu.prevent="event => contextMenu.open(event, pack)" />
     </div>
   </div>
@@ -50,12 +52,21 @@ import { invoke } from '@tauri-apps/api/tauri'
 
 let component = ref()
 let componentPack = ref()
+let packFilter = ref("all")
+let packSort = ref("recentlyPlayed")
 
 const emit = defineEmits(["select", "edit"])
 
 const props = defineProps<{
   packs: Modpack[]
 }>()
+
+const FILTERS = {
+  all: "All Modpacks",
+  own: "My Modpacks",
+  featured: "Featured Modpacks",
+  thirdparty: "External Modpacks"
+}
 
 const SORTS = {
   recentlyPlayed: "Recently Played",
@@ -64,6 +75,37 @@ const SORTS = {
   mcVersion: "Game Version",
   created: "Creation Date"
 }
+
+const sortedPacks = computed(() => {
+  return [...props.packs]
+  .filter(pack => {
+    switch(packFilter.value) {
+      case "own":
+        return !pack.author
+      case "featured":
+        return false
+      case "thirdparty":
+        return pack.versions.pack
+      case "all":
+      default:
+         return true
+    }
+  })
+  .sort((a,b) => {
+    switch(packSort.value) {
+      case "recentlyPlayed":
+        return new Date(b.lastPlayed) - new Date(a.lastPlayed)
+      case "mostPlayed":
+        return b.timesPlayed - a.timesPlayed
+      case "name":
+        return a.name.localeCompare(b.name)
+      case "mcVersion":
+        return a.versions.minecraft.localeCompare(b.versions.minecraft)
+      case "created":
+        return new Date(b.created) - new Date(a.created)
+    }
+  })
+})
 
 const cardSize = ref(3)
 let contextMenu = ref()

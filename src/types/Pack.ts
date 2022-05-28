@@ -13,6 +13,7 @@ export interface Modpack {
   settings: PackSettings,
   created: number,
   lastPlayed?: number,
+  timesPlayed?: number,
   mods: Record<string, SavedModEntry>
 }
 

@@ -77,8 +77,6 @@ const props = defineProps<{
   settings: AppSettings
 }>()
 
-// TODO: tauri invoke to get appmeta and settings
-
 const RELEASES = {
   release: "Stable (Recommended)",
   beta: "Beta",

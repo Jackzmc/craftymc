@@ -1,7 +1,8 @@
 // Will be called AFTER folder structure done
 use std::path::PathBuf;
 use crate::pack;
-use log::{info, debug, error};
+#[allow(unused_imports)]
+use log::{info, debug, error, warn};
 
 pub struct Setup {
     pub root_folder: PathBuf,
@@ -171,7 +172,7 @@ impl Setup {
               Ok(created) => {
                 if file.file_type().unwrap().is_file() {
                   if let Ok(duration) = created.duration_since(now) {
-                    if duration.as_secs() > 5 && duration.as_secs() <= 12 {
+                    if duration.as_secs() > 5 && duration.as_secs() <= 30 {
                       let filename = &file.file_name().into_string().unwrap();
                       if filename.ends_with(".jar") {
                         return Ok(file)
@@ -183,6 +184,7 @@ impl Setup {
               Err(err) => return Err(err.to_string())
             };
           }
+          tokio::time::sleep(tokio::time::Duration::from_secs(3)).await
         }
         Err("Watch timed out".to_string())
       }

@@ -241,6 +241,7 @@ impl ModpackManager {
                 */
                 modpack.lastPlayed = Some(util::get_iso8601(None));
                 let modpack = self.get_modpack(id).unwrap();
+                self.save(modpack);
                 self.set_launcher_config(&modpack);
                 self.run_minecraft_launcher()
             },

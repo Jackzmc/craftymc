@@ -12,12 +12,12 @@
   <tbody>
     <tr v-for="mod in props.mods" :key="mod.id">
       <td>{{mod.name}}</td>
-      <td>{{mod.author_id}}</td>
-      <td>{{mod.filename}}</td>
+      <td>{{mod.author}}</td>
+      <td>{{mod.filenames[0]}}</td>
       <td>
         <div class="buttons">
-        <a class="button is-small is-white"><Icon :icon="['fas', 'download']" /></a>
-        <a class="button is-small is-white"><Icon :icon="['fas', 'trash']" /></a>
+        <!-- <a class="button is-small is-white" data-tooltip="Update"><Icon :icon="['fas', 'download']" /></a> -->
+        <a class="button is-small is-white" data-tooltip="Delete"><Icon :icon="['fas', 'trash']" /></a>
         </div>
       </td>
       <td>

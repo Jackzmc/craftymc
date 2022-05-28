@@ -25,10 +25,6 @@ pub struct AppState {
   modpacks: Arc<Mutex<pack::ModpackManager>>
 }
 
-/// ASYNC COMMANDS (unable to be added as plugin for now)
- 
-
-
 fn main() {
   let config = settings::SettingsManager::new();
   let save_folder = std::path::Path::new(&config.settings.minecraft.saveDirectory).to_path_buf();

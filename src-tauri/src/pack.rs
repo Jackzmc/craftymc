@@ -30,6 +30,7 @@ pub struct Modpack {
     pub versions: ModpackVersionInfo,
     pub settings: PackSettings,
     pub lastPlayed: Option<String>,
+    pub timesPlayed: Option<u32>,
     pub created: String,
     pub mods: Vec<mods::SavedModEntry>
 }
@@ -240,6 +241,10 @@ impl ModpackManager {
                 1. Install launcher to $saveDir/Launcher/
                 */
                 modpack.lastPlayed = Some(util::get_iso8601(None));
+                modpack.timesPlayed = match modpack.timesPlayed {
+                    Some(n) => Some(n + 1),
+                    None => Some(1)
+                };
                 let modpack = self.get_modpack(id).unwrap();
                 self.save(modpack);
                 self.set_launcher_config(&modpack);

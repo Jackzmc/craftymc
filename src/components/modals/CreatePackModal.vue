@@ -88,6 +88,7 @@ let pack = ref<Partial<Modpack>>({
     pack: undefined
   },
   lastPlayed: undefined,
+  timesPlayed: 0,
   created: new Date(),
   mods: []
 })

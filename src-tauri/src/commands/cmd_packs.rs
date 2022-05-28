@@ -63,10 +63,12 @@ pub fn open_modpack_folder(state: tauri::State<'_, AppState>, pack_id: &str) -> 
 }
   
 /*
-watch_modloader_download -- download has started
-  modloader_download_found -- jar found, prompt ui to close
-  modloader_download_ready -- window has closed
-  modloader_download_complete -- modloader acquired and moved
+cmd  start_modloader_download -- rust creates window, with tmp user data it can access
+ :requires new window resolving forge/fabric url 
+rust watch_for_download
+evnt modloader_download_found -- jar found, prompt ui to close
+evnt modloader_download_ready -- window has closede
+evnt modloader_download_complete -- modloader acquired and moved
 Ok(())
 */
 #[tauri::command]
@@ -80,7 +82,7 @@ pub async fn watch_modloader_download(state: tauri::State<'_, AppState>, window:
       let dest_path = instances_dir.join(&modpack.folder_name.as_ref().unwrap());
       drop(modpacks);
 
-      debug!("Found modloader installer");
+      debug!("Found modloader installer: {:?}", file.file_name());
       window.emit("modloader_download_found", payloads::EmptyPayload()).unwrap();
       // Wait until window is closed:
       let cl_window = window.clone();
@@ -90,24 +92,7 @@ pub async fn watch_modloader_download(state: tauri::State<'_, AppState>, window:
         // Rust can't copy but this can as admin.... stupid but it works
         // TODO: Linux support
         let src_path = file.path();
-        debug!("cmd /c copy {:?} {:?}", &src_path, &dest_path);
-        runas::Command::new(r"C:\Windows\System32\cmd.exe")
-          .gui(true)
-          .arg("/c")
-          .arg("copy")
-          .arg(&src_path)
-          .arg(&dest_path)
-          .status()
-          .unwrap();
-
-        debug!("cmd /c del {:?}", &src_path);
-        runas::Command::new(r"C:\Windows\System32\cmd.exe")
-          .gui(true)
-          .arg("/c")
-          .arg("del")
-          .arg(src_path)
-          .status()
-          .unwrap();
+        util::mv_as_admin(&src_path, &dest_path);
           
         tokio::spawn(async move {
 

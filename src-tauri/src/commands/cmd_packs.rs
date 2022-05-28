@@ -12,8 +12,9 @@ pub fn create_modpack(state: tauri::State<'_, AppState>,  window: tauri::Window,
   match state.modpacks.blocking_lock().create_modpack(modpack) {
     Ok(modpack) => {
       window.emit("update-modpack", payloads::UpdateModpackPayload { 
-        modpack,
-        deleted: false
+        modpack: Some(modpack),
+        state: payloads::UpdateModpackState::Normal,
+        data: None
       }).unwrap();
       Ok(())
     },
@@ -124,15 +125,25 @@ pub async fn watch_modloader_download(state: tauri::State<'_, AppState>, window:
 
 #[tauri::command]
 // TODO: Possibly not make ui wait for return and instead use events
-pub async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, id: &str) -> Result<i32, String> {
+pub async fn launch_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, id: &str) -> Result<(), String> {
   let mut packs = state.modpacks.lock().await;
   match packs.launch_modpack(id) {
     Ok(mut child) => {
       window.emit("update-modpack", payloads::UpdateModpackPayload { 
-        modpack: packs.get_modpack(id).unwrap().clone(),
-        deleted: false
+        modpack: Some(packs.get_modpack(id).unwrap().clone()),
+        state: payloads::UpdateModpackState::NowActive,
+        data: None
       }).unwrap();
-      child.wait().expect("wait for child failed").code().ok_or("killed by signal".to_string())
+      let exit_code = match child.wait().expect("wait for child failed").code() {
+        Some(code) => Some(code.to_string()),
+        None => None
+      };
+      window.emit("update-modpack", payloads::UpdateModpackPayload { 
+        modpack: None,
+        state: payloads::UpdateModpackState::Normal,
+        data: exit_code
+      }).unwrap();
+      Ok(())
     },
     Err(err) => Err(err)
   }
@@ -160,8 +171,9 @@ pub fn choose_modpack_image(state: tauri::State<'_, AppState>, window: tauri::Wi
         let mut modpack = modpacks.get_modpack_mut(&pack_id).unwrap();
         modpack.img_ext = Some(ext.to_string());
         window.emit("update-modpack", payloads::UpdateModpackPayload { 
-          modpack: modpack.clone(),
-          deleted: false
+          modpack: Some(modpack.clone()),
+          state: payloads::UpdateModpackState::Normal,
+          data: None
         }).unwrap();
       }
     });
@@ -172,8 +184,9 @@ pub fn delete_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, 
   match state.modpacks.blocking_lock().delete_modpack(&pack_id) {
     Ok(Some(pack)) => {
       window.emit("update-modpack", payloads::UpdateModpackPayload { 
-        modpack: pack,
-        deleted: true
+        modpack: Some(pack),
+        state: payloads::UpdateModpackState::Deleted,
+        data: None
       }).unwrap();
       Ok(())
     },
@@ -188,12 +201,14 @@ pub fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pa
   let modpacks = &mut state.modpacks.blocking_lock();
   info!("Saved modpack \"{}\" data", pack_id);
   match modpacks.get_modpack(pack_id) {
-    Some(pack) => {
+    Some(modpack) => {
+      modpacks.save(modpack);
       window.emit("update-modpack", payloads::UpdateModpackPayload { 
-        modpack: pack.clone(),
-        deleted: false
+        modpack: Some(modpack.clone()),
+        state: payloads::UpdateModpackState::Normal,
+        data: None
       }).unwrap();
-      Ok(modpacks.save(pack))
+      Ok(())
     },
     None => Err("No modpack was found".to_string())
   }
@@ -222,10 +237,11 @@ pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
       if let Some(filepath) = result {
         let mut modpacks = modpacks.blocking_lock();
         match modpacks.import(&filepath) {
-          Ok(pack) => {
+          Ok(modpack) => {
             window.emit("update-modpack", payloads::UpdateModpackPayload { 
-              modpack: pack,
-              deleted: false
+              modpack: Some(modpack),
+              state: payloads::UpdateModpackState::Normal,
+              data: None
             }).unwrap();
           },
           Err(_) => {

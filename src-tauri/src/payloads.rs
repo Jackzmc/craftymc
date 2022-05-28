@@ -1,10 +1,27 @@
 use crate::pack;
 
 #[derive(Clone, serde::Serialize)]
-pub struct UpdateModpackPayload {
-  pub modpack: pack::Modpack,
-  pub deleted: bool
+#[allow(dead_code)] // False detection
+pub enum UpdateModpackState {
+  Normal,
+  Deleted,
+  NowActive,
+  Invalid
 }
+
+#[derive(Clone, serde::Serialize)]
+pub struct UpdateModpackPayload {
+  pub modpack: Option<pack::Modpack>,
+  pub state: UpdateModpackState,
+  pub data: Option<String>
+}
+
+#[derive(Clone, serde::Serialize)]
+pub struct LauncherStatePayload {
+  pub modpack: pack::Modpack,
+  pub active: bool
+}
+
 
 #[derive(Clone, serde::Serialize)]
 pub struct EmptyPayload();

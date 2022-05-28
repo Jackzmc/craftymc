@@ -16,8 +16,9 @@ pub async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Windo
   let mut packs = cl_modpacks.lock().await;
   let pack = packs.add_mod_entry(pack_id, entry_data);
   window.emit("update-modpack", payloads::UpdateModpackPayload { 
-    modpack: pack,
-    deleted: false
+    modpack: Some(pack),
+    state: payloads::UpdateModpackState::Normal,
+    data: None
    }).unwrap();
   Ok(())
 }

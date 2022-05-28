@@ -9,7 +9,7 @@
     <section class="modal-card-body">
       <slot />
     </section>
-    <footer class="modal-card-foot">
+    <footer class="modal-card-foot" v-if="!hideFooter">
       <slot name="footer">
         <button class="button" @click="emit('close')">Close</button>
       </slot>
@@ -21,9 +21,10 @@
 <script setup lang="ts">
 const emit = defineEmits(["close"])
 const props = defineProps<{
-  title: string,
+  title?: string,
   closable?: boolean,
   active?: boolean,
-  showHeader?: boolean
+  showHeader?: boolean,
+  hideFooter?: boolean
 }>()
 </script>

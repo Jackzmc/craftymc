@@ -47,8 +47,6 @@ function setActive(state: boolean) {
 }
 
 async function launch() {
-  // TODO: Show that launcher is running
-  const exitCode = await invoke('launch_modpack', { id: props.pack.id })
-  console.info('launched modpack exited with code', exitCode)
+  await invoke('launch_modpack', { id: props.pack.id })
 }
 </script>

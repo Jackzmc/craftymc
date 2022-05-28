@@ -121,9 +121,7 @@ async function showDeleteConfirm(pack: Modpack) {
 }
 
 async function launch(pack: Modpack) {
-  // TODO: Show that launcher is running
-  const exitCode = await invoke('launch_modpack', { id: pack.id })
-  console.info('launched modpack exited with code', exitCode)
+  await invoke('launch_modpack', { id: pack.id })
   contextMenu.value.close()
 }
 

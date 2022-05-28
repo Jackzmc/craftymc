@@ -65,27 +65,47 @@ const mainViewClass = computed(() => {
   return arr
 })
 
+enum UpdateModpackState {
+  Normal = "Normal",
+  Deleted = "Deleted",
+  NowActive = "NowActive",
+  Invalid = "Invalid"
+}
+
 onBeforeMount(async() => {
   await updateSettings()
   console.debug('app settings', settings.value)
   await updateModpacks()
   console.debug(modpacks.value.length, 'modpacks loaded')
 
+  let isLauncherActive = false
+
   await listen('update-modpack', async(event) => {
-    console.debug('update-modpack', event.payload.modpack)
+    console.debug('update-modpack', event.payload)
     const newModpack = event.payload.modpack
-    newModpack.imageUrl = await _get_img_url(newModpack)
-    for(let i = 0; i < modpacks.value.length; i++) {
-      if(modpacks.value[i].id === newModpack.id) {
-        if(event.payload.deleted)
-          modpacks.value.splice(i, 1)
-        else
-          modpacks.value[i] = newModpack
-        return
+    if(newModpack) newModpack.imageUrl = await _get_img_url(newModpack)
+    if(isLauncherActive && event.payload.state === UpdateModpackState.Normal) {
+      modal.value = undefined
+      isLauncherActive = false
+      console.debug(`Launcher exited with code ${event.payload.data === null ? '<signal>' : event.payload.data}`)
+    } else {
+      // Find the modpack by it's id
+      for(let i = 0; i < modpacks.value.length; i++) {
+        if(modpacks.value[i].id === newModpack.id) {
+          if(event.payload.state == UpdateModpackState.Deleted)
+            modpacks.value.splice(i, 1)
+          else if(event.payload.state === UpdateModpackState.NowActive) {
+            modal.value = { component: markRaw(defineAsyncComponent(()  => import('@/components/modals/NowPlayingModal.vue'))), pack: event.payload.modpack }
+            isLauncherActive = true
+            return
+          } else
+            modpacks.value[i] = newModpack
+          return
+        }
       }
+      // If no known modpack, insert it
+      modpacks.value.push(newModpack)
     }
-    // Modpack to update not found, insert
-    modpacks.value.push(newModpack)
   })
 })
 

@@ -1,4 +1,6 @@
 use chrono::{DateTime, Utc};
+#[allow(unused_imports)]
+use log::{info, debug, error, warn};
 
 pub fn get_unix_timestamp_now() -> i64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64
@@ -25,6 +27,40 @@ pub fn open_folder(path: &std::path::PathBuf) -> Result<(), String> {
     {
         Ok(_) => return Ok(()),
         Err(err) => return Err(err.to_string())
+    }
+}
+
+pub fn mv_as_admin(src_path: &std::path::Path, dest_path: &std::path::PathBuf) {
+    let src = src_path.to_str().unwrap();
+    let dest = dest_path.to_str().unwrap();
+    match std::env::consts::OS {
+        "windows" => {
+            let status = runas::Command::new(r"C:\Windows\System32\cmd.exe")
+                .gui(true)
+                .arg("/c")
+                .arg("copy")
+                .arg(src)
+                .arg(dest)
+                .status()
+                .unwrap();
+            debug!("cmd /c copy {:?} {:?} returned: status {:?}", src, dest, status.code().unwrap_or(-1));
+            let status = runas::Command::new(r"C:\Windows\System32\cmd.exe")
+                .gui(true)
+                .arg("/c")
+                .arg("del")
+                .arg(src)
+                .status()
+                .unwrap();
+            debug!("cmd /c del {:?} returned: status {:?}", src, status.code().unwrap_or(-1))
+        },
+        "linux" => {
+            runas::Command::new(r"/bin/sh")
+                .gui(true)
+                .arg(format!("'cp \"{}\" \"{}\"; rm \"{}\"'", src, dest, src))
+                .status()
+                .unwrap();
+        },
+        _ => panic!("Unsupported OS")
     }
 }
 

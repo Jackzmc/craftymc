@@ -6,7 +6,7 @@
         <h4 class="title is-4">{{props.pack.name}}</h4>
         <Field :icon-left="['fa', 'search']">
           <!-- TODO: Add 'x' to right on search -->
-          <input type="text" class="input" placeholder="Search for mods" v-model="searchQuery" @input="doSearch" />
+          <input type="text" class="input" placeholder="Search for mods" v-model="settings.query" @input="doSearch(false)" />
         </Field>
       </div>
       <div class="column">
@@ -22,20 +22,21 @@
         <li><a>Maps</a></li>
       </ul>
     </div>
-    <FilterControls :sorts="SORTS" defaultSort="relevance" :filters="FILTERS"
-      @update:sort="(val) => sort = val"  @update:filter="(val) => filter = val"
+    <FilterControls :sorts="SORTS" :defaultSort="settings.sort" :filters="FILTERS"
+      @update:sort="(val) => settings.sort = val"  @update:filter="(val) => settings.filter = val"
     />
   </div>
-  <div style="overflow-y: scroll; height: 70vh" ref="contentbody">
+  <div style="overflow-y: scroll; height: 70vh; padding-left: 0.1em" ref="contentbody">
     <template v-if="tabIndex == TabIndex.Mods">
-      <p class="has-text-centered mx-5 my-5">
-        <span class="has-text-danger" v-if="error">
+      <div class="has-text-centered mx-5 my-5">
+        <p class="has-text-danger" v-if="error">
           {{error}}
-          <a class="button is-info" @click="searchModrinth">Refresh</a>
-        </span>
-        <span class="subtitle is-4" v-else-if="loading">Loading...</span>
-        <span class="subtitle is-4" v-else-if="mods.length == 0">No mods were found.</span>
-      </p>
+          <br><br>
+          <a class="button is-info" @click="searchModrinth(false)">Refresh</a>
+        </p>
+        <p class="subtitle is-4" v-else-if="loading">Loading...</p>
+        <p class="subtitle is-4" v-else-if="mods.length == 0">No mods were found.</p>
+      </div>
       <EntryCard v-for="entry in mods" :entry="entry" :key="entry.project.project_id">
         <template v-slot:rightColumn>
             <p v-if="installedMods[entry.project.project_id]">Installed</p> <!-- remove pack.mods once rust has it -->
@@ -59,7 +60,7 @@ import FilterControls from '@/components/FilterControls.vue'
 import EntryCard from '@/components/EntryCard.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack';
-import { ref, onBeforeMount, onMounted, computed, onBeforeUnmount } from 'vue'
+import { ref, onBeforeMount, onMounted, computed, onBeforeUnmount, watch } from 'vue'
 import { createDebounce } from '@/js/utils'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -118,34 +119,46 @@ const FILTERS = computed(() => {
 let scrollComponent = ref()
 let contentbody = ref()
 
-let sort = ref('relevance')
-let filter = ref('all')
-let debug = ref<string>()
-let searchQuery = ref<string>()
+let tabIndex = ref(TabIndex.Mods)
+
+const settings = ref({
+  sort: "relevance",
+  filter: "all",
+  page: 0,
+  query: ''
+})
+
+watch([() => settings.value.sort, () => settings.value.filter], () => {
+  console.log('filter change')
+  searchModrinth(false)
+})
+
 let loading = ref(false)
 let error = ref<string>()
+
 let mods = ref<ModrinthProject[]>([])
-let page = ref(0)
-let tabIndex = ref(TabIndex.Mods)
 
 async function searchModrinth(nextPage: boolean = false) {
   loading.value = true
   error.value = undefined
-  if(nextPage) page.value++
+  if(nextPage) settings.value.page++
+  else {
+    settings.value.page = 0
+    mods.value = []
+  }
   try {
     const facets = ["project_type:mod"]
     facets.push(`categories:${props.pack.settings.modloaderType}`)
     facets.push(`versions:${props.pack.versions.minecraft}`)
     const facetsString = `[["${facets.join('"],["')}"]]`
 
-    const queryText = searchQuery.value && searchQuery.value != '' ? `&query=${searchQuery.value}` : ''
-    const offset = MAX_FETCH_PER_PAGE * page.value
-    const response = await fetch(`https://api.modrinth.com/v2/search?limit=${MAX_FETCH_PER_PAGE}&offset=${offset}&index=${sort.value}&facets=${facetsString}${queryText}`)
+    const queryText = settings.value.query != '' ? `&query=${settings.value.query}` : ''
+    const offset = MAX_FETCH_PER_PAGE *settings.value.page
+    const response = await fetch(`https://api.modrinth.com/v2/search?limit=${MAX_FETCH_PER_PAGE}&offset=${offset}&index=${settings.value.sort}&facets=${facetsString}${queryText}`)
     // TODO: Check versions to see if there is a valid version FOR the modloader
     // OR wait until modrinth fixes it on their side
     const json = await response.json()
     if(response.ok) {
-      debug.value = {...json, _url: `https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=${facetsString}${queryText}`}
       mods.value = mods.value.concat((json.hits as ModrinthProject[])
         .map(pack => {
           return {

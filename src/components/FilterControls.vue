@@ -38,8 +38,8 @@ const props = defineProps<{
   showSize?: boolean,
   sorts: Record<string, string>,
   filters: Record<string, string>,
-  defaultSort: string,
-  defaultFilter: string
+  defaultSort?: string,
+  defaultFilter?: string
 }>()
 
 //"relevance" "downloads" "follows" "newest" "updated"

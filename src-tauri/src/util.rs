@@ -47,6 +47,7 @@ pub fn mv_as_admin(src_path: &std::path::Path, dest_path: &std::path::PathBuf) {
 
             let status = runas::Command::new(r"C:\Windows\System32\cmd.exe")
                 .gui(true)
+                .arg("/s")
                 .arg("/c")
                 .arg(format!("del \"{}\"", src))
                 .status()

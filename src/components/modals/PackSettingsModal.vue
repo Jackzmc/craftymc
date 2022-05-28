@@ -64,7 +64,8 @@ async function updateName() {
 }
 
 const modloaderDisplay = computed(() => {
-  return `${props.pack.settings.modloaderType.charAt(0).toUpperCase() + props.pack.settings.modloaderType.slice(1)} v${props.pack.versions.modloader}`
+  const version = props.pack.versions.modloader === "manual" ? 'manual install' : `v${props.pack.versions.modloader}`
+  return `${props.pack.settings.modloaderType.charAt(0).toUpperCase()}${props.pack.settings.modloaderType.slice(1)} ${version}`
 })
 
 const javaMemory = computed(() => {

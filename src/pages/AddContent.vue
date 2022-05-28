@@ -1,22 +1,33 @@
 <template>
 <div>
-  <div class="columns">
-    <div class="column is-10">
-      <h4 class="title is-4">{{props.pack.name}}</h4>
-      <Field :icon-left="['fa', 'search']">
-        <!-- TODO: Add 'x' to right on search -->
-        <input type="text" class="input" placeholder="Search for mods" v-model="searchQuery" @input="doSearch" />
-      </Field>
+  <div class="content-nav">
+    <div class="columns">
+      <div class="column is-10">
+        <h4 class="title is-4">{{props.pack.name}}</h4>
+        <Field :icon-left="['fa', 'search']">
+          <!-- TODO: Add 'x' to right on search -->
+          <input type="text" class="input" placeholder="Search for mods" v-model="searchQuery" @input="doSearch" />
+        </Field>
+      </div>
+      <div class="column">
+        <a class="button is-white is-circular is-pulled-right" @click="emit('close')">
+          <fa-icon :icon="['fas', 'times-circle']" size="2x" />
+        </a>
+      </div>
     </div>
-    <div class="column">
-      <a class="button is-white is-circular is-pulled-right" @click="emit('close')">
-        <fa-icon :icon="['fas', 'times-circle']" size="2x" />
-      </a>
+    <div class="tabs">
+      <ul>
+        <li :class="{'is-active': tabIndex == TabIndex.Mods}" @click="tabIndex = TabIndex.Mods"><a>Mods</a></li>
+        <li><a>Resource Packs</a></li>
+        <li><a>Maps</a></li>
+      </ul>
     </div>
+    <FilterControls :sorts="SORTS" defaultSort="relevance" :filters="FILTERS"
+      @update:sort="(val) => sort = val"  @update:filter="(val) => filter = val"
+    />
   </div>
-  <Tabs inner-wrapper-class="tabs" :options="{useUrlFragment:false}">
-    <Tab name="Mods">
-      <FilterControls :sorts="SORTS" defaultSort="relevance" @update:sort="(val) => sort = val"  @update:filter="(val) => filter = val" />
+  <div style="overflow-y: scroll; height: 70vh" ref="contentbody">
+    <template v-if="tabIndex == TabIndex.Mods">
       <p class="has-text-centered mx-5 my-5">
         <span class="has-text-danger" v-if="error">
           {{error}}
@@ -35,30 +46,29 @@
             >Install</a>
         </template>
       </EntryCard>
-      <div ref="scrollComponent" />
-    </Tab>
-    <Tab name="Resource Packs">
-
-    </Tab>
-
-    <Tab name="Maps">
-
-    </Tab>
-  </Tabs>
+    </template>
+    <div ref="scrollComponent" />
+  </div>
 </div>
 </template>
 
 <script setup lang="ts">
-import { Tab, Tabs } from 'vue3-tabs-component'
+// import { Tab, Tabs } from 'vue3-tabs-component'
 import { ModrinthProject } from '@/types/External';
 import FilterControls from '@/components/FilterControls.vue'
 import EntryCard from '@/components/EntryCard.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack';
-import { ref, onBeforeMount, computed, onUnmounted } from 'vue'
+import { ref, onBeforeMount, onMounted, computed, onBeforeUnmount } from 'vue'
 import { createDebounce } from '@/js/utils'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
+
+enum TabIndex {
+  Mods = 0,
+  ResourcePacks = 1,
+  Maps = 2,
+}
 
 const MAX_FETCH_PER_PAGE = 20
 
@@ -90,7 +100,24 @@ const SORTS = computed(() => {
   }
 })
 
+const FILTERS = computed(() => {
+  if(props.pack.settings.modSource === "modrinth") {
+    return {
+      relevance: "Relevance",
+      downloads: "Downloads",
+      follows: "Follows",
+      newest: "Newest",
+      updated: "Updated"
+    }
+  } else {
+    console.warn("Unsupported or unknown modsource", props.pack.settings.modsource)
+    return []
+  }
+})
+
 let scrollComponent = ref()
+let contentbody = ref()
+
 let sort = ref('relevance')
 let filter = ref('all')
 let debug = ref<string>()
@@ -99,6 +126,7 @@ let loading = ref(false)
 let error = ref<string>()
 let mods = ref<ModrinthProject[]>([])
 let page = ref(0)
+let tabIndex = ref(TabIndex.Mods)
 
 async function searchModrinth(nextPage: boolean = false) {
   loading.value = true
@@ -127,7 +155,7 @@ async function searchModrinth(nextPage: boolean = false) {
         })
       )
     } else {
-      error.value = json.message || json.error
+      error.value = json.description || json.message || json.error
     }
   } catch(err) {
     error.value = err.message
@@ -170,6 +198,7 @@ async function getModVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
 }
 
 const doSearch = createDebounce(searchModrinth, 500)
+const scrollSearch = createDebounce(searchModrinth, 1500)
 
 onBeforeMount(async() => {
   searchModrinth()
@@ -181,19 +210,23 @@ onBeforeMount(async() => {
     }
     console.log(event)
   })
-  window.addEventListener("scroll", handleScroll)
 })
 
-onUnmounted(() => {
-  window.removeEventListener("scroll", handleScroll)
+onMounted(() => {
+  contentbody.value.addEventListener("scroll", handleScroll)
 })
 
+onBeforeUnmount(() => {
+  contentbody.value.removeEventListener("scroll", handleScroll)
+})
+
+const earlyScrollAmount = 150
 function handleScroll() {
-  if (scrollComponent.value.getBoundingClientRect().bottom < window.innerHeight) {
-    doSearch(true)
+  if (scrollComponent.value.getBoundingClientRect().bottom <= contentbody.value.clientHeight + contentbody.value.getBoundingClientRect().top + earlyScrollAmount) {
+    console.log('search')
+    scrollSearch(true)
   }
 }
-
 /*interface DownloadSuccess {
   mod_id: string,
   pack_id: string,
@@ -206,3 +239,33 @@ interface DownloadFailure {
 }*/
 
 </script>
+
+<style>
+.content-nav {
+  height: 14em;
+  overflow-x: hidden;
+  overflow-y: clip;
+}
+html, body {
+  overflow: hidden;
+}
+/* Scrollbar styles */
+::-webkit-scrollbar {
+width: 12px;
+height: 12px;
+}
+
+::-webkit-scrollbar-track {
+border: 1px solid #3e8ed0;
+border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb {
+background: #3e8ed0;
+border-radius: 50px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+background: #88ba1c;
+}
+</style>

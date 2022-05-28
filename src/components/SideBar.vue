@@ -41,6 +41,14 @@
       <Icon :icon="['fa', 'info-circle']" text="About" />
     </router-link></li>
   </ul>
+  <p class="menu-label  has-text-centered">
+    Categories
+  </p>
+  <ul class="menu-list">
+    <li v-for="category in categories" :key="category">
+
+    </li>
+  </ul>
   <!--<ul class="menu-label">
     Ad
   </ul>

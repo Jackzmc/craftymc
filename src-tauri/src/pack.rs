@@ -126,7 +126,7 @@ impl ModpackManager {
         for path in paths {
             let entry = path.unwrap();
             if entry.file_type().unwrap().is_dir() {
-                self.load_entry(&entry.path(), None);
+                let _ = self.load_entry(&entry.path(), None);
             }
         }
     }

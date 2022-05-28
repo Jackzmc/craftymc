@@ -74,7 +74,7 @@ impl ModpackManager {
         manager
     }
 
-    fn load_entry(&mut self, entry: &std::path::Path, override_id: Option<String>) -> Option<String> {
+    fn load_entry(&mut self, entry: &std::path::Path, override_id: Option<String>) -> Result<String, String> {
       let manifest_path = entry.join("manifest.json");
       // TODO: Pass invalid or corrupted modpacks to user
       let filename = entry.file_name().unwrap().to_str().unwrap();
@@ -93,28 +93,31 @@ impl ModpackManager {
                 modpack.img_ext = self.get_pack_img_ext(&filename);
                 modpack.folder_name = Some(filename.to_string());
                 self.packs.insert(id.clone(), modpack);
-                return Some(id);
+                return Ok(id);
             },
             Err(err) => {
-              error!("Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", filename, err)
+              let err = format!("Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", filename, err);
+              warn!("{}", &err);
+              Err(err)
             }
           }
         },
         Err(err) => {
-          match err.kind() {
-            std::io::ErrorKind::NotFound => {
-              warn!("Directory \"{}\" is missing a manifest.json", filename);
-            },
-            std::io::ErrorKind::PermissionDenied => {
-              error!("Cannot read \"{}\"/manifest.json: Permission Denied", filename);
-            },
-            _ => {
-              error!("Error reading \"{}\"'s manifest.json: {}", filename, err);
-            }
-          }
+            let error = match err.kind() {
+                std::io::ErrorKind::NotFound => {
+                    format!("Directory \"{}\" is missing a manifest.json", filename)
+                },
+                std::io::ErrorKind::PermissionDenied => {
+                    format!("Cannot read \"{}\"/manifest.json: Permission Denied", filename)
+                },
+                _ => {
+                    format!("Error reading \"{}\"'s manifest.json: {}", filename, err)
+                }
+            };
+            warn!("{}", &error);
+            Err(error)
         }
       }
-      None
     }
 
     pub fn load(&mut self) {
@@ -386,14 +389,14 @@ impl ModpackManager {
       match zip.extract(&dest_dir) {
         Ok(()) => {
           match &self.load_entry(&dest_dir, Some(Uuid::new_v4().to_string())) {
-            Some(id) => {
+            Ok(id) => {
               let pack = self.get_modpack_mut(id).unwrap();
               pack.name = pack_name;
               let pack = self.get_modpack(id).unwrap();
               self.save(pack);
-              Ok(pack.clone())
+              return Ok(pack.clone())
             },
-            None => Err("Imported modpack is invalid".to_string())
+            Err(e) => return Err(e.to_string())
           }
         },
         Err(err) => Err(err.to_string())

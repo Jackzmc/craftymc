@@ -74,9 +74,9 @@ enum UpdateModpackState {
 
 onBeforeMount(async() => {
   await updateSettings()
-  console.debug('app settings', settings.value)
+  console.debug('app settings', Object.assign({}, settings.value))
   await updateModpacks()
-  console.debug(modpacks.value.length, 'modpacks loaded')
+  console.debug(`${modpacks.value.length} modpacks loaded`)
 
   let isLauncherActive = false
 

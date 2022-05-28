@@ -44,14 +44,14 @@ pub fn mv_as_admin(src_path: &std::path::Path, dest_path: &std::path::PathBuf) {
                 .status()
                 .unwrap();
             debug!("cmd /c copy {:?} {:?} returned: status {:?}", src, dest, status.code().unwrap_or(-1));
+
             let status = runas::Command::new(r"C:\Windows\System32\cmd.exe")
                 .gui(true)
                 .arg("/c")
-                .arg("del")
-                .arg(src)
+                .arg(format!("del \"{}\"", src))
                 .status()
                 .unwrap();
-            debug!("cmd /c del {:?} returned: status {:?}", src, status.code().unwrap_or(-1))
+            debug!("cmd /c \"del \"{:?}\"\" returned: status {:?}", src, status.code().unwrap_or(-1))
         },
         "linux" => {
             runas::Command::new(r"/bin/sh")

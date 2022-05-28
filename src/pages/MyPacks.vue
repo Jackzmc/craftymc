@@ -24,7 +24,7 @@ let selectedPack = ref<Modpack>()
 let editSelected = ref(false)
 
 watch(() => props.modpacks, () => {
-  console.debug('without this, code below doesnt work. help me.')
+  console.debug('(vue3 watcher weirdness requires this console log. I don\'t know why. It scares me.)')
   if(selectedPack.value) {
     const id = selectedPack.value.id
     selectedPack.value = props.modpacks.find(pack => pack.id === id)

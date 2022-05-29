@@ -1,6 +1,6 @@
 <template>
 <div>
-  <component :is="component" :pack="props.pack" v-if="component" @close="showSubview(Subview.None)" @change-modloader="changeModloader"/>
+  <component :is="component" :pack="props.pack" v-if="component" @close="showSubview(Subview.None)" @change-modloader="changeModloader" :selected="selected" />
   <template v-if="!hideSelf"> <!-- a little hacky -->
   <a class="button mb-2">
     <Icon :icon="['fas', 'arrow-left']" text="Back" @click="emit('goback')" />
@@ -104,10 +104,11 @@ let contextMenu = ref()
 let component = ref()
 let hideSelf = ref(false)
 
-const emit = defineEmits(["goback", "change-modloader"])
+const emit = defineEmits(["goback", "change-modloader", "show"])
 const props = defineProps<{
   pack: Modpack,
-  editSelected: boolean
+  editSelected: boolean,
+  selected?: any
 }>()
 
 const enum Subview {
@@ -139,6 +140,7 @@ async function showSubview(subview: Subview) {
       component.value = undefined
       if(props.editSelected)
         emit('goback')
+      emit('show', { type: 'category-picker', for: undefined })
       break
     case Subview.SettingsModal:
       component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/PackSettingsModal.vue')))
@@ -146,6 +148,7 @@ async function showSubview(subview: Subview) {
     case Subview.AddContent:
       hideSelf.value = true
       component.value = markRaw(defineAsyncComponent(() => import('@/pages/AddContent.vue')))
+      emit('show', { type: 'category-picker', for: 'mod' })
       break
     case Subview.Export:
       component.value = markRaw(defineAsyncComponent(() => import('@/components/modals/ExportModal.vue')))

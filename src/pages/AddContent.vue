@@ -22,9 +22,13 @@
         <li><a>Maps</a></li>
       </ul>
     </div>
-    <FilterControls :sorts="SORTS" :defaultSort="settings.sort" :filters="FILTERS"
-      @update:sort="(val) => settings.sort = val"  @update:filter="(val) => settings.filter = val"
-    />
+    <FilterControls :sorts="SORTS" :defaultSort="settings.sort"
+      @update:sort="(val) => settings.sort = val"
+    >
+      <template v-slot:filter>
+        <p></p>
+      </template>
+    </FilterControls>
   </div>
   <div style="overflow-y: scroll; height: 70vh; padding-left: 0.1em" ref="contentbody">
     <template v-if="tabIndex == TabIndex.Mods">
@@ -75,7 +79,8 @@ const MAX_FETCH_PER_PAGE = 20
 
 const emit = defineEmits(["close"])
 const props = defineProps<{
-  pack: Modpack
+  pack: Modpack,
+  selected?: any
 }>()
 
 const installedMods = computed(() => {
@@ -101,20 +106,6 @@ const SORTS = computed(() => {
   }
 })
 
-const FILTERS = computed(() => {
-  if(props.pack.settings.modSource === "modrinth") {
-    return {
-      relevance: "Relevance",
-      downloads: "Downloads",
-      follows: "Follows",
-      newest: "Newest",
-      updated: "Updated"
-    }
-  } else {
-    console.warn("Unsupported or unknown modsource", props.pack.settings.modsource)
-    return []
-  }
-})
 
 let scrollComponent = ref()
 let contentbody = ref()
@@ -123,16 +114,16 @@ let tabIndex = ref(TabIndex.Mods)
 
 const settings = ref({
   sort: "relevance",
-  filter: "all",
+  categories: [],
   page: 0,
   query: ''
 })
 
-watch([() => settings.value.sort, () => settings.value.filter], () => {
-  console.log('filter change')
+watch([() => settings.value.sort, () => settings.value.filter, () => props.selected], () => {
   searchModrinth(false)
 })
 
+let categories = ref([])
 let loading = ref(false)
 let error = ref<string>()
 
@@ -147,13 +138,19 @@ async function searchModrinth(nextPage: boolean = false) {
     mods.value = []
   }
   try {
-    const facets = ["project_type:mod"]
-    facets.push(`categories:${props.pack.settings.modloaderType}`)
-    facets.push(`versions:${props.pack.versions.minecraft}`)
+    const facets = [[`categories:${props.pack.settings.modloaderType}`],[`project_type:mod`],[`versions:${props.pack.versions.minecraft}`]]
+    // const facets = ["project_type:mod"]
+    if(props.selected) {
+      const categoryFacet = []
+      for(const category of props.selected) {
+        categoryFacet.push(`categories:${category}`)
+      }
+      facets.push(categoryFacet)
+    }
     const facetsString = `[["${facets.join('"],["')}"]]`
-
     const queryText = settings.value.query != '' ? `&query=${settings.value.query}` : ''
     const offset = MAX_FETCH_PER_PAGE *settings.value.page
+
     const response = await fetch(`https://api.modrinth.com/v2/search?limit=${MAX_FETCH_PER_PAGE}&offset=${offset}&index=${settings.value.sort}&facets=${facetsString}${queryText}`)
     // TODO: Check versions to see if there is a valid version FOR the modloader
     // OR wait until modrinth fixes it on their side
@@ -174,6 +171,16 @@ async function searchModrinth(nextPage: boolean = false) {
     error.value = err.message
   } finally {
     loading.value = false
+  }
+}
+
+async function getCategories() {
+  const response = await fetch(`https://api.modrinth.com/v2/tag/category`)
+  const json = await response.json()
+  if(response.ok) {
+    return json
+  } else {
+    throw new Error(json.description || json.message || json.error)
   }
 }
 
@@ -206,7 +213,7 @@ async function getModVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
   if(response.ok) {
     return json as ModrinthProjectVersion[]
   } else {
-    throw new Error(json.message || json.error)
+    throw new Error(json.description || json.message || json.error)
   }
 }
 
@@ -214,6 +221,7 @@ const doSearch = createDebounce(searchModrinth, 500)
 const scrollSearch = createDebounce(searchModrinth, 1500)
 
 onBeforeMount(async() => {
+  categories.value = await getCategories()
   searchModrinth()
   listen("download-mod", async(event) => {
     if(event.payload.error) {

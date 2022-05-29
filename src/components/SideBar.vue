@@ -41,14 +41,24 @@
       <Icon :icon="['fa', 'info-circle']" text="About" />
     </router-link></li>
   </ul>
-  <p class="menu-label  has-text-centered">
-    Categories
-  </p>
-  <ul class="menu-list">
-    <li v-for="category in categories" :key="category">
-
-    </li>
-  </ul>
+  <template v-if="categories">
+    <p class="menu-label  has-text-centered">
+      Categories
+    </p>
+    <ul class="menu-list">
+      <li v-for="category in categories" :key="category.name">
+        <div class="field pl-2 mt-2">
+          <input ref="checkbox" class="is-checkradio" :id="category.name" type="checkbox" :style="'display: none'"
+            v-model="selectedCategories" @change="onCategoryChosen" name="category" :value="category.name"
+          >
+          <label :for="category.name" >
+            <span class="custom-icon is-small" v-html="category.icon" />
+            &nbsp;{{category.name}}
+          </label>
+          </div>
+      </li>
+    </ul>
+  </template>
   <!--<ul class="menu-label">
     Ad
   </ul>
@@ -59,4 +69,51 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from 'vue'
+const emit = defineEmits(["selected"])
+const props = defineProps<{
+  showData?: object
+}>()
+
+const selectedCategories = ref([])
+const categories = ref([])
+
+watch(() => props.showData, (value) => {
+  if(value && value.type === "category-picker") {
+    selectedCategories.value = []
+    if(!value.for) categories.value = undefined
+    else getCategoriesFor(value.for)
+  }
+}, { deep: true })
+
+
+async function getCategoriesFor(type = "modpack" | "mod") {
+  const response = await fetch(`https://api.modrinth.com/v2/tag/category`)
+  const json = await response.json()
+  if(response.ok) {
+    categories.value = json.filter(tag => tag.project_type === type)
+  } else {
+    throw new Error(json.description || json.message || json.error)
+  }
+}
+
+function onCategoryChosen() {
+  emit("selected", selectedCategories.value)
+}
+
 </script>
+
+<style>
+[class*=" custom-icon"], [class^=custom-icon] {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    stroke-width: 0;
+    stroke: currentColor;
+    fill: currentColor;
+    line-height: 1;
+    position: relative;
+    top: -.05em;
+    vertical-align: middle;
+}
+</style>

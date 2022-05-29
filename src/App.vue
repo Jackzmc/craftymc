@@ -8,10 +8,11 @@
   <br>
   <div class="columns mt-6" v-if="settings">
     <div class="column is-2 ml-1" v-show="hasSidebar">
-      <SideBar />
+      <SideBar :show-data="showData" @selected="v => showResponseData = v" />
     </div>
     <div :class="mainViewClass">
-      <router-view :settings="settings" :modpacks="modpacks" @update-settings="updateSettings" @change-modloader="installModloader" />
+      <router-view :settings="settings" :modpacks="modpacks" :selected="showResponseData"
+        @update-settings="updateSettings" @change-modloader="installModloader" @show="onShow"  />
     </div>
   </div>
 </div>
@@ -33,6 +34,8 @@ const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
 let modpacks = ref<Modpack[]>([])
 let modal = ref<{ component: any, pack: any}>()
+let showData = ref()
+let showResponseData = ref()
 
 async function updateSettings(newSettings?: AppSettings) {
   if(!newSettings) settings.value = await invoke('get_settings')
@@ -118,6 +121,10 @@ onMounted(() => {
 function installModloader(pack: Modpack) {
   console.debug('installing modloader', pack)
   modal.value = { component: markRaw(defineAsyncComponent(() => import('@/components/modals/ModloaderInstaller.vue'))), pack: pack}
+}
+function onShow(value) {
+  console.log('show-pass', value)
+  showData.value = value
 }
 
 </script>

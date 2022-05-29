@@ -11,13 +11,15 @@
       </HorizontalField>
     </div>
     <div class="level-item">
-      <HorizontalField label="Filter by">
-        <div class="select">
-          <select v-model="filter">
-            <option v-for="(display, key) in props.filters" :key="key" :value="key">{{display}}</option>
-          </select>
-        </div>
-      </HorizontalField>
+      <slot name="filter">
+        <HorizontalField label="Filter by">
+          <div class="select">
+            <select v-model="filter">
+              <option v-for="(display, key) in props.filters" :key="key" :value="key">{{display}}</option>
+            </select>
+          </div>
+        </HorizontalField>
+      </slot>
     </div>
   </div>
   <div class="level-right" v-if="props.showSize">
@@ -37,7 +39,7 @@ const props = defineProps<{
   cardsize?: number,
   showSize?: boolean,
   sorts: Record<string, string>,
-  filters: Record<string, string>,
+  filters?: Record<string, string>,
   defaultSort?: string,
   defaultFilter?: string
 }>()

@@ -116,7 +116,7 @@ async function getMCVersions() {
   const response = await fetch("https://api.modrinth.com/v2/tag/game_version")
   const json = await response.json()
   if(response.ok) {
-    mcVersions.value = json as MCVersion[]
+    mcVersions.value = json.filter(v => v.version_type === "release") as MCVersion[]
   }
 }
 

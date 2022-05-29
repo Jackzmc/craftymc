@@ -227,29 +227,43 @@ pub async fn export_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
   }
 }
 
+enum ChannelRes {
+  Data(std::path::PathBuf),
+  Cancel
+}
 #[tauri::command]
 pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Window) -> Result<(), String> { 
   let modpacks = state.modpacks.clone();
+  let (tx, rx) = std::sync::mpsc::channel();
   tauri::api::dialog::FileDialogBuilder::new()
     .set_title("Import a modpack")
     .add_filter("modpack archive", &["zip"])
     .pick_file(move |result| {
       if let Some(filepath) = result {
-        let mut modpacks = modpacks.blocking_lock();
-        match modpacks.import(&filepath) {
-          Ok(modpack) => {
-            window.emit("update-modpack", payloads::UpdateModpackPayload { 
-              modpack: Some(modpack),
-              state: payloads::UpdateModpackState::Normal,
-              data: None
-            }).unwrap();
-          },
-          Err(_) => {
-            // TODO: Pass to ui
-          }
-        }
+        tx.send(ChannelRes::Data(filepath)).unwrap();
+      } else { 
+        tx.send(ChannelRes::Cancel).unwrap();
       }
     });
+    
+  let res = rx.recv().unwrap();
+  drop(rx);
+  if let ChannelRes::Data(filepath) = res {
+    let mut modpacks = modpacks.lock().await;
+    debug!("starting import of {:?}", &filepath);
+    match modpacks.import(&filepath).await {
+      Ok(modpack) => {
+        window.emit("update-modpack", payloads::UpdateModpackPayload { 
+          modpack: Some(modpack),
+          state: payloads::UpdateModpackState::Normal,
+          data: None
+        }).unwrap();
+      },
+      Err(_) => {
+        // TODO: Pass to ui
+      }
+    }
+  };
   Ok(())
 }
 

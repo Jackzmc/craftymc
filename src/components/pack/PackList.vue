@@ -25,7 +25,7 @@
             <li><a @click="emit('edit', slotProps.ctx); contextMenu.close()">
               <Icon :icon="['fa', 'pencil']" text="Edit" />
             </a></li>
-            <li><a @click="invoke('open_modpack_folder', { packId: slotProps.ctx.id })">
+            <li><a @click="invoke('open_modpack_folder', { packId: slotProps.ctx.id }); contextMenu.close()">
               <Icon :icon="['fa', 'folder']" text="Open Folder" />
             </a></li>
             <li><a @click="openExportMenu(slotProps.ctx)">

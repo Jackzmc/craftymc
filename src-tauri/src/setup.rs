@@ -105,6 +105,27 @@ impl Setup {
         info!("Minecraft launcher install is complete.");
         Ok(())
     }
+    
+    pub async fn download_fml_direct(dest_dir: &std::path::PathBuf, mc_version: &str, forge_version: &str) -> Result<String, String> {
+        let client = reqwest::Client::new();
+        let filename = format!("forge-{}-{}-installer.jar", mc_version, forge_version);
+        match client
+            .get(format!("https://files.minecraftforge.net/maven/net/minecraftforge/forge/{}-{}/{}", mc_version, forge_version, &filename))
+            .send()
+            .await
+        {
+            Ok(response) => {
+                let mut dest_file = std::fs::File::create(dest_dir.join(&filename)).expect("could not create fml file");
+                let mut content = std::io::Cursor::new(response.bytes().await.unwrap());
+                std::io::copy(&mut content, &mut dest_file).expect("cp failed");
+                dest_file.sync_data().expect("sync failed");
+                drop(dest_file);
+                debug!("direct fml download complete ({})", &filename);
+                Ok(filename)
+            },
+            Err(err) => return Err(err.to_string())
+        }
+    }
 
     async fn download_fml_installer(&self) -> Result<PathBuf, String> {
         let path = self.launcher_folder.join("ForgeCLI.jar");

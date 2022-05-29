@@ -77,7 +77,7 @@
         <li><a @click="showSubview(Subview.SettingsModal)">
           <Icon :icon="['fa', 'cog']" text="Settings" />
         </a></li>
-        <li><a @click="invoke('open_modpack_folder', { packId: props.pack.id })">
+        <li><a @click="invoke('open_modpack_folder', { packId: props.pack.id }); contextMenu.close()">
           <Icon :icon="['fa', 'folder']" text="Open Folder" />
         </a></li>
         <li><a @click="showSubview(Subview.Export)">

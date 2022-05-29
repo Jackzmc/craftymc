@@ -76,7 +76,7 @@ const props = defineProps<{
 }>()
 
 const selectedCategories = ref([])
-const categories = ref([])
+const categories = ref()
 
 watch(() => props.showData, (value) => {
   if(value && value.type === "category-picker") {

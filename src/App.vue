@@ -6,14 +6,12 @@
   />
   <NavBar :has-sidebar="hasSidebar" @sidebar="hasSidebar = !hasSidebar" @update-modpacks="updateModpacks" @installModloader="installModloader" />
   <br>
-  <div class="columns mt-6" v-if="settings">
-    <div class="column is-2 ml-1" v-show="hasSidebar">
+  <div class="columns mt-6 is-gapless" style="overflow-y: auto; overflow-x: hidden;" v-if="settings">
+    <div class="column is-2" v-show="hasSidebar">
       <SideBar :show-data="showData" @selected="v => showResponseData = v" />
     </div>
-    <div :class="mainViewClass">
-      <router-view :settings="settings" :modpacks="modpacks" :selected="showResponseData"
-        @update-settings="updateSettings" @change-modloader="installModloader" @show="onShow"  />
-    </div>
+    <router-view :class="mainViewClass" :settings="settings" :modpacks="modpacks" :selected="showResponseData"
+      @update-settings="updateSettings" @change-modloader="installModloader" @show="onShow"  />
   </div>
 </div>
 </template>
@@ -62,7 +60,7 @@ async function _get_img_url(modpack: Modpack): Promise<Modpack> {
 }
 
 const mainViewClass = computed(() => {
-  const arr = ['column', 'mr-1 ml-1']
+  const arr = ['column']
   if(hasSidebar.value) arr.push("is-10")
   else arr.push("mx-5")
   return arr
@@ -135,5 +133,8 @@ function onShow(value) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
+}
+html, body {
+  /* overflow: hidden !important; */
 }
 </style>

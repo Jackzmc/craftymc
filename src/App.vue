@@ -10,7 +10,7 @@
     <div class="column is-2" v-show="hasSidebar">
       <SideBar :show-data="showData" @selected="v => showResponseData = v" />
     </div>
-    <router-view :class="mainViewClass" :settings="settings" :modpacks="modpacks" :selected="showResponseData"
+    <router-view :class="mainViewClass" :settings="settings" :modpacks="modpacks" :invalid-modpacks="invalidPacks" :selected="showResponseData"
       @update-settings="updateSettings" @change-modloader="installModloader" @show="onShow"  />
   </div>
 </div>
@@ -31,6 +31,7 @@ import DefaultPackImage from '@/assets/default_pack.png'
 const hasSidebar = ref(true)
 let settings = ref<AppSettings>()
 let modpacks = ref<Modpack[]>([])
+let invalidPacks = ref<Partial<Modpack>[]>([])
 let modal = ref<{ component: any, pack: any}>()
 let showData = ref()
 let showResponseData = ref()
@@ -76,20 +77,23 @@ enum UpdateModpackState {
 onBeforeMount(async() => {
   await updateSettings()
   console.debug('app settings', Object.assign({}, settings.value))
-  await updateModpacks()
-  console.debug(`${modpacks.value.length} modpacks loaded`)
 
   let isLauncherActive = false
 
   await listen('update-modpack', async(event) => {
     console.debug('update-modpack', event.payload)
-    const newModpack = event.payload.modpack
-    if(newModpack) newModpack.imageUrl = await _get_img_url(newModpack)
-    if(isLauncherActive && event.payload.state === UpdateModpackState.Normal) {
+    if(event.payload.state.Invalid) {
+      return invalidPacks.value.push({ name: event.payload.state.Invalid[0], reason: event.payload.state.Invalid[1] })
+    }else if(isLauncherActive && event.payload.state === UpdateModpackState.Normal) {
       modal.value = undefined
       isLauncherActive = false
       console.debug(`Launcher exited with code ${event.payload.data === null ? '<signal>' : event.payload.data}`)
-    } else {
+    }
+
+    const newModpack = event.payload.modpack
+    if(newModpack) {
+      newModpack.imageUrl = await _get_img_url(newModpack)
+
       // Find the modpack by it's id
       for(let i = 0; i < modpacks.value.length; i++) {
         if(modpacks.value[i].id === newModpack.id) {
@@ -104,10 +108,13 @@ onBeforeMount(async() => {
           return
         }
       }
-      // If no known modpack, insert it
-      modpacks.value.push(newModpack)
     }
+    // If no known modpack, insert it
+    modpacks.value.push(newModpack)
   })
+
+  await updateModpacks()
+  console.debug(`${modpacks.value.length} modpacks loaded`)
 })
 
 onMounted(() => {

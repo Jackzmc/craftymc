@@ -105,15 +105,9 @@ impl ModpackManager {
         },
         Err(err) => {
             let error = match err.kind() {
-                std::io::ErrorKind::NotFound => {
-                    format!("Directory \"{}\" is missing a manifest.json", filename)
-                },
-                std::io::ErrorKind::PermissionDenied => {
-                    format!("Cannot read \"{}\"/manifest.json: Permission Denied", filename)
-                },
-                _ => {
-                    format!("Error reading \"{}\"'s manifest.json: {}", filename, err)
-                }
+                std::io::ErrorKind::NotFound => format!("\"{}\" is missing a manifest.json", filename),
+                std::io::ErrorKind::PermissionDenied => format!("Cannot read \"{}\"/manifest.json: Permission Denied", filename),
+                _ => format!("Error reading \"{}\"'s manifest.json: {}", filename, err)
             };
             warn!("{}", &error);
             Err(error)
@@ -134,7 +128,8 @@ impl ModpackManager {
                     },
                     Err(err) => {
                         let filename = entry.file_name().into_string().unwrap();
-                        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+                        debug!("emitting event[update-modpack] with state Invalid");
+                        window.emit("update-modpack", payloads::UpdateModpackPayload {
                             modpack: None,
                             data: None,
                             state: payloads::UpdateModpackState::Invalid(filename, err)
@@ -402,7 +397,7 @@ impl ModpackManager {
         let mut zip = zip::ZipArchive::new(zip_file).unwrap();
         info!("Importing {} -> {:?}", &filename, &dest_dir);
 
-        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+        window.emit("update-modpack", payloads::UpdateModpackPayload {
             modpack: None,
             data: None,
             state: payloads::UpdateModpackState::Importing(import_name.to_string(), "Starting import".into())
@@ -417,7 +412,7 @@ impl ModpackManager {
                         pack.id = Some(id.clone());
                         pack.name = import_name;
                         self.save(&pack);
-                        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+                        window.emit("update-modpack", payloads::UpdateModpackPayload {
                             modpack: None,
                             data: None,
                             state: payloads::UpdateModpackState::Importing(pack.name.to_string(), "Downloading modloader".into())
@@ -430,7 +425,7 @@ impl ModpackManager {
                                     Ok(file) => {
                                         debug!("installing: {}", &file);
                                         pack.versions.modloader = file;
-                                        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+                                        window.emit("update-modpack", payloads::UpdateModpackPayload {
                                             modpack: None,
                                             data: None,
                                             state: payloads::UpdateModpackState::Importing(pack.name.to_string(), "Installing modloader".into())

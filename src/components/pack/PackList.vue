@@ -8,6 +8,9 @@
     <div :class="columnClass" v-for="pack of sortedPacks" :key="pack.id">
       <Pack :pack="pack" @select="pack => emit('select', pack)" @contextmenu.prevent="event => contextMenu.open(event, pack)" />
     </div>
+    <div :class="columnClass" v-for="pack of invalidModpacks" :key="pack.name">
+      <InvalidPack :name="pack.name" :reason="pack.reason" />
+    </div>
   </div>
   <p class="subtitle is-italic has-text-centered my-6 py-6" v-else>
     No packs were found.
@@ -47,6 +50,7 @@ import { ref, computed, defineAsyncComponent, markRaw } from 'vue'
 import { Modpack } from '@/types/Pack'
 import FilterControls from '@/components/FilterControls.vue'
 import Pack from '@/components/pack/Pack.vue'
+import InvalidPack from '@/components/pack/InvalidPack.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 
@@ -58,7 +62,8 @@ let packSort = ref("recentlyPlayed")
 const emit = defineEmits(["select", "edit"])
 
 const props = defineProps<{
-  packs: Modpack[]
+  packs: Modpack[],
+  invalidModpacks: any[]
 }>()
 
 const FILTERS = {

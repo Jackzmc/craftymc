@@ -6,7 +6,7 @@
     @show="value => emit('show', value)"
     :selected="props.selected"
   />
-  <PackList v-else :packs="props.modpacks" @select="pack => selectPack(pack)" @edit="pack => selectPack(pack, true)" />
+  <PackList v-else :packs="props.modpacks" :invalid-modpacks="props.invalidModpacks" @select="pack => selectPack(pack)" @edit="pack => selectPack(pack, true)" />
 </div>
 </template>
 
@@ -20,6 +20,7 @@ const emit = defineEmits(["change-modloader", "show"])
 
 const props = defineProps<{
   modpacks: Modpack[],
+  invalidModpacks: any[],
   selected?: any
 }>()
 

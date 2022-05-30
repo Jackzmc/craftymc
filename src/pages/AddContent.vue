@@ -186,7 +186,6 @@ async function getCategories() {
 
 async function installMod(entry: Entry) {
   entry.installing = true
-  console.log(entry.project)
   const versions = (await getModVersions(entry))
     .filter((version) => {
       // TODO: Check against settings for version_type
@@ -229,7 +228,6 @@ onBeforeMount(async() => {
     } else {
       // Don't do anything, will send update-modload event
     }
-    console.log(event)
   })
 })
 
@@ -244,7 +242,6 @@ onBeforeUnmount(() => {
 const earlyScrollAmount = 150
 function handleScroll() {
   if (scrollComponent.value.getBoundingClientRect().bottom <= contentbody.value.clientHeight + contentbody.value.getBoundingClientRect().top + earlyScrollAmount) {
-    console.log('search')
     scrollSearch(true)
   }
 }

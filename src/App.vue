@@ -128,7 +128,6 @@ function installModloader(pack: Modpack) {
   modal.value = { component: markRaw(defineAsyncComponent(() => import('@/components/modals/ModloaderInstaller.vue'))), pack: pack}
 }
 function onShow(value) {
-  console.log('show-pass', value)
   showData.value = value
 }
 

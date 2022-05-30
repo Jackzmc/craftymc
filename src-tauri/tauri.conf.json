@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "CraftyMc",
-    "version": "0.3.0-alpha"
+    "version": "0.4.1-alpha"
   },
   "tauri": {
     "allowlist": {

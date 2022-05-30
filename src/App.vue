@@ -84,10 +84,11 @@ onBeforeMount(async() => {
     console.debug('update-modpack', event.payload)
     if(event.payload.state.Invalid) {
       return invalidPacks.value.push({ name: event.payload.state.Invalid[0], reason: event.payload.state.Invalid[1] })
-    }else if(isLauncherActive && event.payload.state === UpdateModpackState.Normal) {
+    } else if(isLauncherActive && event.payload.state === UpdateModpackState.Normal) {
       modal.value = undefined
       isLauncherActive = false
       console.debug(`Launcher exited with code ${event.payload.data === null ? '<signal>' : event.payload.data}`)
+      return
     }
 
     const newModpack = event.payload.modpack

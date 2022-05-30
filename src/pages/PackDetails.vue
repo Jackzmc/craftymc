@@ -123,7 +123,7 @@ function formatRelative(value: number, locale?: string) {
   if(!value) return "Never"
   const date = new Date(value);
   const deltaDays = (date.getTime() - Date.now()) / (1000 * 3600 * 24);
-  if(deltaDays <= 0) return "Today"
+  if(deltaDays >= 0) return "Today"
   else if(deltaDays <= 1) return "Yesterday"
   const formatter = new Intl.RelativeTimeFormat(locale);
   return formatter.format(Math.round(deltaDays), 'days');

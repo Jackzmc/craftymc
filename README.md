@@ -1,22 +1,33 @@
-# mc-mod-manager
+# CraftyMc
+An open source alternative to curseforge, supporting modrinth for all your modpack consumption and creation needs.
 
-Extremely alpha stages. Heavily inspired by curseforge for ui purposes, for now.
+In alpha stages. Heavily inspired by curseforge for ui purposes, for now.
 
-Name is still pending.
+Name may change.
 
-Built with Tauri (rust + edge webview) with Vue.js & TS on the UI
+## Technology
+
+* [Tauri (Edge Webview)](https://tauri.studio/)
+  - Rust
+  - Vue3 & TS
+
 
 ## Preview
 
+
 ![app_1653166952](https://user-images.githubusercontent.com/4030546/169668926-1c878b8b-a49b-40f0-8b24-d6d48a85d473.gif)
+* Preview is outdated and is from v0.2.0-alpha or earlier
 
-### Current Roadmap, for alpha release
+### Current Roadmap, for beta release
 
-1. Overall UI mockup (mostly done)
-2. Backend rust code
-   1. Testing modloader install solution
-   2. Filter mod lists
-   3. Testing of entire fresh install
+ * Linux support for installing forge
+ * Show externally installed mods in pack's modlist
+ * Importing modpacks from modrinth
+ * Add update checking and updating for mods
+ * Support for fabric
+ * Improve export dialog with save-as prompt
+ * UI Improvements
+
 
 #### Development
 

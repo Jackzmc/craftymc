@@ -53,7 +53,10 @@ fn main() {
       let window = app.get_window("main").unwrap();
       #[cfg(debug_assertions)]
       window.open_devtools();
-      app.state::<AppState>().config.blocking_lock().set_version(app.config().package.version.as_ref().expect("missing version").clone());
+
+      let state = app.state::<AppState>();
+      state.modpacks.blocking_lock().provide_window(window.clone());
+      state.config.blocking_lock().set_version(app.config().package.version.as_ref().expect("missing version").clone());
       Ok(())
     })
     .run(tauri::generate_context!())

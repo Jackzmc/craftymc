@@ -6,8 +6,8 @@ pub enum UpdateModpackState {
   Normal,
   Deleted,
   NowActive,
-  Invalid(String),
-  Importing(String)
+  Invalid(String, String), 
+  Importing(String, String)
 }
 
 #[derive(Clone, serde::Serialize)]

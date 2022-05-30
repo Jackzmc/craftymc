@@ -13,7 +13,8 @@ use crate::payloads;
 pub struct ModpackManager {
     pub packs: HashMap<String, Modpack>, //key is modpack.id
     settings: settings::Settings,
-    pub root_folder: PathBuf
+    pub root_folder: PathBuf,
+    window: Option<tauri::Window> // Set after provide_window
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -69,9 +70,13 @@ impl ModpackManager {
         let manager = ModpackManager {
             packs: HashMap::new(),
             root_folder: Path::new(&settings.minecraft.saveDirectory).to_path_buf(),
-            settings
+            settings,
+            window: None
         };
         manager
+    }
+    pub fn provide_window(&mut self, window: tauri::Window) {
+        self.window = Some(window);
     }
 
     fn load_entry(&mut self, entry: &std::path::Path) -> Result<Modpack, String> {
@@ -119,11 +124,22 @@ impl ModpackManager {
     pub fn load(&mut self) {
         let paths = fs::read_dir(self.get_instances_folder()).unwrap();
         self.packs.clear();
+        let window = self.window.as_ref().cloned().unwrap();
         for path in paths {
             let entry = path.unwrap();
             if entry.file_type().unwrap().is_dir() {
-                if let Ok(modpack) = self.load_entry(&entry.path()) {
-                    self.packs.insert(modpack.id.as_ref().unwrap().to_string(), modpack);
+                match self.load_entry(&entry.path()) {
+                    Ok(modpack) => {
+                        self.packs.insert(modpack.id.as_ref().unwrap().to_string(), modpack);
+                    },
+                    Err(err) => {
+                        let filename = entry.file_name().into_string().unwrap();
+                        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+                            modpack: None,
+                            data: None,
+                            state: payloads::UpdateModpackState::Invalid(filename, err)
+                        }).unwrap();
+                    }
                 }
             }
         }
@@ -374,51 +390,68 @@ impl ModpackManager {
     }
 
     pub async fn import(&mut self, path: &PathBuf) -> Result<Modpack, String> {
-      let filename = path.file_name().unwrap().to_str().unwrap();
-      let instances_dir = self.get_instances_folder();
-      std::fs::create_dir_all(&instances_dir).unwrap();
-      let import_name = self.get_suitable_name(&filename[0..filename.len() - 4])
-        .expect("Could not find available name");
+        let filename = path.file_name().unwrap().to_str().unwrap();
+        let instances_dir = self.get_instances_folder();
+        std::fs::create_dir_all(&instances_dir).unwrap();
+        let import_name = self.get_suitable_name(&filename[0..filename.len() - 4])
+            .expect("Could not find available name");
+        let window = self.window.as_ref().cloned().unwrap();
 
-      let dest_dir = instances_dir.join(&import_name);
-      let zip_file = fs::File::open(path).unwrap();
-      let mut zip = zip::ZipArchive::new(zip_file).unwrap();
-      info!("Importing {} -> {:?}", &filename, &dest_dir);
+        let dest_dir = instances_dir.join(&import_name);
+        let zip_file = fs::File::open(path).unwrap();
+        let mut zip = zip::ZipArchive::new(zip_file).unwrap();
+        info!("Importing {} -> {:?}", &filename, &dest_dir);
 
-      let setup = crate::setup::Setup::new(&self);
-      match zip.extract(&dest_dir) {
-        Ok(()) => {
-          match self.load_entry(&dest_dir) {
-            Ok(mut pack) => {
-                let id = Uuid::new_v4().to_string();
-                pack.id = Some(id.clone());
-                pack.name = import_name;
-                self.save(&pack);
-                match pack.settings.modloaderType.as_str() {
-                    "forge" => {
-                        debug!("downloading forge {}-{} -- direct", &pack.versions.minecraft, &pack.versions.modloader);
-                        match crate::setup::Setup::download_fml_direct(&dest_dir, &pack.versions.minecraft, &pack.versions.modloader).await
-                        {
-                            Ok(file) => {
-                                debug!("installing: {}", &file);
-                                pack.versions.modloader = file;
-                                if let Err(err) = setup.install_fml(&mut pack).await { 
-                                    return Err(err)
+        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+            modpack: None,
+            data: None,
+            state: payloads::UpdateModpackState::Importing(import_name.to_string(), "Starting import".into())
+        }).unwrap();
+
+        let setup = crate::setup::Setup::new(&self);
+        match zip.extract(&dest_dir) {
+            Ok(()) => {
+                match self.load_entry(&dest_dir) {
+                    Ok(mut pack) => {
+                        let id = Uuid::new_v4().to_string();
+                        pack.id = Some(id.clone());
+                        pack.name = import_name;
+                        self.save(&pack);
+                        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+                            modpack: None,
+                            data: None,
+                            state: payloads::UpdateModpackState::Importing(pack.name.to_string(), "Downloading modloader".into())
+                        }).unwrap();
+                        match pack.settings.modloaderType.as_str() {
+                            "forge" => {
+                                debug!("downloading forge {}-{} -- direct", &pack.versions.minecraft, &pack.versions.modloader);
+                                match crate::setup::Setup::download_fml_direct(&dest_dir, &pack.versions.minecraft, &pack.versions.modloader).await
+                                {
+                                    Ok(file) => {
+                                        debug!("installing: {}", &file);
+                                        pack.versions.modloader = file;
+                                        window.emit("update-modpacks", payloads::UpdateModpackPayload {
+                                            modpack: None,
+                                            data: None,
+                                            state: payloads::UpdateModpackState::Importing(pack.name.to_string(), "Installing modloader".into())
+                                        }).unwrap();
+                                        if let Err(err) = setup.install_fml(&mut pack).await { 
+                                            return Err(err)
+                                        }
+                                    },
+                                    Err(err) => return Err(err)
                                 }
                             },
-                            Err(err) => return Err(err)
+                            _ => warn!("Unknown modloader \"{}\" for modpack, not installing modloader", &pack.settings.modloaderType )
                         }
+                        self.packs.insert(id, pack.clone());
+                        return Ok(pack)
                     },
-                    _ => warn!("Unknown modloader \"{}\" for modpack, not installing modloader", &pack.settings.modloaderType )
+                    Err(e) => return Err(e.to_string())
                 }
-                self.packs.insert(id, pack.clone());
-                return Ok(pack)
             },
-            Err(e) => return Err(e.to_string())
-          }
-        },
-        Err(err) => Err(err.to_string())
-      }
+            Err(err) => Err(err.to_string())
+        }
     }    
 
 }

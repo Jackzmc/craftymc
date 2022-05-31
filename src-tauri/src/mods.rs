@@ -2,21 +2,7 @@ use std::io::Write;
 use futures::{StreamExt};
 use log::{info, debug, error};
 use crate::pack;
-
-
-#[derive(Clone, serde::Serialize)]
-pub struct ModDownloadedPayload {
-    pub mod_id: String,
-    pub pack_id: String
-}
-
-#[derive(Clone, serde::Serialize)]
-pub struct ModDownloadErrorPayload {
-    pub mod_id: String,
-    pub pack_id: String,
-    pub file_name: String,
-    pub error: String,
-}
+use crate::payloads;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct SavedModEntry {
@@ -27,7 +13,7 @@ pub struct SavedModEntry {
     pub author: String
 }
 
-impl ModrinthVersionData {
+impl crate::types::modrinth::mods::ModrinthVersionData {
     pub async fn install_mod(&mut self, window: &tauri::Window, author_name: String, destination: &std::path::PathBuf, pack: &mut pack::Modpack) -> Result<SavedModEntry, String> {
         let client = reqwest::Client::new();
         let pack_id = pack.id.as_deref().unwrap();
@@ -53,7 +39,7 @@ impl ModrinthVersionData {
                                 }
                             },
                             Err(err) => {
-                                window.emit("download-mod", ModDownloadErrorPayload {
+                                window.emit("download-mod", payloads::ModDownloadErrorPayload {
                                     mod_id: self.id.clone(),
                                     file_name: file.filename.clone(),
                                     pack_id: pack_id.to_string(),
@@ -65,7 +51,7 @@ impl ModrinthVersionData {
                         }
                     }
                     debug!("{}: finished", &file.filename);
-                    window.emit("download-mod", ModDownloadedPayload {
+                    window.emit("download-mod", payloads::ModDownloadedPayload {
                         mod_id: self.id.clone(),
                         pack_id: pack_id.to_string()
                     }).ok();
@@ -90,44 +76,3 @@ impl ModrinthVersionData {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct ModrinthVersionData {
-    pub id: String,
-    pub project_id: String,
-    pub author_id: Option<String>,
-    pub team: Option<String>,
-    pub featured: bool,
-    pub name: String,
-    pub version_number: String,
-    pub changelog: Option<String>,
-    pub changelog_url: Option<String>,
-    pub date_published: String,
-    pub downloads: i64,
-    pub version_type: String,
-    pub files: Vec<ModrinthFile>,
-    pub dependencies: Option<Vec<ModrinthDependency>>,
-    pub game_versions: Vec<String>,
-    pub loaders: Vec<String>,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct ModrinthFile {
-    pub hashes: ModrinthHashes,
-    pub url: String,
-    pub filename: String,
-    pub primary: bool,
-    pub size: i64,
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct ModrinthDependency {
-    version_id: String,
-    project_id: String,
-    dependency_type: String
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct ModrinthHashes {
-    pub sha512: String,
-    pub sha1: String,
-}

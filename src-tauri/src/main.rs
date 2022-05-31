@@ -16,6 +16,7 @@ mod util;
 mod mods;
 mod telemetry;
 pub mod commands;
+pub mod types;
 mod payloads;
 
 use commands::{cmd_packs, cmd_mods, cmd_settings, cmd_debug};

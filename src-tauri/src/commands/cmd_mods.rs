@@ -1,10 +1,10 @@
-use crate::mods;
 use crate::AppState;
 use crate::payloads;
+use crate::types::modrinth;
 
 #[tauri::command]
 // This works. But I barely understand it. I'm not touching it.
-pub async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, author_name: String, mut version_data: mods::ModrinthVersionData) -> Result<(), ()> {
+pub async fn install_mod(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, author_name: String, mut version_data: modrinth::mods::ModrinthVersionData) -> Result<(), ()> {
   let cl_modpacks = state.modpacks.clone();
   
   let modpacks = state.modpacks.lock().await;

@@ -30,3 +30,17 @@ pub struct EmptyPayload();
 pub struct ErrorPayload(pub String);
 #[derive(Clone, serde::Serialize)]
 pub struct ExportPayload(pub String);
+
+#[derive(Clone, serde::Serialize)]
+pub struct ModDownloadedPayload {
+    pub mod_id: String,
+    pub pack_id: String
+}
+
+#[derive(Clone, serde::Serialize)]
+pub struct ModDownloadErrorPayload {
+    pub mod_id: String,
+    pub pack_id: String,
+    pub file_name: String,
+    pub error: String,
+}

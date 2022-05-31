@@ -1,5 +1,7 @@
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
+use futures::stream::StreamExt;
+use tokio::io::AsyncWriteExt;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -42,10 +44,34 @@ pub struct ModrinthModpackManager {
     instances_dir: std::path::PathBuf
 }
 
+static MAX_CONCURRENT_DOWNLOADS: usize = 4;
+
 impl ModrinthModpackManager {
     pub fn new(instances_folder: std::path::PathBuf) -> ModrinthModpackManager{
         ModrinthModpackManager {
             instances_dir: instances_folder
+        }
+    }
+
+    async fn download_mod(&self, client: &reqwest::Client, instance_dir: &std::path::Path, entry: ModrinthModpackFileEntry) -> (ModrinthModpackFileEntry, Result<(), String>) {
+        debug!("{:?}", std::path::PathBuf::from(instance_dir.to_string_lossy().replace("\\\\", "/")).join(&entry.path));
+        let mut file = match tokio::fs::File::create(instance_dir.join(&entry.path)).await {
+            Ok(file) => file,
+            Err(err) => return (entry, Err(err.to_string()))
+        };
+        let url = &entry.downloads.as_ref().unwrap()[0];
+        debug!("downloading {}, {}", &entry.path, url);
+        match client.get(url)
+            .send()
+            .await
+        {
+            Ok(mut response) => {
+                while let Ok(Some(chunk)) = response.chunk().await {
+                    file.write_all(&chunk).await;
+                }
+                (entry, Ok(()))
+            },
+            Err(e) => (entry, Err(format!("Failed to download mod: {}", e)))
         }
     }
 
@@ -100,6 +126,39 @@ impl ModrinthModpackManager {
             std::fs::remove_dir_all(src_folder).expect("cleanup failed");
             return Err("Unsupported modloader".to_string());
         }
+        let client = reqwest::Client::new();
+        let clrf = &client;
+        // let mut futs = futures::stream::FuturesUnordered::new();
+        debug!("downloading {} files", modpack.files.len());
+        std::fs::create_dir_all(src_folder.join("mods")).unwrap();
+        futures::stream::iter(modpack.files)
+            .map(|entry| {
+                self.download_mod(clrf, src_folder, entry)
+            })
+            .buffer_unordered(MAX_CONCURRENT_DOWNLOADS)
+            .for_each(|result| async move {
+                if let Err(err) = result.1 {
+                    debug!("{} failed: {}", result.0.path, err);
+                } else {
+                    debug!("{} success", result.0.path);
+                }
+            })
+            .await;
+        /*while let Some(entry) = modpack.files.pop() {
+            futs.push(async move {
+                self.download_mod(clrf, src_folder, &entry).await
+            });
+
+            if futs.len() == MAX_CONCURRENT_DOWNLOADS {
+                futs.next().await.unwrap();
+                debug!("while1 iteration");
+                
+            }
+        }
+
+        while let Some(item) = futs.next().await {
+            debug!("while2 iteration");
+        }*/
 
         debug!("modloader is: {}", loader.as_ref().unwrap());
 

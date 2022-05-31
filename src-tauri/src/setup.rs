@@ -106,7 +106,7 @@ impl Setup {
         Ok(())
     }
     
-    pub async fn download_fml_direct(dest_dir: &std::path::PathBuf, mc_version: &str, forge_version: &str) -> Result<String, String> {
+    pub async fn download_fml_direct(dest_dir: &std::path::Path, mc_version: &str, forge_version: &str) -> Result<String, String> {
         let client = reqwest::Client::new();
         let filename = format!("forge-{}-{}-installer.jar", mc_version, forge_version);
         match client

@@ -29,6 +29,7 @@ tauri-plugin-log = { git = "https://github.com/tauri-apps/tauri-plugin-log" }
 log = "0.4.17"
 runas = "0.2"
 zip = "0.6"
+fs_extra = "1.2"
 
 [features]
 # by default Tauri runs in production mode

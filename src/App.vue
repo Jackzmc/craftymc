@@ -89,7 +89,7 @@ onBeforeMount(async() => {
       isLauncherActive = false
       console.debug(`Launcher exited with code ${event.payload.data === null ? '<signal>' : event.payload.data}`)
       return
-    }
+    } else if(event.payload.state.Importing) return
 
     const newModpack = event.payload.modpack
     if(newModpack) {

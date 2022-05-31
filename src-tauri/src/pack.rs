@@ -6,6 +6,7 @@ use std::path::{Path,PathBuf};
 use log::{info, debug, error, warn};
 use std::io::{Read, Write};
 
+use crate::types::modrinth::modpacks;
 use crate::util;
 use crate::mods;
 use crate::payloads;
@@ -14,7 +15,8 @@ pub struct ModpackManager {
     pub packs: HashMap<String, Modpack>, //key is modpack.id
     settings: settings::Settings,
     pub root_folder: PathBuf,
-    window: Option<tauri::Window> // Set after provide_window
+    window: Option<tauri::Window>, // Set after provide_window
+    modrinth_manager: Option<modpacks::ModrinthModpackManager>
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -67,12 +69,14 @@ impl ModpackManager {
     }
 
     pub fn new(settings: settings::Settings) -> ModpackManager {
-        let manager = ModpackManager {
+        let mut manager = ModpackManager {
             packs: HashMap::new(),
             root_folder: Path::new(&settings.minecraft.saveDirectory).to_path_buf(),
             settings,
-            window: None
+            window: None,
+            modrinth_manager: None
         };
+        manager.modrinth_manager = Some(modpacks::ModrinthModpackManager::new(manager.get_instances_folder()));
         manager
     }
     pub fn provide_window(&mut self, window: tauri::Window) {
@@ -406,6 +410,13 @@ impl ModpackManager {
         let setup = crate::setup::Setup::new(&self);
         match zip.extract(&dest_dir) {
             Ok(()) => {
+                if filename.ends_with("mrpack") {
+                    debug!("is a modrinth modpack, setting up");
+                    if let Err(err) = self.modrinth_manager.as_ref().unwrap().import(&dest_dir).await {
+                        return Err(format!("Failed to import modpack: {}", err));
+                    }
+                }
+                debug!("loading entry from disk");
                 match self.load_entry(&dest_dir) {
                     Ok(mut pack) => {
                         let id = Uuid::new_v4().to_string();

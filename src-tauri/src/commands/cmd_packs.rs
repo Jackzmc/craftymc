@@ -237,7 +237,7 @@ pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
   let (tx, rx) = std::sync::mpsc::channel();
   tauri::api::dialog::FileDialogBuilder::new()
     .set_title("Import a modpack")
-    .add_filter("modpack archive", &["zip"])
+    .add_filter("modpack archive", &["zip", "mrpack"])
     .pick_file(move |result| {
       if let Some(filepath) = result {
         tx.send(ChannelRes::Data(filepath)).unwrap();

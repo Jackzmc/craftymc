@@ -2,6 +2,7 @@
 use log::{info, debug, error, warn};
 use futures::stream::StreamExt;
 use tokio::io::AsyncWriteExt;
+use sha2::{Sha512, Digest};
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -58,7 +59,8 @@ impl ModrinthModpackManager {
             Err(err) => return (entry, Err(err.to_string()))
         };
         let url = &entry.downloads.as_ref().unwrap()[0];
-        debug!("downloading {}, {}", &entry.path, url);
+        debug!("downloading {} from {}", &entry.path, url);
+        let mut hasher = Sha512::new();
         match client.get(url)
             .send()
             .await
@@ -68,6 +70,12 @@ impl ModrinthModpackManager {
                     if let Err(err) = file.write_all(&chunk).await {
                         return (entry, Err(err.to_string()));
                     }
+                    hasher.update(&chunk);
+                }
+                let hash = base16ct::lower::encode_string(&hasher.finalize());
+                if hash != entry.hashes.sha512 {
+                    let err = Err(format!("hashes don't match (got {:?}, expected {}) {}", &hash, &entry.hashes.sha512, &entry.path));
+                    return (entry, err);
                 }
                 (entry, Ok(path.file_name().unwrap().to_str().unwrap().to_string()))
             },
@@ -149,7 +157,6 @@ impl ModrinthModpackManager {
             copy_opts.content_only = true;
             fs_extra::dir::move_dir(overrides_dir, src_folder, &copy_opts).expect("failed to move overrides");
         }
-
         futures::stream::iter(modpack.files)
             .map(|entry| {
                 self.download_mod(&client, src_folder, entry)

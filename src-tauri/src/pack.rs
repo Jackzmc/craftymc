@@ -79,10 +79,10 @@ impl ModpackManager {
             setup: None
         };
         manager.setup = Some(crate::setup::Setup::new(&manager));
-        manager.modrinth_manager = Some(modpacks::ModrinthModpackManager::new());
         manager
     }
     pub fn provide_window(&mut self, window: tauri::Window) {
+        self.modrinth_manager = Some(modpacks::ModrinthModpackManager::new(window.clone()));
         self.window = Some(window);
     }
 

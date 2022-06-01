@@ -21,7 +21,7 @@ mod payloads;
 
 use commands::{cmd_packs, cmd_mods, cmd_settings, cmd_debug};
 
-pub struct AppState {
+pub struct AppState{
   config: Mutex<settings::SettingsManager>,
   modpacks: Arc<Mutex<pack::ModpackManager>>
 }

@@ -42,17 +42,23 @@ pub struct ModrinthManifestDependency {
 
 
 pub struct ModrinthModpackManager {
+    window: tauri::Window
 }
 
 static MAX_CONCURRENT_DOWNLOADS: usize = 4;
 
 impl ModrinthModpackManager {
-    pub fn new() -> ModrinthModpackManager{
+    pub fn new(window: tauri::Window) -> ModrinthModpackManager{
         ModrinthModpackManager {
+            window
         }
     }
 
-    async fn download_mod(&self, client: &reqwest::Client, instance_dir: &std::path::Path, entry: ModrinthModpackFileEntry) -> (ModrinthModpackFileEntry, Result<String, String>) {
+    async fn download_mod(&self, 
+        client: &reqwest::Client, 
+        instance_dir: &std::path::Path, 
+        entry: ModrinthModpackFileEntry
+    ) -> (ModrinthModpackFileEntry, Result<String, String>) {
         let path = instance_dir.join(&entry.path);
         let mut file = match tokio::fs::File::create(&path).await {
             Ok(file) => file,
@@ -150,6 +156,9 @@ impl ModrinthModpackManager {
             },
         };
 
+        std::fs::write(src_folder.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).expect("write manifest failed");
+        std::fs::remove_file(manifest_path).unwrap();
+
         let overrides_dir = src_folder.join("overrides");
         if overrides_dir.exists() {
             let mut copy_opts = fs_extra::dir::CopyOptions::new();
@@ -157,7 +166,20 @@ impl ModrinthModpackManager {
             copy_opts.content_only = true;
             fs_extra::dir::move_dir(overrides_dir, src_folder, &copy_opts).expect("failed to move overrides");
         }
-        futures::stream::iter(modpack.files)
+        let mut optional_mods = Vec::<ModrinthModpackFileEntry>::new();
+        let mut required_mods = Vec::<ModrinthModpackFileEntry>::new();
+
+        for entry in modpack.files {
+            if let Some(env) = &entry.env {
+                match env.client.as_str() {
+                    "required" => required_mods.push(entry),
+                    "optional" => optional_mods.push(entry),
+                    _ => {}
+                }
+            }
+        }
+
+        futures::stream::iter(required_mods)
             .map(|entry| {
                 self.download_mod(&client, src_folder, entry)
             })
@@ -180,9 +202,25 @@ impl ModrinthModpackManager {
                 }
             })
             .await;
+            
+        if optional_mods.len() > 0 {
+            self.window.emit("ask-optional-mods", crate::payloads::OptionalModRequestPayload(optional_mods)).unwrap();
+            let (tx, rx) = std::sync::mpsc::sync_channel(32);
+            self.window.once("answer-optional-mods", |event| {
+                let payload: crate::payloads::OptionalModResponsePayload = serde_json::from_str(event.payload().unwrap()).unwrap();
+                tx.send(payload).unwrap();
+                drop(tx);
+            });
+            
+            let mods = rx.recv().unwrap().0;
+            for entry in mods {
+                let result = self.download_mod(&client, &src_folder, entry).await;
+                if let Err(err) = result.1 {
+                    debug!("{} failed: {}", &result.0.path, err)
+                }
+            };
+        }
 
-        std::fs::write(src_folder.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).expect("write manifest failed");
-        std::fs::remove_file(manifest_path).unwrap();
         Ok(())
     }
 }

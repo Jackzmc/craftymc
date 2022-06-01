@@ -72,7 +72,7 @@ import { ref, computed, onBeforeMount } from 'vue'
 // eslint-disable-next-line
 import { invoke } from '@tauri-apps/api/tauri'
 
-const emit = defineEmits(['close', 'save'])
+const emit = defineEmits(['close', 'create-modpack'])
 let pack = ref<Partial<Modpack>>({
   name: undefined,
   settings: {
@@ -140,7 +140,7 @@ async function save() {
   if(!saveDisabled) return alert("Cannot save: Please fill in all fields.")
   try {
     const savedPack = await invoke('create_modpack', { modpack: pack.value as Modpack })
-    await emit('save', savedPack)
+    await emit('create-modpack', savedPack)
     saving.value = false
     emit('close')
   } catch(err) {

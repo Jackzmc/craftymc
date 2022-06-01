@@ -16,7 +16,8 @@ pub struct ModpackManager {
     settings: settings::Settings,
     pub root_folder: PathBuf,
     window: Option<tauri::Window>, // Set after provide_window
-    modrinth_manager: Option<modpacks::ModrinthModpackManager>
+    modrinth_manager: Option<modpacks::ModrinthModpackManager>,
+    setup: Option<crate::setup::Setup>
 }
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -74,9 +75,11 @@ impl ModpackManager {
             root_folder: Path::new(&settings.minecraft.saveDirectory).to_path_buf(),
             settings,
             window: None,
-            modrinth_manager: None
+            modrinth_manager: None,
+            setup: None
         };
-        manager.modrinth_manager = Some(modpacks::ModrinthModpackManager::new(manager.get_instances_folder()));
+        manager.setup = Some(crate::setup::Setup::new(&manager));
+        manager.modrinth_manager = Some(modpacks::ModrinthModpackManager::new());
         manager
     }
     pub fn provide_window(&mut self, window: tauri::Window) {
@@ -407,7 +410,6 @@ impl ModpackManager {
             state: payloads::UpdateModpackState::Importing(import_name.to_string(), "Starting import".into())
         }).unwrap();
 
-        let setup = crate::setup::Setup::new(&self);
         match zip.extract(&dest_dir) {
             Ok(()) => {
                 if filename.ends_with("mrpack") {
@@ -441,7 +443,7 @@ impl ModpackManager {
                                             data: None,
                                             state: payloads::UpdateModpackState::Importing(pack.name.to_string(), "Installing modloader".into())
                                         }).unwrap();
-                                        if let Err(err) = setup.install_fml(&mut pack).await { 
+                                        if let Err(err) = self.setup.as_ref().unwrap().install_fml(&mut pack).await { 
                                             return Err(err)
                                         }
                                     },

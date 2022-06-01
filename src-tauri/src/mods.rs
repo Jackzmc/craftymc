@@ -6,11 +6,11 @@ use crate::payloads;
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct SavedModEntry {
-    pub project_id: String,
-    pub version_id: String,
+    pub project_id: Option<String>,
+    pub version_id: Option<String>,
     pub filenames: Vec<String>,
-    pub name: String,
-    pub author: String
+    pub name: Option<String>,
+    pub author: Option<String>
 }
 
 impl crate::types::modrinth::mods::ModrinthVersionData {
@@ -65,11 +65,11 @@ impl crate::types::modrinth::mods::ModrinthVersionData {
             }
         }
         let save_entry = SavedModEntry {
-            project_id: self.project_id.clone(),
-            version_id: self.id.clone(),
+            project_id: Some(self.project_id.clone()),
+            version_id: Some(self.id.clone()),
             filenames,
-            name: self.name.clone(),
-            author: author_name
+            name: Some(self.name.clone()),
+            author: Some(author_name)
         };
         info!("[debug] Completed download queue for {}", pack_id);
         Ok(save_entry)

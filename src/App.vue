@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, onMounted, computed, defineAsyncComponent, markRaw } from 'vue'
+import { ref, onBeforeMount, computed, defineAsyncComponent, markRaw } from 'vue'
 import NavBar from '@/components/NavBar.vue'
 import SideBar from '@/components/SideBar.vue'
 
@@ -56,7 +56,7 @@ async function updateModpacks(newModpack?: Modpack) {
 }
 async function _get_img_url(modpack: Modpack): Promise<Modpack> {
   return (modpack.img_ext)
-    ? await convertFileSrc(await join(await documentDir(), `MCModDownloader/Instances/${modpack.folder_name}/pack.${modpack.img_ext}`))
+    ? await convertFileSrc(await join(await documentDir(), `CraftyMc/Instances/${modpack.folder_name}/pack.${modpack.img_ext}`))
     : DefaultPackImage
 }
 
@@ -77,6 +77,9 @@ enum UpdateModpackState {
 onBeforeMount(async() => {
   await updateSettings()
   console.debug('app settings', Object.assign({}, settings.value))
+  if(settings.value && settings.value.general.telemetryState < 0) {
+    modal.value = { component: markRaw(defineAsyncComponent(()  => import('@/components/modals/AskTelemetryModal.vue'))), pack: null }
+  }
 
   let isLauncherActive = false
 
@@ -116,12 +119,6 @@ onBeforeMount(async() => {
 
   await updateModpacks()
   console.debug(`${modpacks.value.length} modpacks loaded`)
-})
-
-onMounted(() => {
-  if(settings.value && settings.value.general.telemetryState < 0) {
-    modal.value = { component: markRaw(defineAsyncComponent(()  => import('@/components/modals/AskTelemetryModal.vue'))), pack: null }
-  }
 })
 
 function installModloader(pack: Modpack) {

@@ -14,7 +14,7 @@
       // "all": true,
       "protocol": {
         "assetScope": [
-          "$DOCUMENT/MCModDownloader/*"
+          "$DOCUMENT/CraftyMc/*"
         ],
         "asset": true
       },

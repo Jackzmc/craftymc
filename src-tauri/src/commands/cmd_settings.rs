@@ -27,9 +27,6 @@ pub fn set_setting(state: tauri::State<'_, AppState>, category: &str, key: &str,
           if prev == -1 && settings.general.telemetryState != prev {
             // First time setup runs here:
             let _ = telemetry::send_telemetry(telemetry::TelemetryFlags::GeneralInfo, &settings);
-            let mut setup = setup::Setup::new(&state.modpacks.blocking_lock());
-            setup.download_launcher().expect("installing mc launcher failed");
-            state.modpacks.blocking_lock().run_minecraft_launcher().expect("running mc launcher failed");
           }
         },
         _ => return Err("Invalid key".to_string())

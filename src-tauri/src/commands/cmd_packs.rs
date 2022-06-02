@@ -3,6 +3,7 @@ use crate::AppState;
 use crate::pack;
 use crate::payloads;
 use crate::util;
+use crate::types::modrinth;
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
 /// COMMANDS
@@ -273,4 +274,11 @@ pub async fn get_instance_tree(state: tauri::State<'_, AppState>, pack_id: &str)
   let pack = modpacks.get_modpack(pack_id).unwrap();
   let root = modpacks.get_instances_folder().join(pack.folder_name.as_ref().unwrap());
   Ok(util::get_directory_tree(&root))
+}
+
+#[tauri::command]
+// Possibly move this to a cmd_modrinth
+pub async fn install_modpack(state: tauri::State<'_, AppState>, modpack_id: &str, author_name: &str, mut version_data: modrinth::mods::ModrinthVersionData) -> Result<(), String> {
+  debug!("project {} by {}", modpack_id, author_name);
+  Ok(())
 }

@@ -56,8 +56,20 @@ fn main() {
       window.open_devtools();
 
       let state = app.state::<AppState>();
-      state.modpacks.blocking_lock().provide_window(window.clone());
-      state.config.blocking_lock().set_version(app.config().package.version.as_ref().expect("missing version").clone());
+      let mut packs = state.modpacks.blocking_lock();
+      let mut config = state.config.blocking_lock();
+      packs.provide_window(window.clone());
+      config.set_version(app.config().package.version.as_ref().expect("missing version").clone());
+      if config.settings.general.telemetryState == -1 {
+        info!("Running first time setup");
+        let mut setup = setup::Setup::new(&packs);
+        if !packs.get_install_folder().join(pack::ModpackManager::get_launcher_exec()).exists() {
+          setup.download_launcher().expect("installing mc launcher failed");
+          packs.run_minecraft_launcher().expect("running mc launcher failed");
+        } else {
+          info!("Skipping download & install of launcher: already exists");
+        }
+      }
       Ok(())
     })
     .run(tauri::generate_context!())

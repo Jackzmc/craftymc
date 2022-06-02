@@ -273,13 +273,17 @@ impl ModpackManager {
         }
     }
 
+    pub fn get_launcher_exec() -> String {
+        match std::env::consts::OS {
+            "windows" => "MinecraftLauncher.exe".to_string(),
+            "linux" => "minecraft-launcher".to_string(),
+            _ => panic!("Unsupported OS")
+        }
+    }
+
     pub fn run_minecraft_launcher(&self) -> Result<std::process::Child, String>  {
         let work_dir = self.get_install_folder();
-        let executable = match std::env::consts::OS {
-            "windows" => "MinecraftLauncher.exe",
-            "linux" => "minecraft-launcher",
-            _ => panic!("Unsupported OS")
-        };
+        let executable = &ModpackManager::get_launcher_exec();
 
         match std::process::Command::new(self.get_install_folder().join(executable))
             .arg("-w")

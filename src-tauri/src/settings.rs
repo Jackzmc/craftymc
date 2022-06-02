@@ -66,7 +66,7 @@ impl Settings {
 
 impl SettingsManager {
     pub fn get_save_folder() -> std::path::PathBuf {
-        Path::new(&dirs_next::document_dir().unwrap()).join("MCModDownloader")
+        Path::new(&dirs_next::document_dir().unwrap()).join("CraftyMc")
     }
 
     pub fn new() -> SettingsManager {

@@ -11,7 +11,7 @@ const routes = [
   {
     name: "BrowsePacks",
     path: '/browse',
-    component: () => import(/* webpackChunkName: 'browse-packs' */ '@/pages/BrowsePacks.vue')
+    component: () => import(/* webpackChunkName: 'browse-packs' */ '@/pages/modrinth/AddModpack.vue')
   },
   {
     name: "Settings",

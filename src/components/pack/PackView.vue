@@ -17,6 +17,7 @@
         <a
           :disabled="entry.installState != InstallState.NotInstalled ? true : undefined"
           :class="['button', 'is-info', {'is-loading': entry.installState == InstallState.Installing}]"
+          @click="installModpack"
         >Install</a>
     </template>
   </EntryCard>
@@ -51,4 +52,8 @@ let search = ref<string>()
 const sendSearch = createDebounce(() => {
   emit('search', search.value)
 }, 500)
+
+function installModpack(pack: Entry) {
+
+}
 </script>

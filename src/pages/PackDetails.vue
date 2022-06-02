@@ -147,7 +147,7 @@ async function showSubview(subview: Subview) {
       break
     case Subview.AddContent:
       hideSelf.value = true
-      component.value = markRaw(defineAsyncComponent(() => import('@/pages/AddContent.vue')))
+      component.value = markRaw(defineAsyncComponent(() => import('@/pages/modrinth/AddMod.vue')))
       emit('show', { type: 'category-picker', for: 'mod' })
       break
     case Subview.Export:

@@ -88,19 +88,22 @@ impl Setup {
             std::fs::remove_dir(self.launcher_folder.join("Minecraft Launcher")).expect("rmdir launcher failed");
             std::fs::remove_file(self.launcher_folder.join("MinecraftInstaller.msi")).expect("rm installer failed");
 
-            std::process::Command::new("MinecraftLauncher.exe")
-                .current_dir(&self.launcher_folder)
-                .status()
-                .expect("Launcher failed to start");
         } else if cfg!(unix) {
             //tar -xf Minecraft.tar.gz --strip-components=1 -C ../Launcher minecraft-launcher/
-            
             std::process::Command::new("tar")
-                .args(["-xf", src_file.to_str().unwrap(), "--strip-components=1", "-C"])
-                .arg(self.launcher_folder.to_str().unwrap())
-                .status()
-                .expect("tar failed");
+            .args(["-xf", src_file.to_str().unwrap(), "--strip-components=1", "-C"])
+            .arg(self.launcher_folder.to_str().unwrap())
+            .status()
+            .expect("tar failed");
         }
+
+        let executable = crate::pack::ModpackManager::get_launcher_exec();
+        debug!("Running for first time: {}", &executable);
+        std::process::Command::new(self.launcher_folder.join(executable))
+            .current_dir(&self.launcher_folder)
+            .status()
+            .expect("Launcher failed to start");
+
         std::fs::remove_file(src_file).expect("rm src file failed");
         info!("Minecraft launcher install is complete.");
         Ok(())

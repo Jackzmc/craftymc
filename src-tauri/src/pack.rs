@@ -123,7 +123,7 @@ impl ModpackManager {
     }
 
     pub fn load(&mut self) {
-        let paths = fs::read_dir(self.get_instances_folder()).unwrap();
+        let paths = fs::read_dir(self.get_instances_folder()).expect("cant find Instances folder");
         self.packs.clear();
         let window = self.window.as_ref().cloned().unwrap();
         for path in paths {

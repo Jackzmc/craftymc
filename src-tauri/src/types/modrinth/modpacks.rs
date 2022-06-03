@@ -54,6 +54,16 @@ impl ModrinthModpackManager {
         }
     }
 
+    pub async fn fetch(project_id: &str) -> Result<ModrinthModpackProject, String> {
+        match reqwest::get(format!("https://api.modrinth.com/v2/project/{}", project_id)).await {
+            Ok(response) => match response.json::<ModrinthModpackProject>().await {
+                Ok(json) => Ok(json),
+                Err(err) => return Err(err.to_string())
+            },
+            Err(err) => return Err(err.to_string())
+        }
+    }
+
     async fn download_mod(&self, 
         client: &reqwest::Client, 
         instance_dir: &std::path::Path, 
@@ -65,7 +75,6 @@ impl ModrinthModpackManager {
             Err(err) => return (entry, Err(err.to_string()))
         };
         let url = &entry.downloads.as_ref().unwrap()[0];
-        debug!("downloading {} from {}", &entry.path, url);
         let mut hasher = Sha512::new();
         match client.get(url)
             .send()
@@ -223,4 +232,13 @@ impl ModrinthModpackManager {
 
         Ok(())
     }
+}
+
+
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct ModrinthModpackProject {
+    pub slug: String,
+    pub title: String,
+    pub icon_url: Option<String>,
+    pub team: String,
 }

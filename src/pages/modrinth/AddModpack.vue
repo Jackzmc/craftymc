@@ -27,27 +27,35 @@
           </HorizontalField>
         </div>
         <div class="level-item">
-          <slot name="filter">
-            <HorizontalField label="Minecraft Version">
-              <div class="select">
-                <select v-model="settings.minecraft">
-                  <option :value="undefined">Any</option>
-                  <option v-for="version in mcVersions" :key="version.version" :value="version.version">{{version.version}}</option>
-                </select>
-              </div>
-            </HorizontalField>
-          </slot>
+          <HorizontalField label="Minecraft Version">
+            <div class="select">
+              <select v-model="settings.minecraft">
+                <option :value="undefined">Any</option>
+                <option v-for="version in mcVersions" :key="version.version" :value="version.version">{{version.version}}</option>
+              </select>
+            </div>
+          </HorizontalField>
+        </div>
+        <div class="level-item">
+          <HorizontalField label="Modloader">
+            <div class="select">
+              <select v-model="settings.modloader">
+                <option :value="undefined">Any</option>
+                <option v-for="modloader in MODLOADERS" :key="modloader" :value="modloader.toLowerCase()">{{modloader}}</option>
+              </select>
+            </div>
+          </HorizontalField>
         </div>
       </div>
     </div>
   </div>
-  <div style="overflow-y: scroll; height: 70vh; padding-left: 0.1em" ref="contentbody">
+  <div style="overflow-y: scroll; height: 78vh; padding-left: 0.1em" ref="contentbody">
     <EntryCard v-for="entry in modpacks" :entry="entry" :key="entry.project.project_id">
       <template v-slot:rightColumn>
           <a
             :disabled="entry.installing || undefined"
             :class="['button', 'is-info', {'is-loading': entry.installing }]"
-            @click="installModpack"
+            @click="installModpack(entry)"
           >Install</a>
       </template>
     </EntryCard>
@@ -65,6 +73,9 @@ import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
 import EntryCard from '@/components/EntryCard.vue'
 import HorizontalField from '@/components/form/HorizontalField.vue'
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
 
 const MAX_FETCH_PER_PAGE = 20
 
@@ -84,6 +95,11 @@ const SORTS = computed(() => {
 
 })
 
+const MODLOADERS = [
+  "Forge",
+  "Fabric"
+]
+
 
 let scrollComponent = ref()
 let contentbody = ref()
@@ -92,6 +108,7 @@ const settings = ref({
   sort: "relevance",
   categories: [],
   minecraft: undefined,
+  modloader: undefined,
   page: 0,
   query: ''
 })
@@ -117,7 +134,12 @@ async function searchModrinth(nextPage: boolean = false) {
   }
   try {
     const facets = [[`project_type:modpack`]]
-    // const facets = ["project_type:mod"]
+    if(settings.value.modloader) {
+      facets.push([`categories:${settings.value.modloader}`])
+    }
+    if(settings.value.minecraft) {
+      facets.push([`versions:${settings.value.minecraft}`])
+    }
     console.log(props.selecte)
     if(props.selected && props.selected.length > 0) {
       const categoryFacet = []
@@ -185,15 +207,18 @@ async function installModpack(entry: Entry) {
     console.warn(`Could not find versions for modpack.`, entry.project)
     return alert("Could not find any valid versions. Probably a bug. Modpack id:", entry.project.id)
   }
-  await invoke('install_modpack', {
-    modpackId: entry.project.id,
+  invoke('install_modpack', {
+    projectId: entry.project.project_id,
     authorName: entry.project.author,
     versionData: versions[0]
   })
+  router.push('/')
 }
 
 async function getVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
-  const response = await fetch(`https://api.modrinth.com/v2/project/${entry.project.slug}/version?loaders=["${props.pack.settings.modloaderType}"]&game_versions=["${props.pack.versions.minecraft}"]`)
+  const loadersStr = settings.value.modloader ? `&loaders=["${settings.value.modloader}"]` : ''
+  const mcVersionStr = settings.value.minecraft ? `&game_versions=["${settings.value.minecraft}"]` : ''
+  const response = await fetch(`https://api.modrinth.com/v2/project/${entry.project.slug}/version?${loadersStr}${mcVersionStr}`)
   const json = await response.json()
   if(response.ok) {
     return json as ModrinthProjectVersion[]

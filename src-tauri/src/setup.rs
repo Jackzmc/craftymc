@@ -130,6 +130,25 @@ impl Setup {
         }
     }
 
+    pub async fn download_file(dest: &std::path::Path, url: &str) -> Result<(), String> {
+        let client = reqwest::Client::new();
+        match client
+            .get(url)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                let mut dest_file = std::fs::File::create(&dest).expect("could not create file");
+                let mut content = std::io::Cursor::new(response.bytes().await.unwrap());
+                std::io::copy(&mut content, &mut dest_file).expect("cp failed");
+                dest_file.sync_data().expect("sync failed");
+                debug!("dl file from ({})", &url);
+                Ok(())
+            },
+            Err(err) => return Err(err.to_string())
+        }
+    }
+
     async fn download_fml_installer(&self) -> Result<PathBuf, String> {
         let path = self.launcher_folder.join("ForgeCLI.jar");
         debug!("installing to: {:?}", &path);
@@ -143,7 +162,6 @@ impl Setup {
                 let mut content = std::io::Cursor::new(bytes);
                 std::io::copy(&mut content, &mut dest_file).unwrap();
                 dest_file.sync_data().unwrap();
-                drop(dest_file);
                 debug!("forge-cli download complete");
             },
             Err(err) => {

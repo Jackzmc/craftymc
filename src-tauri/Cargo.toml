@@ -23,7 +23,7 @@ dirs-next = "2.0.0"
 sysinfo = "0.23"
 uuid = "1.0"
 chrono = "0.4"
-reqwest = { version = "0.11", features = ["stream", "blocking"] }
+reqwest = { version = "0.11", features = ["stream", "blocking", "json"] }
 futures = "0.3.21"
 tauri-plugin-log = { git = "https://github.com/tauri-apps/tauri-plugin-log" }
 log = "0.4.17"

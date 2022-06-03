@@ -214,8 +214,8 @@ impl ModpackManager {
       }
     }
 
-    fn get_suitable_name(&self, name: &str) -> Option<String> {
-    let mut new_name = name.to_string();
+    pub fn get_suitable_name(&self, name: &str) -> Option<String> {
+        let mut new_name = name.to_string();
       if self.get_modpack_by_name(name).is_some() {
         for n in 1..50 {
           new_name = format!("{} ({})", name, n);
@@ -399,7 +399,7 @@ impl ModpackManager {
         let filename = path.file_name().unwrap().to_str().unwrap();
         let instances_dir = self.get_instances_folder();
         std::fs::create_dir_all(&instances_dir).unwrap();
-        let import_name = self.get_suitable_name(&filename[0..filename.len() - 4])
+        let import_name = self.get_suitable_name(&filename[0..filename.len() - 7])
             .expect("Could not find available name");
         let window = self.window.as_ref().cloned().unwrap();
 

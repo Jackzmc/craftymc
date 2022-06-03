@@ -45,7 +45,6 @@ pub struct ModDownloadErrorPayload {
     pub error: String,
 }
 
-use tauri::async_runtime::Mutex;
 #[derive(Clone, serde::Serialize)]
 pub struct OptionalModRequestPayload(pub Vec<crate::types::modrinth::modpacks::ModrinthModpackFileEntry>);
 #[derive(Clone, serde::Serialize, serde::Deserialize)]

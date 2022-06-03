@@ -278,7 +278,54 @@ pub async fn get_instance_tree(state: tauri::State<'_, AppState>, pack_id: &str)
 
 #[tauri::command]
 // Possibly move this to a cmd_modrinth
-pub async fn install_modpack(state: tauri::State<'_, AppState>, modpack_id: &str, author_name: &str, mut version_data: modrinth::mods::ModrinthVersionData) -> Result<(), String> {
-  debug!("project {} by {}", modpack_id, author_name);
+pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, 
+  project_id: &str, author_name: &str, version_data: modrinth::mods::ModrinthVersionData
+) -> Result<(), String> {
+  let mut modpacks = state.modpacks.lock().await;
+  let project = match modrinth::modpacks::ModrinthModpackManager::fetch(project_id).await {
+    Ok(a) => a,
+    Err(err) => return Err(err)
+  };
+  let download_file = modpacks.get_downloads_folder().join(format!("{}.mrpack", project.slug));
+
+  debug!("downloading {:?}", &download_file);
+  if let Err(err) = crate::setup::Setup::download_file(&download_file, &version_data.files[0].url).await {
+    return Err(err.to_string());
+  }
+  
+  debug!("starting import of {:?}", &download_file);
+  match modpacks.import(&download_file).await {
+    Ok(mut modpack) => {
+      if let Some(url_str) = project.icon_url {
+        let url = reqwest::Url::parse(&url_str).unwrap();
+        let segments = url.path_segments().unwrap();
+        let segments = segments.last().unwrap();
+        let ext = segments.split(".").last().unwrap();
+        let dest = modpacks.get_instances_folder().join(modpack.folder_name.as_ref().unwrap()).join(format!("pack.{}", &ext));
+        if let Err(err) = crate::setup::Setup::download_file(&dest, &url_str).await {
+          warn!("Failed to download pack image from {}", err);
+        } else {
+          modpack.img_ext = Some(ext.to_string());
+        }
+      }
+      modpack.name = modpacks.get_suitable_name(&project.title).unwrap();
+      modpack.author = Some(author_name.to_string());
+
+      modpacks.save(&modpack);
+      let id = modpack.id.as_ref().unwrap().to_string();
+      modpacks.packs.insert(id, modpack.clone());
+
+      // TODO: Add modpack.mods entries
+
+      window.emit("update-modpack", payloads::UpdateModpackPayload { 
+        modpack: Some(modpack),
+        state: payloads::UpdateModpackState::Normal,
+        data: None
+      }).unwrap();
+    },
+    Err(_) => {
+      // TODO: Pass to ui
+    }
+  }
   Ok(())
 }

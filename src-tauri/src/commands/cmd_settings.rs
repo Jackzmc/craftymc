@@ -1,5 +1,4 @@
 use crate::AppState;
-use crate::setup;
 use crate::settings;
 use crate::telemetry;
 #[allow(unused_imports)]

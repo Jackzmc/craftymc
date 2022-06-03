@@ -37,7 +37,7 @@ fn main() {
       config: Mutex::new(config),
     })
     .invoke_handler(tauri::generate_handler![
-      cmd_packs::launch_modpack, cmd_packs::watch_modloader_download, cmd_packs::save_modpack, cmd_packs::delete_modpack, cmd_packs::choose_modpack_image, cmd_packs::create_modpack, cmd_packs::get_modpack, cmd_packs::get_modpacks, cmd_packs::set_modpack_setting, cmd_packs::open_modpack_folder, cmd_packs::export_modpack, cmd_packs::get_instance_tree, cmd_packs::import_modpack,
+      cmd_packs::launch_modpack, cmd_packs::watch_modloader_download, cmd_packs::save_modpack, cmd_packs::delete_modpack, cmd_packs::choose_modpack_image, cmd_packs::create_modpack, cmd_packs::get_modpack, cmd_packs::get_modpacks, cmd_packs::set_modpack_setting, cmd_packs::open_modpack_folder, cmd_packs::export_modpack, cmd_packs::get_instance_tree, cmd_packs::import_modpack, cmd_packs::install_modpack,
       cmd_mods::install_mod,
       cmd_debug::debug_install_launcher,
       cmd_settings::get_settings, cmd_settings::set_setting, cmd_settings::save_settings

@@ -315,8 +315,6 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
       let id = modpack.id.as_ref().unwrap().to_string();
       modpacks.packs.insert(id, modpack.clone());
 
-      // TODO: Add modpack.mods entries
-
       window.emit("update-modpack", payloads::UpdateModpackPayload { 
         modpack: Some(modpack),
         state: payloads::UpdateModpackState::Normal,

@@ -13,7 +13,7 @@
     <tr v-for="mod in props.mods" :key="mod.id">
       <td>{{mod.name}}</td>
       <td>{{mod.author}}</td>
-      <td>{{mod.filenames[0]}}</td>
+      <td>{{mod.filename}}</td>
       <td>
         <div class="buttons">
         <!-- <a class="button is-small is-white" data-tooltip="Update"><Icon :icon="['fas', 'download']" /></a> -->

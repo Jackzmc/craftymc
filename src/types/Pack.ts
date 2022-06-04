@@ -20,7 +20,7 @@ export interface Modpack {
 export interface SavedModEntry {
   name: string,
   version_id: string,
-  filenames: string[]
+  filename: string[]
 }
 
 export interface PackSettings {

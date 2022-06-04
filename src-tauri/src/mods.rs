@@ -8,13 +8,15 @@ use crate::payloads;
 pub struct SavedModEntry {
     pub project_id: Option<String>,
     pub version_id: Option<String>,
-    pub filenames: Vec<String>,
+    pub filename: String,
     pub name: Option<String>,
     pub author: Option<String>
 }
 
 impl crate::types::modrinth::mods::ModrinthVersionData {
-    pub async fn install_mod(&mut self, window: &tauri::Window, author_name: String, destination: &std::path::PathBuf, pack: &mut pack::Modpack) -> Result<SavedModEntry, String> {
+    pub async fn install_mod(&mut self, window: &tauri::Window, 
+        author_name: String, destination: &std::path::PathBuf, pack: &mut pack::Modpack
+    ) -> Result<Vec<SavedModEntry>, String> {
         let client = reqwest::Client::new();
         let pack_id = pack.id.as_deref().unwrap();
         let mut filenames = Vec::<String>::new();
@@ -64,15 +66,19 @@ impl crate::types::modrinth::mods::ModrinthVersionData {
                 }
             }
         }
-        let save_entry = SavedModEntry {
-            project_id: Some(self.project_id.clone()),
-            version_id: Some(self.id.clone()),
-            filenames,
-            name: Some(self.name.clone()),
-            author: Some(author_name)
-        };
         info!("[debug] Completed download queue for {}", pack_id);
-        Ok(save_entry)
+        let result = filenames.into_iter()
+        .map(|filename| {
+            SavedModEntry {
+                project_id: Some(self.project_id.clone()),
+                version_id: Some(self.id.clone()),
+                filename,
+                name: Some(self.name.clone()),
+                author: Some(author_name.clone())
+            }
+        })
+        .collect();
+        Ok(result)
     }
 }
 

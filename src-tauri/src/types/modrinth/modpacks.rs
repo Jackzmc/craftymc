@@ -200,7 +200,7 @@ impl ModrinthModpackManager {
                             name: None,
                             project_id: None,
                             version_id: None,
-                            filenames: vec![filename],
+                            filename,
                             author: None
                         })
                     },

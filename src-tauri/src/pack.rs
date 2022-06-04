@@ -87,39 +87,60 @@ impl ModpackManager {
     }
 
     fn load_entry(&mut self, entry: &std::path::Path) -> Result<Modpack, String> {
-      let manifest_path = entry.join("manifest.json");
-      // TODO: Pass invalid or corrupted modpacks to user
-      let filename = entry.file_name().unwrap().to_str().unwrap();
-      match fs::read_to_string(&manifest_path) {
-        Ok(str) => {
-          match serde_json::from_str::<Modpack>(&str) {
-            Ok(mut modpack) => {
-                if let Some(id) = modpack.id.as_ref() {
-                    debug!("loading modpack id = {} in \"{}\"", &id, &filename);
-                } else {
-                    debug!("loading modpack id = NONE in \"{}\"", &filename);
+        let manifest_path = entry.join("manifest.json");
+        // TODO: Pass invalid or corrupted modpacks to user
+        let filename = entry.file_name().unwrap().to_str().unwrap();
+        let mut modpack = match fs::read_to_string(&manifest_path) {
+            Ok(str) => {
+            match serde_json::from_str::<Modpack>(&str) {
+                Ok(mut modpack) => {
+                    if let Some(id) = modpack.id.as_ref() {
+                        debug!("loading modpack id = {} in \"{}\"", &id, &filename);
+                    } else {
+                        debug!("loading modpack id = NONE in \"{}\"", &filename);
+                    }
+                    modpack.img_ext = self.get_pack_img_ext(&filename);
+                    modpack.folder_name = Some(filename.to_string());
+                    modpack
+                },
+                Err(err) => {
+                    let err = format!("Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", filename, err);
+                    warn!("{}", &err);
+                    return Err(err)
                 }
-                modpack.img_ext = self.get_pack_img_ext(&filename);
-                modpack.folder_name = Some(filename.to_string());
-                return Ok(modpack);
+            }
             },
             Err(err) => {
-              let err = format!("Directory \"{}\"'s manifest.json is either incomplete or invalid json: {}", filename, err);
-              warn!("{}", &err);
-              Err(err)
+                let error = match err.kind() {
+                    std::io::ErrorKind::NotFound => format!("\"{}\" is missing a manifest.json", filename),
+                    std::io::ErrorKind::PermissionDenied => format!("Cannot read \"{}\"/manifest.json: Permission Denied", filename),
+                    _ => format!("Error reading \"{}\"'s manifest.json: {}", filename, err)
+                };
+                warn!("{}", &error);
+                return Err(error)
             }
-          }
-        },
-        Err(err) => {
-            let error = match err.kind() {
-                std::io::ErrorKind::NotFound => format!("\"{}\" is missing a manifest.json", filename),
-                std::io::ErrorKind::PermissionDenied => format!("Cannot read \"{}\"/manifest.json: Permission Denied", filename),
-                _ => format!("Error reading \"{}\"'s manifest.json: {}", filename, err)
-            };
-            warn!("{}", &error);
-            Err(error)
+        };
+        let mods_dir = entry.join("mods");
+        if mods_dir.exists() && mods_dir.is_dir() {
+            let mut mods = Vec::new();
+            for mod_entry in fs::read_dir(&mods_dir).unwrap() {
+                let mod_entry = mod_entry.unwrap();
+                let mod_path = mod_entry.path();
+                let filename = mod_path.file_name().unwrap().to_str().unwrap();
+                if !modpack.mods.iter().any(|x| &x.filename == &filename) {
+                    let mod_entry = crate::mods::SavedModEntry {
+                        project_id: None,
+                        version_id: None,
+                        name: None,
+                        author: None,
+                        filename: filename.to_string()
+                    };
+                    mods.push(mod_entry);
+                }
+            }
+            modpack.mods.append(&mut mods);
         }
-      }
+        return Ok(modpack)
     }
 
     pub fn load(&mut self) {
@@ -351,11 +372,9 @@ impl ModpackManager {
         let download_dir = self.get_downloads_folder();
         let dest = self.get_instances_folder().join(pack.folder_name.as_ref().unwrap()).join("mods");
         std::fs::create_dir_all(&dest).unwrap();
-        for filename in &entry.filenames {
-            let src_path = download_dir.join(filename);
-            let dest_path = dest.join(filename);
-            std::fs::rename(src_path, dest_path).expect("failed to move download");
-        }
+        let src_path = download_dir.join(&entry.filename);
+        let dest_path = dest.join(&entry.filename);
+        std::fs::rename(src_path, dest_path).expect("failed to move download");
         pack.mods.push(entry);
         self.save(&pack);
         self.packs.insert(pack.id.clone().unwrap(), pack.clone());

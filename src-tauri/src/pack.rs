@@ -239,16 +239,17 @@ impl ModpackManager {
 
     pub fn get_suitable_name(&self, name: &str) -> Option<String> {
         let mut new_name = name.to_string();
-      if self.get_modpack_by_name(name).is_some() {
-        for n in 1..50 {
-          new_name = format!("{} ({})", name, n);
-          if self.get_modpack_by_name(&new_name).is_none() {
-            return Some(new_name);
-          }
+        let instances_dir = self.get_instances_folder();
+        if self.get_modpack_by_name(name).is_some() || instances_dir.join(&name).exists() {
+            for n in 1..50 {
+                new_name = format!("{} ({})", name, n);
+                if self.get_modpack_by_name(&new_name).is_none() && !instances_dir.join(&new_name).exists() {
+                    return Some(new_name);
+                }
+            }
+            return None
         }
-        return None
-      }
-      Some(new_name)
+        Some(new_name)
     }
 
     pub fn create_modpack(&mut self, mut pack: Modpack) -> Result<Modpack, String> {

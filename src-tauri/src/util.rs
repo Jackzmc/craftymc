@@ -1,3 +1,5 @@
+use std::process::Child;
+
 use chrono::{DateTime, Utc};
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
@@ -13,21 +15,28 @@ pub fn get_iso8601(mut timestamp: Option<i64>) -> String {
     DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(timestamp.unwrap(), 0), Utc).to_rfc3339()
 }
 
-pub fn open_folder(path: &std::path::Path) -> Result<(), String> {
+pub fn open_folder(path: &std::path::Path) -> Result<Child, String> {
     let mut command = match std::env::consts::OS {
-        "windows" => std::process::Command::new("explorer"),
-        "macos" => std::process::Command::new("open"),
-        "linux" => std::process::Command::new("xdg-open"),
-        _ => panic!("Unsupported OS")
+        "windows" => {
+            let mut cmd = std::process::Command::new("explorer");
+            cmd.arg("/select,").arg(path);
+            cmd
+        },
+        "macos" => {
+            let mut cmd = std::process::Command::new("open");
+            cmd.arg(path);
+            cmd
+        },
+        "linux" => {
+            let mut cmd = std::process::Command::new("xdg-open");
+            cmd.arg(path);
+            cmd
+        }, 
+        // Linux: Use 'dbus-send --session --print-reply --dest=org.freedesktop.FileManager1 --type=method_call /org/freedesktop/FileManager1 org.freedesktop.FileManager1.ShowItems array:string:"file:///home/me/path/to/folder/or/file" string:"' ?
+        _ => return Err("Unsupported OS".to_string())
     };
 
-    match command
-        .arg(path)
-        .spawn()
-    {
-        Ok(_) => return Ok(()),
-        Err(err) => return Err(err.to_string())
-    }
+    command.spawn().map_err(|err| err.to_string())
 }
 
 pub fn mv_as_admin(src_path: &std::path::Path, dest_path: &std::path::PathBuf) {

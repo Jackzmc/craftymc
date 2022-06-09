@@ -251,9 +251,10 @@ impl ModrinthModpackManager {
         Ok(())
     }
 
-    pub async fn export(&self, file_name: &str, version: &str, paths: &[&str], modpack: &crate::pack::Modpack, src_path: &std::path::Path, mut exp_path: std::path::PathBuf)  {
+    pub async fn export(&self, version: &str, paths: &[&str], modpack: &crate::pack::Modpack, src_path: &std::path::Path, mut exp_path: std::path::PathBuf) 
+        -> Result<(), Box<dyn std::error::Error>> {
         exp_path.set_extension("mrpack");
-        let out_file = std::fs::File::create(&exp_path).expect("file in use");
+        let out_file = std::fs::File::create(&exp_path)?;
 
         let mut zip = zip::ZipWriter::new(out_file);
         let (mut index, skipped) = self.convert_modpack(modpack, src_path).await;
@@ -261,19 +262,19 @@ impl ModrinthModpackManager {
         zip.start_file(
             "modrinth.index.json",
             zip::write::FileOptions::default()
-        ).expect("failed to create index file");
-        zip.write_all(serde_json::to_string_pretty(&index).unwrap().as_bytes()).expect("failed to write to index file");
+        )?;
+        zip.write_all(serde_json::to_string_pretty(&index).unwrap().as_bytes())?;
 
         for path in paths {
             let mut rel_path = path.to_string();
             rel_path.remove(0);
             let file_path = src_path.join(&rel_path);
             if file_path.is_file() {
-                let filename = file_path.file_name().unwrap().to_str().unwrap();
+                let filename = file_path.file_name().ok_or_else(|| "invalid file")?.to_str().ok_or_else(|| "filename str does not exist")?;
                 if filename.contains("manifest.json") || !skipped.iter().any(|x| x == filename) {
                     continue;
                 }
-                self.window.emit("export_progress", crate::payloads::ExportPayload(rel_path.clone())).unwrap();
+                self.window.emit("export_progress", crate::payloads::ExportPayload(rel_path.clone()))?;
                 match std::fs::File::open(&file_path) {
                     Ok(mut src_file) => {
                         let mut buffer = Vec::new();
@@ -281,8 +282,8 @@ impl ModrinthModpackManager {
                         zip.start_file(
                             format!("overrides/{}", rel_path), 
                             zip::write::FileOptions::default()
-                        ).unwrap();
-                        zip.write_all(&buffer).unwrap();
+                        )?;
+                        zip.write_all(&buffer)?;
                     },
                     Err(err) => {
                         warn!("Could not read file \"{}\": {}", &rel_path, err);
@@ -290,8 +291,9 @@ impl ModrinthModpackManager {
                 }
             }
         }
-        zip.finish().expect("failed to create zip file");
-        crate::util::open_folder(&exp_path).unwrap();
+        zip.finish()?;
+        crate::util::open_folder(&exp_path)?;
+        Ok(())
     }
 
     async fn convert_modpack(&self, pack: &crate::pack::Modpack, instance_dir: &std::path::Path) -> (ModrinthModpackManifest, Vec<String>) {

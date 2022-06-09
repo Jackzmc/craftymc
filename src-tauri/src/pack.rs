@@ -383,40 +383,37 @@ impl ModpackManager {
         pack
     }
 
-    pub async fn export(&self, export_type: &str, pack_id: &str, version: &str, file_name: &str, paths: &[&str]) {
+    pub async fn export(&self, export_type: &str, pack_id: &str, version: &str, file_name: &str, paths: &[&str]) -> Result<(), String> {
         let modpack = self.get_modpack(pack_id).expect("unknown modpack");
         let exp_path = self.root_folder.join("Exports").join(file_name);
         let src_path = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
 
         match export_type {
-            "modrinth" => {
-                self.modrinth_manager.as_ref().unwrap().export(file_name, version, paths, &modpack, &src_path, exp_path).await;
-            },
-            _ => {
-                self.export_custom(file_name, version, paths, &modpack, &src_path, exp_path);
-            }
-        };
+            "modrinth" => self.modrinth_manager.as_ref().unwrap().export(version, paths, &modpack, &src_path, exp_path).await,
+            _ => self.export_custom(version, paths, &modpack, &src_path, exp_path)
+        }.map_err(|err| err.to_string())
     }
 
-    fn export_custom(&self, file_name: &str, version: &str, paths: &[&str], modpack: &Modpack, src_path: &Path, mut exp_path: PathBuf) {
+    fn export_custom(&self, version: &str, paths: &[&str], modpack: &Modpack, src_path: &Path, mut exp_path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         exp_path.set_extension("zip");
-        let out_file = std::fs::File::create(&exp_path).unwrap();
+        let out_file = std::fs::File::create(&exp_path)?;
         let mut zip = zip::ZipWriter::new(out_file);
+        let mut buffer = Vec::new();
         for path in paths {
             let mut rel_path = path.to_string();
             rel_path.remove(0);
             let file_path = src_path.join(&rel_path);
             if file_path.is_file() {
-                self.window.as_ref().unwrap().emit("export_progress", payloads::ExportPayload(rel_path.clone())).unwrap();
+                self.window.as_ref().unwrap().emit("export_progress", payloads::ExportPayload(rel_path.clone()))?;
                 match std::fs::File::open(&file_path) {
                     Ok(mut src_file) => {
-                        let mut buffer = Vec::new();
-                        src_file.read_to_end(&mut buffer).unwrap();
+                        buffer.clear();
+                        src_file.read_to_end(&mut buffer)?;
                         zip.start_file(
                             rel_path, 
                             zip::write::FileOptions::default()
-                        ).unwrap();
-                        zip.write_all(&buffer).unwrap();
+                        )?;
+                        zip.write_all(&buffer)?;
                     },
                     Err(err) => {
                         warn!("Could not read file \"{}\": {}", &rel_path, err);
@@ -425,7 +422,8 @@ impl ModpackManager {
             }
         }
         zip.finish().expect("failed to create zip file");
-        util::open_folder(&exp_path).unwrap();
+        util::open_folder(&exp_path)?;
+        Ok(())
     }
 
     pub async fn import(&mut self, path: &PathBuf) -> Result<Modpack, String> {

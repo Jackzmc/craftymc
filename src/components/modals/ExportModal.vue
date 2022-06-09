@@ -79,13 +79,18 @@ async function save(exportType?: string) {
   await listen("export_progress", (event) => {
     currentFile.value = event.payload
   })
-  await invoke('export_modpack', {
-    packId: props.pack.id,
-    fileName: props.pack.name,
-    version: version.value,
-    paths: selected,
-    exportType
-  })
+  try {
+    await invoke('export_modpack', {
+      packId: props.pack.id,
+      fileName: props.pack.name,
+      version: version.value,
+      paths: selected,
+      exportType
+    })
+  } catch(err) {
+    console.error("Export error: ", err)
+    alert("An error occurred while exporting: \n" + err)
+  }
   emit('close')
 }
 

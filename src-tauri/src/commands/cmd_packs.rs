@@ -284,16 +284,11 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
   project_id: &str, author_name: &str, version_data: modrinth::mods::ModrinthVersionData
 ) -> Result<(), String> {
   let mut modpacks = state.modpacks.lock().await;
-  let project = match modpacks.modrinth_manager.as_ref().unwrap().fetch(project_id).await {
-    Ok(a) => a,
-    Err(err) => return Err(err)
-  };
+  let project = modpacks.modrinth_manager.as_ref().unwrap().fetch(project_id).await?;
   let download_file = modpacks.get_downloads_folder().join(format!("{}.mrpack", project.slug));
 
-  debug!("downloading {:?}", &download_file);
-  if let Err(err) = crate::setup::Setup::download_file(&download_file, &version_data.files[0].url).await {
-    return Err(err.to_string());
-  }
+  debug!("downloading {:?}", &version_data.files[0].url);
+  crate::setup::Setup::download_file(&download_file, &version_data.files[0].url).await.map_err(|err| err.to_string())?;
   
   debug!("starting import of {:?}", &download_file);
   match modpacks.import(&download_file).await {
@@ -312,7 +307,7 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
       }
       // Not efficient because modrinth doesn't include file_name right now:
       if let Some(dependencies) = version_data.dependencies {
-        debug!("checking dependencies");
+        debug!("Fetching dependencies, this may take a while");
         let version_ids = dependencies.into_iter().map(|depend| depend.version_id);
         futures::stream::iter(version_ids)
         .map(|version_id| {
@@ -322,9 +317,7 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
         .for_each(|version| {
           if let Ok(version) = version {
             for entry in &mut modpack.mods {
-              debug!("{} compare {}", &entry.filename, &version.files[0].filename);
               if &entry.filename == &version.files[0].filename {
-                debug!("got file for {}", &version.id);
                 entry.version_id = Some(version.id);
                 // entry.author = verison.author_id
                 entry.name = Some(version.name);
@@ -336,6 +329,8 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
         })
         .await;
       }
+
+      debug!("import finished, setting some properties and saving");
       
       modpack.name = modpacks.get_suitable_name(&project.title).unwrap();
       modpack.author = Some(author_name.to_string());

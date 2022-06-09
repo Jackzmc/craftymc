@@ -10,9 +10,9 @@
         </Field>
       </div>
       <div class="column">
-        <a class="button is-white is-circular is-pulled-right" @click="emit('close')">
+        <router-link class="button is-white is-circular is-pulled-right" to="/">
           <fa-icon :icon="['fas', 'times-circle']" size="2x" />
-        </a>
+        </router-link>
       </div>
     </div>
     <div class="level">
@@ -79,7 +79,7 @@ const router = useRouter()
 
 const MAX_FETCH_PER_PAGE = 20
 
-const emit = defineEmits(["close", "show"])
+const emit = defineEmits(["show"])
 const props = defineProps<{
   selected: any
 }>()

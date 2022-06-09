@@ -10,7 +10,9 @@ pub struct SavedModEntry {
     pub version_id: Option<String>,
     pub filename: String,
     pub name: Option<String>,
-    pub author: Option<String>
+    pub author: Option<String>,
+    pub sha512: Option<String>,
+    pub sha1: Option<String>,
 }
 
 impl crate::types::modrinth::mods::ModrinthVersionData {
@@ -74,7 +76,9 @@ impl crate::types::modrinth::mods::ModrinthVersionData {
                 version_id: Some(self.id.clone()),
                 filename,
                 name: Some(self.name.clone()),
-                author: Some(author_name.clone())
+                author: Some(author_name.clone()),
+                sha512: None,
+                sha1: None
             }
         })
         .collect();

@@ -13,7 +13,7 @@ pub fn get_iso8601(mut timestamp: Option<i64>) -> String {
     DateTime::<Utc>::from_utc(chrono::NaiveDateTime::from_timestamp(timestamp.unwrap(), 0), Utc).to_rfc3339()
 }
 
-pub fn open_folder(path: &std::path::PathBuf) -> Result<(), String> {
+pub fn open_folder(path: &std::path::Path) -> Result<(), String> {
     let mut command = match std::env::consts::OS {
         "windows" => std::process::Command::new("explorer"),
         "macos" => std::process::Command::new("open"),

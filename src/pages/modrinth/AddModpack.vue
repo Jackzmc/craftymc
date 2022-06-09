@@ -201,18 +201,25 @@ async function installModpack(entry: Entry) {
       return version.version_type && true
     })
     .sort((a,b) => new Date(b.datePublished) - new Date(a.datePublished))
-  console.debug('versions', versions)
   if(versions.length == 0) {
     entry.installing = false
     console.warn(`Could not find versions for modpack.`, entry.project)
     return alert("Could not find any valid versions. Probably a bug. Modpack id:", entry.project.id)
   }
+  console.debug('project', entry.project, 'version', versions[0], {
+    projectId: entry.project.project_id,
+    authorName: entry.project.author,
+    versionData: versions[0]
+  })
+
   invoke('install_modpack', {
     projectId: entry.project.project_id,
     authorName: entry.project.author,
     versionData: versions[0]
   })
-  router.push('/')
+  entry.installing = false
+  router
+  // router.push('/')
 }
 
 async function getVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {

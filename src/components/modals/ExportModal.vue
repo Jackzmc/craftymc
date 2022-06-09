@@ -6,17 +6,34 @@
     <p class="has-text-centered subtitle is-5">{{currentFile}}</p>
   </div>
   <template v-else>
-    <Field label="Filename">
-      <input class="input" type="text" v-model="filename" />
-      <p class="help has-text-danger" v-if="cantExport">Filename must end with .zip</p>
-    </Field>
+    <div class="columns">
+      <div class="column">
+        <Field label="Filename">
+          <input class="input" type="text" v-model="filename" />
+        </Field>
+      </div>
+      <div class="column">
+        <Field label="Version">
+          <input class="input" type="text" v-model="version" />
+        </Field>
+      </div>
+    </div>
     <Field label="Choose files">
       <TreeNode v-if="rootFile" :node="rootFile" hidden @select="updateRoot" />
     </Field>
   </template>
   <template v-slot:footer>
     <div class="buttons">
-      <a :class="['button','is-info', {'is-loading': exporting}]" @click="save" :disabled="cantExport || undefined" >Export</a>
+      <a :class="['button','is-info', {'is-loading': exporting}, 'has-tooltip-right']" @click="save()" :disabled="cantExport || undefined"
+        data-tooltip="Export as a CraftyMc modpack"
+      >
+      Export
+      </a>
+      <a :class="['button','is-link', {'is-loading': exporting}]" @click="save('modrinth')" :disabled="cantExport || undefined"
+        data-tooltip="Export as a modrinth modpack"
+      >
+        Export as Modrinth
+      </a>
       <a :class="['button',{'is-loading': exporting}]" @click="emit('close')">Cancel</a>
     </div>
   </template>
@@ -46,15 +63,16 @@ const props = defineProps<{
 }>()
 
 const cantExport = computed(() => {
-  return !filename.value.endsWith('.zip')
+  return undefined
 })
 
 let rootFile = ref<Node>()
-let filename = ref(props.pack.name + ".zip")
+let filename = ref(props.pack.name)
+let version = ref(props.pack.versions.pack || "1.0.0")
 let exporting = ref(false)
 let currentFile = ref()
 
-async function save() {
+async function save(exportType?: string) {
   const selected = getSelected(rootFile.value)
   console.debug('selected', selected)
   exporting.value = true
@@ -63,8 +81,10 @@ async function save() {
   })
   await invoke('export_modpack', {
     packId: props.pack.id,
-    fileName: props.pack.name + ".zip",
-    paths: selected
+    fileName: props.pack.name,
+    version: version.value,
+    paths: selected,
+    exportType
   })
   emit('close')
 }

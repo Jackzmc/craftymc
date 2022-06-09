@@ -29,7 +29,8 @@ pub struct ModrinthFile {
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct ModrinthDependency {
-    version_id: String,
-    project_id: String,
-    dependency_type: String
+    pub version_id: String,
+    pub project_id: Option<String>,
+    pub file_name: Option<String>,
+    pub dependency_type: String
 }

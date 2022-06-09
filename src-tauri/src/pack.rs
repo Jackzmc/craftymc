@@ -16,7 +16,7 @@ pub struct ModpackManager {
     settings: settings::Settings,
     pub root_folder: PathBuf,
     window: Option<tauri::Window>, // Set after provide_window
-    modrinth_manager: Option<modpacks::ModrinthModpackManager>,
+    pub modrinth_manager: Option<modpacks::ModrinthModpackManager>,
     setup: Option<crate::setup::Setup>
 }
 
@@ -133,7 +133,9 @@ impl ModpackManager {
                         version_id: None,
                         name: None,
                         author: None,
-                        filename: filename.to_string()
+                        filename: filename.to_string(),
+                        sha512: None,
+                        sha1: None,
                     };
                     mods.push(mod_entry);
                 }
@@ -381,19 +383,31 @@ impl ModpackManager {
         pack
     }
 
-    pub fn export(&self, window: tauri::Window, pack_id: &str, file_name: &str, paths: &[&str]) {
+    pub async fn export(&self, export_type: &str, pack_id: &str, version: &str, file_name: &str, paths: &[&str]) {
         let modpack = self.get_modpack(pack_id).expect("unknown modpack");
         let exp_path = self.root_folder.join("Exports").join(file_name);
         let src_path = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap());
-        let out_file = std::fs::File::create(&exp_path).unwrap();
 
+        match export_type {
+            "modrinth" => {
+                self.modrinth_manager.as_ref().unwrap().export(file_name, version, paths, &modpack, &src_path, exp_path).await;
+            },
+            _ => {
+                self.export_custom(file_name, version, paths, &modpack, &src_path, exp_path);
+            }
+        };
+    }
+
+    fn export_custom(&self, file_name: &str, version: &str, paths: &[&str], modpack: &Modpack, src_path: &Path, mut exp_path: PathBuf) {
+        exp_path.set_extension("zip");
+        let out_file = std::fs::File::create(&exp_path).unwrap();
         let mut zip = zip::ZipWriter::new(out_file);
         for path in paths {
             let mut rel_path = path.to_string();
             rel_path.remove(0);
             let file_path = src_path.join(&rel_path);
             if file_path.is_file() {
-                window.emit("export_progress", payloads::ExportPayload(rel_path.clone())).unwrap();
+                self.window.as_ref().unwrap().emit("export_progress", payloads::ExportPayload(rel_path.clone())).unwrap();
                 match std::fs::File::open(&file_path) {
                     Ok(mut src_file) => {
                         let mut buffer = Vec::new();

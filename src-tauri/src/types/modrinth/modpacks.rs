@@ -3,6 +3,8 @@ use log::{info, debug, error, warn};
 use futures::stream::StreamExt;
 use tokio::io::AsyncWriteExt;
 use sha2::{Sha512, Digest};
+use sha1::{Sha1};
+use std::io::{Read, Write};
 
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -20,6 +22,7 @@ pub struct ModrinthModpackManifest {
 pub struct ModrinthModpackFileEntry {
     pub path: String,
     pub hashes: crate::types::modrinth::common::ModrinthHashes,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub env: Option<ModrinthEnv>,
     pub downloads: Option<Vec<String>>,
     pub file_size: usize
@@ -34,15 +37,19 @@ pub struct ModrinthEnv {
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct ModrinthManifestDependency {
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub fabric_loader: Option<String>,
     pub minecraft: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub forge: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub quilt_loader: Option<String> 
 }
 
 
 pub struct ModrinthModpackManager {
-    window: tauri::Window
+    window: tauri::Window,
+    client: reqwest::Client
 }
 
 static MAX_CONCURRENT_DOWNLOADS: usize = 4;
@@ -50,12 +57,23 @@ static MAX_CONCURRENT_DOWNLOADS: usize = 4;
 impl ModrinthModpackManager {
     pub fn new(window: tauri::Window) -> ModrinthModpackManager{
         ModrinthModpackManager {
+            client: reqwest::Client::new(),
             window
         }
     }
 
-    pub async fn fetch(project_id: &str) -> Result<ModrinthModpackProject, String> {
-        match reqwest::get(format!("https://api.modrinth.com/v2/project/{}", project_id)).await {
+    pub async fn fetch_version(&self, version_id: String) -> Result<crate::types::modrinth::mods::ModrinthVersionData, String> {
+        match self.client.get(format!("https://api.modrinth.com/v2/version/{}", version_id)).send().await {
+            Ok(response) => match response.json::<crate::types::modrinth::mods::ModrinthVersionData>().await {
+                Ok(json) => Ok(json),
+                Err(err) => return Err(err.to_string())
+            },
+            Err(err) => return Err(err.to_string())
+        }
+    }
+
+    pub async fn fetch(&self, project_id: &str) -> Result<ModrinthModpackProject, String> {
+        match self.client.get(format!("https://api.modrinth.com/v2/project/{}", project_id)).send().await {
             Ok(response) => match response.json::<ModrinthModpackProject>().await {
                 Ok(json) => Ok(json),
                 Err(err) => return Err(err.to_string())
@@ -65,7 +83,6 @@ impl ModrinthModpackManager {
     }
 
     async fn download_mod(&self, 
-        client: &reqwest::Client, 
         instance_dir: &std::path::Path, 
         entry: ModrinthModpackFileEntry
     ) -> (ModrinthModpackFileEntry, Result<String, String>) {
@@ -76,7 +93,7 @@ impl ModrinthModpackManager {
         };
         let url = &entry.downloads.as_ref().unwrap()[0];
         let mut hasher = Sha512::new();
-        match client.get(url)
+        match self.client.get(url)
             .send()
             .await
         {
@@ -137,7 +154,6 @@ impl ModrinthModpackManager {
             return Err("Unsupported modloader".to_string());
         }
 
-        let client = reqwest::Client::new();
         debug!("importing modrinth modpack | modloader: {} | {} files", loader.as_ref().unwrap(), modpack.files.len());
         std::fs::create_dir_all(src_folder.join("mods")).unwrap();
 
@@ -190,7 +206,7 @@ impl ModrinthModpackManager {
 
         futures::stream::iter(required_mods)
             .map(|entry| {
-                self.download_mod(&client, src_folder, entry)
+                self.download_mod(src_folder, entry)
             })
             .buffer_unordered(MAX_CONCURRENT_DOWNLOADS)
             .for_each(|result| {
@@ -201,7 +217,9 @@ impl ModrinthModpackManager {
                             project_id: None,
                             version_id: None,
                             filename,
-                            author: None
+                            author: None,
+                            sha512: Some(result.0.hashes.sha512),
+                            sha1: Some(result.0.hashes.sha1)
                         })
                     },
                     Err(err) => debug!("{} failed: {}", result.0.path, err)
@@ -223,7 +241,7 @@ impl ModrinthModpackManager {
             
             let mods = rx.recv().unwrap().0;
             for entry in mods {
-                let result = self.download_mod(&client, &src_folder, entry).await;
+                let result = self.download_mod(&src_folder, entry).await;
                 if let Err(err) = result.1 {
                     debug!("{} failed: {}", &result.0.path, err)
                 }
@@ -232,6 +250,128 @@ impl ModrinthModpackManager {
 
         Ok(())
     }
+
+    pub async fn export(&self, file_name: &str, version: &str, paths: &[&str], modpack: &crate::pack::Modpack, src_path: &std::path::Path, mut exp_path: std::path::PathBuf)  {
+        exp_path.set_extension("mrpack");
+        let out_file = std::fs::File::create(&exp_path).expect("file in use");
+
+        let mut zip = zip::ZipWriter::new(out_file);
+        let (mut index, skipped) = self.convert_modpack(modpack, src_path).await;
+        index.version_id = version.to_string();
+        zip.start_file(
+            "modrinth.index.json",
+            zip::write::FileOptions::default()
+        ).expect("failed to create index file");
+        zip.write_all(serde_json::to_string_pretty(&index).unwrap().as_bytes()).expect("failed to write to index file");
+
+        for path in paths {
+            let mut rel_path = path.to_string();
+            rel_path.remove(0);
+            let file_path = src_path.join(&rel_path);
+            if file_path.is_file() {
+                let filename = file_path.file_name().unwrap().to_str().unwrap();
+                if filename.contains("manifest.json") || !skipped.iter().any(|x| x == filename) {
+                    continue;
+                }
+                self.window.emit("export_progress", crate::payloads::ExportPayload(rel_path.clone())).unwrap();
+                match std::fs::File::open(&file_path) {
+                    Ok(mut src_file) => {
+                        let mut buffer = Vec::new();
+                        src_file.read_to_end(&mut buffer).unwrap();
+                        zip.start_file(
+                            format!("overrides/{}", rel_path), 
+                            zip::write::FileOptions::default()
+                        ).unwrap();
+                        zip.write_all(&buffer).unwrap();
+                    },
+                    Err(err) => {
+                        warn!("Could not read file \"{}\": {}", &rel_path, err);
+                    }
+                }
+            }
+        }
+        zip.finish().expect("failed to create zip file");
+        crate::util::open_folder(&exp_path).unwrap();
+    }
+
+    async fn convert_modpack(&self, pack: &crate::pack::Modpack, instance_dir: &std::path::Path) -> (ModrinthModpackManifest, Vec<String>) {
+        let mut files = Vec::new();
+        let mut skipped = Vec::new();
+
+        for entry in &pack.mods {
+            let download_url = match &entry.version_id {
+                Some(version) => {
+                    self.window.emit("export_progress", 
+                        crate::payloads::ExportPayload(format!("Fetch version {}", version))
+                    ).unwrap();
+                    match self.fetch_version(version.to_string()).await {
+                        Ok(data) => {
+                            data.files[0].url.clone()
+                        },
+                        Err(err) => {
+                            error!("Failed to fetch version info for mod {}: {}", version, err);
+                            continue
+                        }
+                    }
+                },
+                None => {
+                    skipped.push(entry.filename.clone());
+                    continue
+                }
+            };
+            match std::fs::File::open(instance_dir.join("mods").join(&entry.filename)) {
+                Ok(mut file) => {
+                    let meta = file.metadata().unwrap();
+                    let mut sha512_hasher = Sha512::new();
+                    let mut sha1_hasher = Sha1::new();
+                    std::io::copy(&mut file, &mut sha512_hasher).unwrap();
+                    std::io::copy(&mut file, &mut sha1_hasher).unwrap();
+                    files.push(ModrinthModpackFileEntry {
+                        path: format!("mods/{}", &entry.filename).to_string(),
+                        hashes: crate::types::modrinth::common::ModrinthHashes {
+                            sha512: base16ct::lower::encode_string(&sha512_hasher.finalize()),
+                            sha1: base16ct::lower::encode_string(&sha1_hasher.finalize())
+                        },
+                        env: None,
+                        downloads: Some(vec![
+                            download_url
+                        ]),
+                        file_size: meta.len() as usize
+                    })
+                },
+                Err(err) => {
+                    error!("Could not include \"{}\" due to error: {}", &entry.filename, err);
+                }
+            }
+            
+        }
+
+        let mut forge = None;
+        let mut fabric_loader = None;
+        let mut quilt_loader = None;
+        match pack.settings.modloaderType.as_str() {
+            "forge" => forge = Some(pack.versions.modloader.clone()),
+            "fabric" => fabric_loader = Some(pack.versions.modloader.clone()),
+            "quilt" => quilt_loader = Some(pack.versions.modloader.clone()),
+            _ => {}
+        };
+
+        let index = ModrinthModpackManifest {
+            format_version: 1,
+            game: "minecraft".to_string(),
+            version_id: "1.0.0".to_string(),
+            name: pack.name.clone(),
+            files,
+            dependencies: ModrinthManifestDependency {
+                minecraft: Some(pack.versions.minecraft.clone()),
+                forge,
+                fabric_loader,
+                quilt_loader
+            }
+        };
+        (index, skipped)
+    }
+
 }
 
 

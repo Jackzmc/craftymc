@@ -31,6 +31,7 @@ runas = "0.2"
 zip = "0.6"
 fs_extra = "1.2"
 sha2 = "0.10.2"
+sha-1 = "*" # Need this due to modrinth
 base16ct = { version = "0.1.1", features = ["alloc"] }
 
 [features]

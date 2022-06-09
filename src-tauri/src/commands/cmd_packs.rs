@@ -4,6 +4,7 @@ use crate::pack;
 use crate::payloads;
 use crate::util;
 use crate::types::modrinth;
+use futures::stream::StreamExt;
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
 /// COMMANDS
@@ -216,12 +217,14 @@ pub fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pa
 }
 
 #[tauri::command]
-pub async fn export_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pack_id: &str, file_name: &str, paths: Vec<&str>) -> Result<(), String> {
+pub async fn export_modpack(state: tauri::State<'_, AppState>,
+  pack_id: &str, file_name: &str, version: &str, paths: Vec<&str>, export_type: &str
+) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().await;
   match modpacks.get_modpack(pack_id) {
     Some(pack) => {
       info!("Exporting modpack id = {}", &pack.id.as_ref().unwrap());
-      modpacks.export(window, pack_id, file_name, &paths);
+      modpacks.export(export_type, pack_id, version, file_name, &paths).await;
       Ok(())
     },
     None => Err("No modpack was found".to_string())
@@ -282,7 +285,7 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
   project_id: &str, author_name: &str, version_data: modrinth::mods::ModrinthVersionData
 ) -> Result<(), String> {
   let mut modpacks = state.modpacks.lock().await;
-  let project = match modrinth::modpacks::ModrinthModpackManager::fetch(project_id).await {
+  let project = match modpacks.modrinth_manager.as_ref().unwrap().fetch(project_id).await {
     Ok(a) => a,
     Err(err) => return Err(err)
   };
@@ -308,6 +311,33 @@ pub async fn install_modpack(state: tauri::State<'_, AppState>, window: tauri::W
           modpack.img_ext = Some(ext.to_string());
         }
       }
+      // Not efficient because modrinth doesn't include file_name right now:
+      if let Some(dependencies) = version_data.dependencies {
+        debug!("checking dependencies");
+        let version_ids = dependencies.into_iter().map(|depend| depend.version_id);
+        futures::stream::iter(version_ids)
+        .map(|version_id| {
+          modpacks.modrinth_manager.as_ref().unwrap().fetch_version(version_id)
+        })
+        .buffer_unordered(4)
+        .for_each(|version| {
+          if let Ok(version) = version {
+            for entry in &mut modpack.mods {
+              debug!("{} compare {}", &entry.filename, &version.files[0].filename);
+              if &entry.filename == &version.files[0].filename {
+                debug!("got file for {}", &version.id);
+                entry.version_id = Some(version.id);
+                // entry.author = verison.author_id
+                entry.name = Some(version.name);
+                break;
+              }
+            }
+          }
+          async {}
+        })
+        .await;
+      }
+      
       modpack.name = modpacks.get_suitable_name(&project.title).unwrap();
       modpack.author = Some(author_name.to_string());
 

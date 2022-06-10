@@ -3,7 +3,7 @@ An open source alternative to curseforge, supporting modrinth for all your modpa
 
 In alpha stages. Heavily inspired by curseforge for ui purposes, for now.
 
-Name may change.
+Supports creating custom modpacks, importing and exporting modrinth modpacks
 
 ## Technology
 
@@ -14,20 +14,18 @@ Name may change.
 
 ## Preview
 
-
 ![app_1653166952](https://user-images.githubusercontent.com/4030546/169668926-1c878b8b-a49b-40f0-8b24-d6d48a85d473.gif)
 * Preview is outdated and is from v0.2.0-alpha or earlier
 
-### Current Roadmap, for beta release
+### Current Roadmap
 
- * Linux support for installing forge
- * Show externally installed mods in pack's modlist
- * Importing modpacks from modrinth
- * Add update checking and updating for mods
- * Support for fabric
- * Improve export dialog with save-as prompt
- * UI Improvements
-
+- Full Linux support
+- Download mods on import (from normal zip)
+- Fabric Support
+- Mod Update Checking & Installing
+- UI Improvements
+- Code Cleanup
+- Full Testing
 
 #### Development
 

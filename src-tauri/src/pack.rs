@@ -400,6 +400,7 @@ impl ModpackManager {
         let out_file = std::fs::File::create(&exp_path)?;
         let mut zip = zip::ZipWriter::new(out_file);
         let mut buffer = Vec::new();
+        // TODO: Modify modpack version
         for path in paths {
             let mut rel_path = path.to_string();
             rel_path.remove(0);

@@ -19,6 +19,8 @@ Supports creating custom modpacks, importing and exporting modrinth modpacks
 
 ### Current Roadmap
 
+See the [project page](https://github.com/Jackzmc/craftymc/projects/1) for up to date progress.
+
 - Full Linux support
 - Download mods on import (from normal zip)
 - Fabric Support

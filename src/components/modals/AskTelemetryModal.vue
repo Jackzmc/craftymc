@@ -23,7 +23,7 @@ import BaseModal from './BaseModal.vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import TelemetryList from '@/components/TelemetryList.vue'
 import { ref } from 'vue'
-const emit = defineEmits(['result'])
+const emit = defineEmits(['result', 'close'])
 
 let level = ref(0)
 
@@ -36,6 +36,7 @@ async function enable() {
   })
   await invoke('save_settings')
   emit('result', level.value)
+  emit('close')
 }
 
 function setLevel(value) {

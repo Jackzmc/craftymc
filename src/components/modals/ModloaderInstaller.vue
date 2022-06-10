@@ -83,7 +83,7 @@ if(props.pack.settings.modloaderType === "forge")
   return undefined
 })
 async function checkWindow(windowHandle) {
-  if(windowHandle.closed && waiting.value && !waitingInstall.value) {
+  if(!windowHandle || windowHandle.closed && waiting.value && !waitingInstall.value) {
     clearInterval(waitForCloseTimer.value)
     wasCancelled.value = true
     setTimeout(() => {

@@ -41,6 +41,7 @@
 import { appWindow } from '@tauri-apps/api/window'
 import { computed, ref, defineAsyncComponent, markRaw, } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
+import { Modpack } from '@/types/Pack.js'
 // eslint-disable-next-line
 const props = defineProps<{
   hasSidebar: boolean
@@ -49,13 +50,13 @@ const emit = defineEmits(["sidebar", "installModloader"])
 
 let modal = ref()
 
-async function onModpackCreated(pack) {
+async function onModpackCreated(pack: Modpack) {
   // await emit('update-modpacks', pack)
-  await emit('installModloader', pack)
+  emit('installModloader', pack)
 }
 
-async function onOptionalSelected(selected) {
-  await emit('answer-optinal-mods', selected)
+async function onOptionalSelected(selected: any[]) {
+  await appWindow.emit('answer-optinal-mods', selected)
 }
 
 function createModpack() {

@@ -309,21 +309,22 @@ impl ModpackManager {
         let work_dir = self.get_install_folder();
         let executable = &ModpackManager::get_launcher_exec();
 
-        match std::process::Command::new(self.get_install_folder().join(executable))
+        debug!("set work_dir: {:?}", &work_dir);
+
+        std::process::Command::new(self.get_install_folder().join(executable))
             .arg("-w")
             .arg(work_dir)
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
+            .arg("--disableGPU")
+            // .arg(self.get_install_folder())
+            // .stdout(std::process::Stdio::null())
+            // .stderr(std::process::Stdio::null())
             .spawn()
-        {
-            Ok(child) => Ok(child),
-            Err(err) => Err(err.to_string())
-        }
+            .map_err(|e| e.to_string())
     }
 
     #[allow(non_snake_case)]
     fn get_launcher_profile(&self, modpack: &Modpack) -> LauncherProfile {
-        let game_dir = self.get_instances_folder().join(&modpack.name).to_str().unwrap().to_owned();
+        let game_dir = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap()).to_str().unwrap().to_string();
         let java_args = modpack.settings.javaArgs.as_ref()
             .or(self.settings.minecraft.javaArgs.as_ref())
             .or(Some(&"".to_string()))
@@ -341,6 +342,7 @@ impl ModpackManager {
             gameDir: Some(game_dir),
             javaArgs: java_args,
             lastUsed: Some(util::get_iso8601(None)),
+            icon: Some("Furnace".to_string()),
             lastVersionId,
             name: modpack.name.clone(),
             resolution: Some(ProfileResolution {
@@ -366,7 +368,7 @@ impl ModpackManager {
         }
         let profiles = profile_config.profiles.as_mut().unwrap();
         profiles.clear();
-        profiles.insert(modpack.name.clone(), self.get_launcher_profile(modpack));
+        profiles.insert("CraftyMc".to_string(), self.get_launcher_profile(modpack));
         fs::write(&path, serde_json::to_string_pretty(&profile_config).unwrap()).unwrap();
     }
 
@@ -510,6 +512,7 @@ struct LauncherProfile {
     pub lastUsed: Option<String>,
     pub lastVersionId: String,
     pub name: String,
+    pub icon: Option<String>,
     pub resolution: Option<ProfileResolution>,
     #[serde(rename = "type")]
     pub type_: String

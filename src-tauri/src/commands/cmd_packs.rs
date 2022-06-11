@@ -246,6 +246,7 @@ pub async fn import_modpack(state: tauri::State<'_, AppState>, window: tauri::Wi
     debug!("starting import of {:?}", &filepath);
     match modpacks.import(&filepath).await {
       Ok(modpack) => {
+        std::fs::remove_file(filepath).map_err(|x| x.to_string())?;
         window.emit("update-modpack", payloads::UpdateModpackPayload { 
           modpack: Some(modpack),
           state: payloads::UpdateModpackState::Normal,

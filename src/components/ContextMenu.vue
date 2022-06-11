@@ -9,7 +9,7 @@
 </template>
 
 <script setup>
-import { ref, onActivated, onDeactivated } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
 let container = ref()
 let isOpen = ref(false)
@@ -46,13 +46,11 @@ function onClick(e) {
   if (!insideMenu) isOpen.value = false;
 }
 
-onActivated(() => {
+onMounted(() => {
 	document.addEventListener('click', onClick);
-  document.removeEventListener()
 })
-onDeactivated(() => {
-	document.addEventListener('click', onClick);
-  document.removeEventListener()
+onUnmounted(() => {
+  document.removeEventListener('click', onClick)
 })
 </script>
 

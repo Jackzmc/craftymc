@@ -251,14 +251,14 @@ impl ModrinthModpackManager {
         Ok(())
     }
 
-    pub async fn export(&self, version: &str, paths: &[&str], modpack: &crate::pack::Modpack, src_path: &std::path::Path, mut exp_path: std::path::PathBuf) 
+    pub async fn export(&self, version: String, paths: &[&str], modpack: &crate::pack::Modpack, src_path: &std::path::Path, mut exp_path: std::path::PathBuf) 
         -> Result<(), Box<dyn std::error::Error>> {
         exp_path.set_extension("mrpack");
         let out_file = std::fs::File::create(&exp_path)?;
 
         let mut zip = zip::ZipWriter::new(out_file);
         let (mut index, skipped) = self.convert_modpack(modpack, src_path).await;
-        index.version_id = version.to_string();
+        index.version_id = version;
         zip.start_file(
             "modrinth.index.json",
             zip::write::FileOptions::default()

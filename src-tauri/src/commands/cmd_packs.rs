@@ -208,7 +208,7 @@ pub fn save_modpack(state: tauri::State<'_, AppState>, window: tauri::Window, pa
 
 #[tauri::command]
 pub async fn export_modpack(state: tauri::State<'_, AppState>,
-  pack_id: &str, file_name: &str, version: &str, paths: Vec<&str>, export_type: &str
+  pack_id: &str, file_name: &str, version: String, paths: Vec<&str>, export_type: &str
 ) -> Result<(), String> {
   let modpacks = &mut state.modpacks.lock().await;
   match modpacks.get_modpack(pack_id) {

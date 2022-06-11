@@ -10,18 +10,8 @@ use log::{info, debug, error, warn};
 /// COMMANDS
 
 #[tauri::command]
-pub fn create_modpack(state: tauri::State<'_, AppState>,  window: tauri::Window, modpack: pack::Modpack) -> Result<(), String> {
-  match state.modpacks.blocking_lock().create_modpack(modpack) {
-    Ok(modpack) => {
-      window.emit("update-modpack", payloads::UpdateModpackPayload { 
-        modpack: Some(modpack),
-        state: payloads::UpdateModpackState::Normal,
-        data: None
-      }).unwrap();
-      Ok(())
-    },
-    Err(e) => Err(e)
-  }
+pub fn create_modpack(state: tauri::State<'_, AppState>, modpack: pack::Modpack) -> Result<pack::Modpack, String> {
+  state.modpacks.blocking_lock().create_modpack(modpack)
 }
 
 #[tauri::command]

@@ -128,7 +128,12 @@ function installModloader(pack: Modpack) {
 function onShow(value) {
   showData.value = value
 }
-
+window.onerror = (message, source, lineno, colno, error) => {
+  invoke('log', {
+    level: 'ERROR',
+    msg: error.stack || error.message || error
+  })
+}
 </script>
 
 <style>

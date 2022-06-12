@@ -325,10 +325,13 @@ impl ModpackManager {
     #[allow(non_snake_case)]
     fn get_launcher_profile(&self, modpack: &Modpack) -> LauncherProfile {
         let game_dir = self.get_instances_folder().join(&modpack.folder_name.as_ref().unwrap()).to_str().unwrap().to_string();
-        let java_args = modpack.settings.javaArgs.as_ref()
-            .or(self.settings.minecraft.javaArgs.as_ref())
-            .or(Some(&"".to_string()))
-            .cloned();
+        let java_args: &str = modpack.settings.javaArgs.as_deref()
+            .or(self.settings.minecraft.javaArgs.as_deref())
+            .unwrap_or("");
+        let memoryMb = match modpack.settings.useCustomMemory {
+            true => modpack.settings.javaMemoryMb,
+            false => self.settings.minecraft.javaMemoryMb
+        };
         let lastVersionId = match modpack.settings.modloaderType.as_str() {
             "forge" => format!("{}-forge-{}", 
                 modpack.versions.minecraft, 
@@ -340,7 +343,7 @@ impl ModpackManager {
         LauncherProfile {
             created: Some(modpack.created.clone()),
             gameDir: Some(game_dir),
-            javaArgs: java_args,
+            javaArgs: Some(format!("-Xmx{}M {}", memoryMb, java_args)),
             lastUsed: Some(util::get_iso8601(None)),
             icon: Some("Furnace".to_string()),
             lastVersionId,

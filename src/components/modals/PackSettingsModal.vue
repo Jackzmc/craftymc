@@ -15,7 +15,7 @@
   <Field label="Java Memory Settings">
     <input class="is-checkradio" id="enableJavaMemory" type="checkbox" name="exampleCheckbox" v-model="pack.settings.useCustomMemory">
     <label for="enableJavaMemory">Use custom memory settings</label>
-    <input v-if="pack.settings.useCustomMemory" id="pack-javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="pack.settings.javaMemory" type="range" :data-tooltip="javaMemory">
+    <input v-if="pack.settings.useCustomMemory" id="pack-javamemslider" class="slider is-fullwidth has-output" step="250" min="1000" max="8000" v-model.number="pack.settings.javaMemoryMb" type="range" :data-tooltip="javaMemory">
   </Field>
   <Field label="Modloader">
     <p>{{modloaderDisplay}}</p>
@@ -43,13 +43,14 @@ const props = defineProps<{
 
 let pack = reactive<Modpack>(JSON.parse(JSON.stringify(props.pack)))
 
-watch(pack.settings, () => {
-  for(const key in pack.settings) {
-    if(props.settings[key] !== settings.value[key]) {
-      invoke('set_setting', {
+watch(() => pack.settings, () => {
+  const settings = pack.settings
+  for(const key in settings) {
+    if(settings[key] !== props.pack.settings[key]) {
+      invoke('set_modpack_setting', {
         packId: pack.id,
         key,
-        value: settings.value[key].toString()
+        value: settings[key].toString()
       })
     }
   }
@@ -69,7 +70,7 @@ const modloaderDisplay = computed(() => {
 })
 
 const javaMemory = computed(() => {
-  return `${pack.settings.javaMemory?.toLocaleString()} MB`
+  return `${pack.settings.javaMemoryMb?.toLocaleString()} MB`
 })
 
 function changeModloader() {

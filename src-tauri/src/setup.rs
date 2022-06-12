@@ -4,21 +4,23 @@ use crate::pack;
 #[allow(unused_imports)]
 use log::{info, debug, error, warn};
 
+
 pub struct Setup {
     pub root_folder: PathBuf,
     pub launcher_folder: PathBuf,
     pub downloads_folder: PathBuf,
-    pub instances_folder: PathBuf
+    pub instances_folder: PathBuf,
 }
 
 impl Setup {
     pub fn new(packs: &pack::ModpackManager) -> Setup {
-        Setup {
+        let instance = Setup {
             root_folder: packs.root_folder.clone(),
             launcher_folder: packs.get_install_folder(),
             instances_folder: packs.get_instances_folder(),
             downloads_folder: packs.get_downloads_folder()
-        }
+        };
+        instance
     }
 
     // Downloads MinecraftInstaller.msi for windows or minecraft-launcher for linux
@@ -108,6 +110,69 @@ impl Setup {
         info!("Minecraft launcher install is complete.");
         Ok(())
     }
+
+    pub async fn download_fabric_installer(&self) -> Result<PathBuf, String> {
+        let path = self.launcher_folder.join("FabricInstaller.jar");
+        match std::fs::File::options().write(true).create_new(true).open(&path) {
+            Ok(mut dest_file) => {
+                let bytes = reqwest
+                    // TODO: Not have a hardcoded version
+                    ::get("https://maven.fabricmc.net/net/fabricmc/fabric-installer/0.11.0/fabric-installer-0.11.0.jar")
+                    .await.unwrap()
+                    .bytes()
+                    .await.unwrap();
+                let mut content = std::io::Cursor::new(bytes);
+                std::io::copy(&mut content, &mut dest_file).unwrap();
+                dest_file.sync_data().unwrap();
+                debug!("fabric-installer download complete");
+            },
+            Err(err) => {
+                if err.kind() != std::io::ErrorKind::AlreadyExists {
+                    error!("error creating dest fabric installer: {}", &err);
+                    return Err(err.to_string());
+                } else {
+                    debug!("skipping download, fabric installer exists already");
+                }
+            }
+        };
+        Ok(path)
+    }
+
+    pub async fn get_latest_loader(&self, mc_version: &str) -> Result<String, Box<dyn std::error::Error>> {
+        Ok(reqwest::get(format!("https://meta.fabricmc.net/v1/versions/loader/{}", mc_version))
+            .await?
+            .json::<serde_json::Value>().await?
+            .get(0).ok_or("no loaders found")?
+            ["version"].to_string()
+        )
+    }
+
+    pub async fn install_fabric(&self, modpack: &mut pack::Modpack) -> Result<(), String> {
+        match self.download_fabric_installer().await {
+            Ok(installer_path) => {
+                let loader_version = self.get_latest_loader(&modpack.versions.minecraft).await.map_err(|x| x.to_string())?;
+                debug!("running: java -jar {:?} -mcversion {:?} -loader {:?} -noprofile -dir {:?}", installer_path, &modpack.versions.minecraft, loader_version, &self.launcher_folder);
+                let res = std::process::Command::new("java")
+                    .arg("-jar")
+                    .arg(&installer_path)
+                    .arg("-mcversion")
+                    .arg(&modpack.versions.minecraft)
+                    .arg("-loader")
+                    .arg(&loader_version)
+                    .arg("-noprofile")
+                    .arg("-dir")
+                    .arg(&self.launcher_folder)
+                    .status()
+                    .unwrap();
+
+                modpack.versions.modloader = loader_version;
+                std::fs::remove_file(&installer_path).expect("cleanup installer failed");
+                res
+            },
+            Err(err) => return Err(err) 
+        };
+        Ok(())
+    }
     
     pub async fn download_fml_direct(dest_dir: &std::path::Path, mc_version: &str, forge_version: &str) -> Result<String, String> {
         let client = reqwest::Client::new();
@@ -130,31 +195,13 @@ impl Setup {
         }
     }
 
-    pub async fn download_file(dest: &std::path::Path, url: &str) -> Result<(), String> {
-        let client = reqwest::Client::new();
-        match client
-            .get(url)
-            .send()
-            .await
-        {
-            Ok(response) => {
-                let mut dest_file = std::fs::File::create(&dest).expect("could not create file");
-                let mut content = std::io::Cursor::new(response.bytes().await.unwrap());
-                std::io::copy(&mut content, &mut dest_file).expect("cp failed");
-                dest_file.sync_data().expect("sync failed");
-                debug!("dl file from ({})", &url);
-                Ok(())
-            },
-            Err(err) => return Err(err.to_string())
-        }
-    }
-
     async fn download_fml_installer(&self) -> Result<PathBuf, String> {
         let path = self.launcher_folder.join("ForgeCLI.jar");
         debug!("installing to: {:?}", &path);
         match std::fs::File::options().write(true).create_new(true).open(&path) {
             Ok(mut dest_file) => {
                 let bytes = reqwest
+                    // TODO: Not have a hardcoded version perhaps
                     ::get("https://github.com/TeamKun/ForgeCLI/releases/download/1.0.1/ForgeCLI-1.0.1-all.jar")
                     .await.unwrap()
                     .bytes()
@@ -201,6 +248,25 @@ impl Setup {
             Err(err) => return Err(err) 
         };
         Ok(())
+    }
+
+    pub async fn download_file(dest: &std::path::Path, url: &str) -> Result<(), String> {
+        let client = reqwest::Client::new();
+        match client
+            .get(url)
+            .send()
+            .await
+        {
+            Ok(response) => {
+                let mut dest_file = std::fs::File::create(&dest).expect("could not create file");
+                let mut content = std::io::Cursor::new(response.bytes().await.unwrap());
+                std::io::copy(&mut content, &mut dest_file).expect("cp failed");
+                dest_file.sync_data().expect("sync failed");
+                debug!("dl file from ({})", &url);
+                Ok(())
+            },
+            Err(err) => return Err(err.to_string())
+        }
     }
 
     pub async fn watch_for_download() -> Result<std::fs::DirEntry, String> {

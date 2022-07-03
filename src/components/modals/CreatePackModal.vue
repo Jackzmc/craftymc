@@ -69,6 +69,8 @@ import BaseModal from './BaseModal.vue'
 import Field from '@/components/form/Field.vue'
 import { Modpack } from '@/types/Pack'
 import { ref, computed, onBeforeMount } from 'vue'
+import { getVersion } from '@tauri-apps/api/app'
+
 // eslint-disable-next-line
 import { invoke } from '@tauri-apps/api/tauri'
 
@@ -113,7 +115,12 @@ const shownMcVersions = computed(() => {
 })
 
 async function getMCVersions() {
-  const response = await fetch("https://api.modrinth.com/v2/tag/game_version")
+  const appVersion = await getVersion()
+  const response = await fetch("https://api.modrinth.com/v2/tag/game_version", {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
   const json = await response.json()
   if(response.ok) {
     mcVersions.value = json.filter(v => v.version_type === "release") as MCVersion[]

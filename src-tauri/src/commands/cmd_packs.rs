@@ -11,7 +11,8 @@ use log::{info, debug, error, warn};
 
 #[tauri::command]
 pub fn create_modpack(state: tauri::State<'_, AppState>, modpack: pack::Modpack) -> Result<pack::Modpack, String> {
-  state.modpacks.blocking_lock().create_modpack(modpack)
+  let modpack = state.modpacks.blocking_lock().create_modpack(modpack);
+  // TODO: Install fabric
 }
 
 #[tauri::command]

@@ -63,7 +63,9 @@ impl ModrinthModpackManager {
     }
 
     pub async fn fetch_version(&self, version_id: String) -> Result<crate::types::modrinth::mods::ModrinthVersionData, String> {
-        match self.client.get(format!("https://api.modrinth.com/v2/version/{}", version_id)).send().await {
+        match self.client.get(format!("https://api.modrinth.com/v2/version/{}", version_id))
+            .header("User-Agent", format!("Jackzmc/CraftyMc"))
+            .send().await {
             Ok(response) => match response.json::<crate::types::modrinth::mods::ModrinthVersionData>().await {
                 Ok(json) => Ok(json),
                 Err(err) => return Err(err.to_string())
@@ -73,7 +75,9 @@ impl ModrinthModpackManager {
     }
 
     pub async fn fetch(&self, project_id: &str) -> Result<ModrinthModpackProject, String> {
-        match self.client.get(format!("https://api.modrinth.com/v2/project/{}", project_id)).send().await {
+        match self.client.get(format!("https://api.modrinth.com/v2/project/{}", project_id))
+            .header("User-Agent", format!("Jackzmc/CraftyMc"))
+            .send().await {
             Ok(response) => match response.json::<ModrinthModpackProject>().await {
                 Ok(json) => Ok(json),
                 Err(err) => return Err(err.to_string())

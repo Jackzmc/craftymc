@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { ModrinthModpack } from '@/types/External';
 import PackView from '@/components/pack/PackView.vue'
+import { getVersion } from '@tauri-apps/api/app'
 import { InstallState } from '@/types/Pack';
 import { ref } from 'vue'
 
@@ -20,9 +21,14 @@ let modpacks = ref<ModrinthModpack[]>([])
 async function searchModrinth(query?: string) {
   loading.value = true
   error.value = undefined
+  const appVersion = await getVersion()
   try {
     const queryText = query && query != '' ? `&query=${query}` : ''
-    const response = await fetch(`https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=[["project_type:modpack"]]${queryText}`)
+    const response = await fetch(`https://api.modrinth.com/v2/search?limit=20&index=relevance&facets=[["project_type:modpack"]]${queryText}`, {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
     const json = await response.json()
     if(response.ok) {
       modpacks.value = (json.hits as ModrinthModpack[])

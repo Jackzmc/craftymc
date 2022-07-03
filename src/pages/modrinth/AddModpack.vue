@@ -121,6 +121,7 @@ let categories = ref([])
 let loading = ref(false)
 let error = ref<string>()
 let mcVersions = ref([])
+let appVersion = ref()
 
 let modpacks = ref<ModrinthProject[]>([])
 
@@ -152,7 +153,11 @@ async function searchModrinth(nextPage: boolean = false) {
     const queryText = settings.value.query != '' ? `&query=${settings.value.query}` : ''
     const offset = MAX_FETCH_PER_PAGE *settings.value.page
 
-    const response = await fetch(`https://api.modrinth.com/v2/search?limit=${MAX_FETCH_PER_PAGE}&offset=${offset}&index=${settings.value.sort}&facets=${facetsString}${queryText}`)
+    const response = await fetch(`https://api.modrinth.com/v2/search?limit=${MAX_FETCH_PER_PAGE}&offset=${offset}&index=${settings.value.sort}&facets=${facetsString}${queryText}`, {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
     // TODO: Check versions to see if there is a valid version FOR the modloader
     // OR wait until modrinth fixes it on their side
     const json = await response.json()
@@ -176,7 +181,11 @@ async function searchModrinth(nextPage: boolean = false) {
 }
 
 async function getMCVersions() {
-  const response = await fetch("https://api.modrinth.com/v2/tag/game_version")
+  const response = await fetch("https://api.modrinth.com/v2/tag/game_version", {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
   const json = await response.json()
   if(response.ok) {
     mcVersions.value = json.filter(v => v.version_type === "release") as MCVersion[]
@@ -184,7 +193,11 @@ async function getMCVersions() {
 }
 
 async function getCategories() {
-  const response = await fetch(`https://api.modrinth.com/v2/tag/category`)
+  const response = await fetch(`https://api.modrinth.com/v2/tag/category`, {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
   const json = await response.json()
   if(response.ok) {
     return json
@@ -225,7 +238,11 @@ async function installModpack(entry: Entry) {
 async function getVersions(entry: Entry): Promise<ModrinthProjectVersion[]> {
   const loadersStr = settings.value.modloader ? `&loaders=["${settings.value.modloader}"]` : ''
   const mcVersionStr = settings.value.minecraft ? `&game_versions=["${settings.value.minecraft}"]` : ''
-  const response = await fetch(`https://api.modrinth.com/v2/project/${entry.project.slug}/version?${loadersStr}${mcVersionStr}`)
+  const response = await fetch(`https://api.modrinth.com/v2/project/${entry.project.slug}/version?${loadersStr}${mcVersionStr}`, {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
   const json = await response.json()
   if(response.ok) {
     return json as ModrinthProjectVersion[]
@@ -238,6 +255,7 @@ const doSearch = createDebounce(searchModrinth, 500)
 const scrollSearch = createDebounce(searchModrinth, 1500)
 
 onBeforeMount(async() => {
+  appVersion.value = await getVersion()
   emit('show', { type: 'category-picker', for: 'modpack' })
   categories.value = await getCategories()
   getMCVersions();

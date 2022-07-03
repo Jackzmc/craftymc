@@ -52,7 +52,8 @@ let modal = ref()
 
 async function onModpackCreated(pack: Modpack) {
   // await emit('update-modpacks', pack)
-  emit('installModloader', pack)
+  if(pack.settings.modloader === "forge")
+    emit('installModloader', pack)
 }
 
 async function onOptionalSelected(selected: any[]) {

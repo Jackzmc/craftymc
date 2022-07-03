@@ -70,6 +70,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { getVersion } from '@tauri-apps/api/app'
 const emit = defineEmits(["selected"])
 const props = defineProps<{
   showData?: object
@@ -86,9 +87,13 @@ watch(() => props.showData, (value) => {
   }
 }, { deep: true })
 
-
 async function getCategoriesFor(type = "modpack" | "mod") {
-  const response = await fetch(`https://api.modrinth.com/v2/tag/category`)
+  const appVersion = await getVersion()
+  const response = await fetch(`https://api.modrinth.com/v2/tag/category`, {
+    headers: {
+      'User-Agent': `Jackzmc/CraftyMc v${appVersion}`
+    }
+  })
   const json = await response.json()
   if(response.ok) {
     categories.value = json.filter(tag => tag.project_type === type)

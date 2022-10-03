@@ -5,6 +5,10 @@ In alpha stages. Heavily inspired by curseforge for ui purposes, for now.
 
 Supports creating custom modpacks, importing and exporting modrinth modpacks
 
+## Update
+
+A lot of stuff broke right when I released it, don't have the motivation anymore to work on this
+
 ## Technology
 
 * [Tauri (Edge Webview)](https://tauri.studio/)
